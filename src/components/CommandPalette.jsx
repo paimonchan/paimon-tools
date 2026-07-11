@@ -19,17 +19,24 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
   const inputRef = useRef(null)
   const listRef = useRef(null)
 
-  // Reset on open
+  // Reset query + selection whenever the palette opens.
   useEffect(() => {
     if (open) {
       setQuery('')
-      setActive(TOOLS.findIndex((t) => t.id === activeId) >= 0 ? Math.max(0, TOOLS.findIndex((t) => t.id === activeId)) : 0)
+      setActive(0)
       // focus next tick so the input is mounted
       requestAnimationFrame(() => inputRef.current?.focus())
     }
-  }, [open, activeId])
+  }, [open])
 
   const results = useMemo(() => filterTools(query), [query])
+
+  // Clamp the active index into the valid range whenever results change.
+  // Without this, typing narrows the list while `active` stays put, leaving it
+  // pointing past the end — Enter would then select nothing.
+  useEffect(() => {
+    setActive((i) => (results.length === 0 ? 0 : Math.min(i, results.length - 1)))
+  }, [results])
 
   useEffect(() => {
     if (!open) return
@@ -39,10 +46,12 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
         onClose()
       } else if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setActive((i) => Math.min(i + 1, results.length - 1))
+        if (results.length === 0) return
+        setActive((i) => (i + 1) % results.length)
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setActive((i) => Math.max(i - 1, 0))
+        if (results.length === 0) return
+        setActive((i) => (i - 1 + results.length) % results.length)
       } else if (e.key === 'Enter') {
         e.preventDefault()
         const tool = results[active]
