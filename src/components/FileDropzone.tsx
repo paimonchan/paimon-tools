@@ -1,19 +1,26 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { FileUp, CheckCircle2 } from 'lucide-react'
 import { readFileAsArrayBuffer, readFileAsText } from '../lib/files'
 import { useToast } from '../context/ToastContext'
 
-/**
- * FileDropzone — drag & drop or click-to-browse upload. Reports the read
- * value (text or ArrayBuffer) up via onFile. Shows a clear "loaded" state so
- * the user knows the file was accepted.
- */
-export default function FileDropzone({ accept, readMode = 'text', onFile, currentName }) {
-  const inputRef = useRef(null)
+interface FileValue {
+  value: string | ArrayBuffer
+  name: string
+}
+
+interface FileDropzoneProps {
+  accept?: string
+  readMode?: 'text' | 'arraybuffer'
+  onFile?: (file: FileValue) => void
+  currentName?: string
+}
+
+export default function FileDropzone({ accept, readMode = 'text', onFile, currentName }: FileDropzoneProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const toast = useToast()
 
-  async function handleFile(file) {
+  async function handleFile(file: File | null | undefined) {
     if (!file) return
     try {
       const value = readMode === 'arraybuffer'
@@ -22,7 +29,8 @@ export default function FileDropzone({ accept, readMode = 'text', onFile, curren
       onFile?.({ value, name: file.name })
       toast.push(`Loaded ${file.name}`, { variant: 'success' })
     } catch (e) {
-      toast.push(`Failed to read file: ${e.message}`, { variant: 'error' })
+      const msg = e instanceof Error ? e.message : String(e)
+      toast.push(`Failed to read file: ${msg}`, { variant: 'error' })
     }
   }
 

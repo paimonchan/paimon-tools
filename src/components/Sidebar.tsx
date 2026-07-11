@@ -1,6 +1,6 @@
 import { Command, ShieldCheck } from 'lucide-react'
 import BrandMark from './BrandMark'
-import { TOOLS_BY_CATEGORY } from '../lib/tools'
+import { TOOLS_BY_CATEGORY } from '../engine/registry'
 
 /**
  * Sidebar — brand, command-palette trigger, grouped tool list, and the

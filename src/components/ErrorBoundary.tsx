@@ -1,28 +1,24 @@
-import { Component } from 'react'
+import { Component, type ReactNode } from 'react'
 
-/**
- * ErrorBoundary — catches render-time errors in its subtree so a single
- * crashing component doesn't blank out the whole app.
- *
- * Why we have this: without it, any runtime error during render unmounts the
- * entire React tree, producing a blank black page with no clue what went wrong.
- * This renders the error inline so the failure is visible (and recoverable).
- *
- * Note: React error boundaries catch errors in render/lifecycle/constructors,
- * not in event handlers or async code — those still need try/catch at the site.
- */
-export default class ErrorBoundary extends Component {
-  constructor(props) {
+interface ErrorBoundaryState {
+  error: Error | null
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode
+}
+
+export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { error: null }
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { error }
   }
 
-  componentDidCatch(error, info) {
-    // Log to console for debugging; we deliberately don't send anywhere.
+  componentDidCatch(error: Error, info: React.ErrorInfo): void {
     console.error('[ErrorBoundary]', error, info)
   }
 

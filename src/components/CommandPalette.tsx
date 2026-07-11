@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CornerDownLeft, Search } from 'lucide-react'
-import { TOOLS } from '../lib/tools'
+import { TOOLS } from '../engine/registry'
 
 /**
  * CommandPalette — ⌘K tool switcher with keyboard-first navigation.

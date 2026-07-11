@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar'
 import MobileBar from './components/MobileBar'
 import CommandPalette from './components/CommandPalette'
 import ConversionTool from './components/ConversionTool'
-import { TOOLS } from './lib/tools'
+import { TOOLS } from './engine/registry'
 import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 
 function Shell() {

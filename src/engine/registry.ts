@@ -1,23 +1,20 @@
 /**
- * tools.js — the tool registry.
+ * registry.ts — typed tool registry.
  *
- * The UI is generic (see ConversionTool.jsx). Each entry declares:
+ * The UI is generic (ConversionTool). Each entry declares:
  *   id          unique slug
  *   name        display label
  *   category    sidebar grouping
- *   description short helper text shown in the tool header
- *   icon        lucide-react component (imported below)
- *   keywords    extra terms for fuzzy search in the command palette
- *   input       { type: 'text' | 'file', accept?: string, label, placeholder }
- *   output      { type: 'text' | 'file', label, ext? }   // 'file' => downloadable binary
- *   sample      a representative input string for "Load sample"
- *   convert     (inputValue, opts) => Result   (see converters.js)
- *
- * For reversible pairs, a `swap` field declares the partner tool id; the UI
- * renders a swap button that flips direction and moves the output into the
- * input of the partner tool.
+ *   description short helper text
+ *   icon        lucide-react component
+ *   keywords    extra terms for fuzzy search in command palette
+ *   input       { type: 'text' | 'file', accept?, label, placeholder }
+ *   output      { type: 'text' | 'file', label, ext? }
+ *   sample      a representative input string
+ *   convert     (inputValue, opts) => Result
  */
 
+import type { ComponentType } from 'react'
 import {
   ArrowLeftRight,
   Braces,
@@ -26,22 +23,47 @@ import {
   FileText,
   Minimize2,
 } from 'lucide-react'
+import type { Result } from './result'
 
-import {
-  csvToJson,
-  csvToXlsx,
-  formatJson,
-  jsonToCsv,
-  jsonToXlsx,
-  minifyJson,
-  xlsxToCsv,
-  xlsxToJson,
-} from './converters'
-import { TOOL_SEO } from './seo'
+import { csvToJson, jsonToCsv } from './converters/csv-io'
+import { formatJson, minifyJson } from './converters/json-io'
+import { jsonToXlsx, xlsxToJson, csvToXlsx, xlsxToCsv } from './converters/xlsx-io'
 
-export const CATEGORIES = ['Convert', 'Format']
+// ── Types ─────────────────────────────────────────────
 
-// Shared sample dataset so conversions feel consistent across tools.
+export type ToolId = string
+
+export interface ToolInput {
+  type: 'text' | 'file'
+  accept?: string
+  label: string
+  placeholder?: string
+}
+
+export interface ToolOutput {
+  type: 'text' | 'file'
+  label: string
+  ext?: string
+}
+
+export interface ToolDefinition {
+  id: ToolId
+  name: string
+  category: 'Convert' | 'Format'
+  icon: ComponentType<{ className?: string }>
+  keywords: string[]
+  description: string
+  swap?: ToolId
+  input: ToolInput
+  output: ToolOutput
+  sample?: string
+  hasOptions?: boolean
+  acceptsLenient?: boolean
+  convert: (value: unknown, opts?: Record<string, unknown>) => Result<unknown>
+}
+
+// ── Sample data ───────────────────────────────────────
+
 const SAMPLE = {
   json: `[
   { "id": 1, "name": "Paimon", "role": "Guide", "joined": "2020-09-28" },
@@ -55,7 +77,13 @@ const SAMPLE = {
   uglyJson: `{"id":1,"name":"Paimon","role":"Guide","stats":{"hp":10164,"atk":311,"def":1234},"tags":["emergency","food","best"]}`,
 }
 
-export const TOOLS = [
+// ── Categories ────────────────────────────────────────
+
+export const CATEGORIES = ['Convert', 'Format'] as const
+
+// ── Tool registry ─────────────────────────────────────
+
+export const TOOLS: ToolDefinition[] = [
   {
     id: 'json-to-csv',
     name: 'JSON to CSV',
@@ -68,7 +96,7 @@ export const TOOLS = [
     output: { type: 'text', label: 'CSV output', ext: 'csv' },
     sample: SAMPLE.json,
     acceptsLenient: true,
-    convert: (v, opts) => jsonToCsv(v, opts),
+    convert: (v, opts) => jsonToCsv(v as string, opts ?? {}),
   },
   {
     id: 'csv-to-json',
@@ -81,7 +109,7 @@ export const TOOLS = [
     input: { type: 'text', label: 'CSV input', accept: '.csv,.txt', placeholder: 'Paste CSV, or drop a .csv file' },
     output: { type: 'text', label: 'JSON output', ext: 'json' },
     sample: SAMPLE.csv,
-    convert: (v) => csvToJson(v),
+    convert: (v) => csvToJson(v as string),
   },
   {
     id: 'json-to-excel',
@@ -95,7 +123,7 @@ export const TOOLS = [
     output: { type: 'file', label: '.xlsx download', ext: 'xlsx' },
     sample: SAMPLE.json,
     acceptsLenient: true,
-    convert: (v, opts) => jsonToXlsx(v, opts),
+    convert: (v, opts) => jsonToXlsx(v, opts ?? {}),
   },
   {
     id: 'excel-to-json',
@@ -107,7 +135,7 @@ export const TOOLS = [
     swap: 'json-to-excel',
     input: { type: 'file', label: 'Drop an .xlsx file', accept: '.xlsx,.xls' },
     output: { type: 'text', label: 'JSON output', ext: 'json' },
-    convert: (v) => xlsxToJson(v),
+    convert: (v) => xlsxToJson(v as ArrayBuffer),
   },
   {
     id: 'csv-to-excel',
@@ -120,7 +148,7 @@ export const TOOLS = [
     input: { type: 'text', label: 'CSV input', accept: '.csv,.txt', placeholder: 'Paste CSV, or drop a .csv file' },
     output: { type: 'file', label: '.xlsx download', ext: 'xlsx' },
     sample: SAMPLE.csv,
-    convert: (v) => csvToXlsx(v),
+    convert: (v) => csvToXlsx(v as string),
   },
   {
     id: 'excel-to-csv',
@@ -132,7 +160,7 @@ export const TOOLS = [
     swap: 'csv-to-excel',
     input: { type: 'file', label: 'Drop an .xlsx file', accept: '.xlsx,.xls' },
     output: { type: 'text', label: 'CSV output', ext: 'csv' },
-    convert: (v) => xlsxToCsv(v),
+    convert: (v) => xlsxToCsv(v as ArrayBuffer),
   },
   {
     id: 'json-formatter',
@@ -146,7 +174,7 @@ export const TOOLS = [
     hasOptions: true,
     acceptsLenient: true,
     sample: SAMPLE.uglyJson,
-    convert: (v, opts) => formatJson(v, opts),
+    convert: (v, opts) => formatJson(v as string, opts ?? {}),
   },
   {
     id: 'json-minifier',
@@ -159,14 +187,14 @@ export const TOOLS = [
     output: { type: 'text', label: 'Minified JSON', ext: 'json' },
     acceptsLenient: true,
     sample: SAMPLE.json,
-    convert: (v) => minifyJson(v),
+    convert: (v, opts) => minifyJson(v as string, opts ?? {}),
   },
 ]
 
-/** Quick lookup by id. */
-export const TOOLS_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t]))
+// ── Lookup helpers ────────────────────────────────────
 
-/** Tools grouped by category for the sidebar. */
+export const TOOLS_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<string, ToolDefinition>
+
 export const TOOLS_BY_CATEGORY = CATEGORIES.map((cat) => ({
   category: cat,
   tools: TOOLS.filter((t) => t.category === cat),

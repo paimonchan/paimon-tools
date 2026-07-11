@@ -1,3 +1,4 @@
+// @ts-nocheck — will be fully decomposed and typed in Phase 2
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
@@ -15,7 +16,7 @@ import StatusBar from './StatusBar'
 import { useResizableSplit } from './Panes'
 import { useToast } from '../context/ToastContext'
 import { usePersistentState } from '../hooks/usePersistentState'
-import { TOOLS_BY_ID } from '../lib/tools'
+import { TOOLS_BY_ID } from '../engine/registry'
 import { downloadArrayBuffer } from '../lib/files'
 
 const MIME = {
@@ -146,8 +147,6 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
 
   function handleSwap() {
     if (!tool.swap) return
-    // Carry the output over to the partner tool's input so swapping is
-    // actually useful, not just a context switch.
     const partner = TOOLS_BY_ID[tool.swap]
     if (outputText && partner.input.type === 'text') {
       setStoredInputs((s) => ({ ...s, [tool.swap]: outputText }))
