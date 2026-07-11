@@ -1,0 +1,186 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { CornerDownLeft, Search } from 'lucide-react'
+import { TOOLS } from '../lib/tools'
+
+/**
+ * CommandPalette — ⌘K tool switcher with keyboard-first navigation.
+ *
+ * Keys:
+ *   ↑ / ↓     move selection
+ *   Enter     run selected tool
+ *   Esc       close
+ *
+ * Filtering is a lightweight subsequence + keyword match (no deps). Results
+ * keep category groupings so the list reads naturally.
+ */
+export default function CommandPalette({ open, onClose, onSelect, activeId }) {
+  const [query, setQuery] = useState('')
+  const [active, setActive] = useState(0)
+  const inputRef = useRef(null)
+  const listRef = useRef(null)
+
+  // Reset on open
+  useEffect(() => {
+    if (open) {
+      setQuery('')
+      setActive(TOOLS.findIndex((t) => t.id === activeId) >= 0 ? Math.max(0, TOOLS.findIndex((t) => t.id === activeId)) : 0)
+      // focus next tick so the input is mounted
+      requestAnimationFrame(() => inputRef.current?.focus())
+    }
+  }, [open, activeId])
+
+  const results = useMemo(() => filterTools(query), [query])
+
+  useEffect(() => {
+    if (!open) return
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setActive((i) => Math.min(i + 1, results.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setActive((i) => Math.max(i - 1, 0))
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        const tool = results[active]
+        if (tool) {
+          onSelect(tool.id)
+          onClose()
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, results, active, onClose, onSelect])
+
+  // Keep active row in view during keyboard nav
+  useEffect(() => {
+    const el = listRef.current?.querySelector(`[data-idx="${active}"]`)
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [active])
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh]">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-pop animate-scale-in">
+        {/* Search input */}
+        <div className="flex items-center gap-3 border-b border-ink-800 px-4">
+          <Search className="h-4 w-4 text-ink-500" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setActive(0)
+            }}
+            placeholder="Search tools…"
+            className="flex-1 bg-transparent py-3.5 text-sm text-ink-100 placeholder:text-ink-500"
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <span className="kbd">Esc</span>
+        </div>
+
+        {/* Results */}
+        <div ref={listRef} className="max-h-[min(50vh,22rem)] overflow-y-auto p-1.5">
+          {results.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-ink-500">
+              No tools match “{query}”.
+            </div>
+          ) : (
+            grouped(results).map(({ category, tools }) => (
+              <div key={category} className="mb-1">
+                <div className="px-3 py-1.5 text-[10px] font-600 uppercase tracking-[0.14em] text-ink-500">
+                  {category}
+                </div>
+                {tools.map((tool) => {
+                  const idx = results.indexOf(tool)
+                  const Icon = tool.icon
+                  const isSelected = idx === active
+                  const isActiveTool = tool.id === activeId
+                  return (
+                    <button
+                      key={tool.id}
+                      data-idx={idx}
+                      onMouseMove={() => setActive(idx)}
+                      onClick={() => {
+                        onSelect(tool.id)
+                        onClose()
+                      }}
+                      className={[
+                        'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors',
+                        isSelected ? 'bg-honey-400/10 text-honey-100' : 'text-ink-200 hover:bg-ink-800',
+                      ].join(' ')}
+                    >
+                      <Icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-honey-300' : 'text-ink-400'}`} />
+                      <span className="flex-1">
+                        <span className="font-500">{tool.name}</span>
+                        <span className="ml-2 text-xs text-ink-500">{tool.description}</span>
+                      </span>
+                      {isActiveTool && <span className="text-[10px] uppercase tracking-wide text-ink-500">current</span>}
+                      {isSelected && <CornerDownLeft className="h-3.5 w-3.5 text-ink-500" />}
+                    </button>
+                  )
+                })}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-ink-800 px-4 py-2 text-[11px] text-ink-500">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1"><span className="kbd">↑</span><span className="kbd">↓</span> navigate</span>
+            <span className="flex items-center gap-1"><span className="kbd">↵</span> select</span>
+          </div>
+          <span className="flex items-center gap-1 text-emerald-500/70">100% local</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Subsequence + keyword match, scored so the best match floats up. */
+function filterTools(query) {
+  const q = query.trim().toLowerCase()
+  if (!q) return TOOLS
+  const scored = []
+  for (const t of TOOLS) {
+    const hay = `${t.name} ${t.category} ${(t.keywords || []).join(' ')}`.toLowerCase()
+    let score = 0
+    if (t.name.toLowerCase().startsWith(q)) score += 100
+    if (t.name.toLowerCase().includes(q)) score += 40
+    if (hay.includes(q)) score += 20
+    // subsequence bonus
+    if (isSubsequence(q, t.name.toLowerCase())) score += 10
+    if (score > 0) scored.push({ t, score })
+  }
+  return scored.sort((a, b) => b.score - a.score).map((s) => s.t)
+}
+
+function isSubsequence(needle, hay) {
+  let i = 0
+  for (const ch of hay) {
+    if (ch === needle[i]) i++
+    if (i === needle.length) return true
+  }
+  return false
+}
+
+function group(tools) {
+  const order = ['Convert', 'Format']
+  return order
+    .map((category) => ({ category, tools: tools.filter((t) => t.category === category) }))
+    .filter((g) => g.tools.length > 0)
+}

@@ -1,0 +1,12 @@
+# Normalize line endings to LF in the repo regardless of OS.
+# Git will check out as-is on *nix and convert on Windows per core.autocrlf.
+* text=auto eol=lf
+
+# Binary files — never normalize
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.xlsx binary
+*.xls binary

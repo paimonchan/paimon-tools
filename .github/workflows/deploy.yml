@@ -1,0 +1,64 @@
+# Builds the app and deploys it to GitHub Pages on every push to main.
+# Uses the official GitHub-provided actions, which are the recommended path
+# (no third-party deploy actions like peaceiris).
+#
+# One-time repo setup required (see README.md):
+#   Settings → Pages → Build and deployment → Source: GitHub Actions
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+# Grant the workflow permission to deploy to Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping queued runs
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        # SheetJS is pulled from its CDN tarball via package.json; this requires
+        # network access at install time, which the runner has.
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

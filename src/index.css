@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Warm honey on warm charcoal.
+ * Structural work is done with 1px hairline borders, not drop shadows.
+ * The honey accent is applied sparingly — active states and key actions only.
+ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-ink-950 text-ink-100 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Inter sits a little low; nudge it for visual balance with the heavy UI */
+  h1, h2, h3, h4 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Honey selection to match the accent */
+  ::selection {
+    @apply bg-honey-400/30 text-honey-50;
+  }
+
+  /* Scrollbars — thin, themed, only visible when needed */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.ink.600') transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-ink-600 border-2 border-solid border-ink-950;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-500;
+  }
+
+  /* Reset focus ring globally; we apply focus-visible rings per component */
+  *:focus {
+    outline: none;
+  }
+}
+
+@layer components {
+  /* Keyboard key affordance — used for shortcut hints throughout the UI */
+  .kbd {
+    @apply inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded
+           border border-ink-600 bg-ink-800 px-1 font-mono text-[10px]
+           font-medium text-ink-300;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* Hairline divider that adapts to context */
+  .hairline {
+    @apply border-ink-700/60;
+  }
+
+  /* The signature accent gradient, used only on the brand mark */
+  .accent-gradient {
+    background-image: linear-gradient(135deg, #eec35a 0%, #e7ac34 50%, #d9911e 100%);
+  }
+}
+
+@layer utilities {
+  /* Subtle dotted grid background for empty / canvas states */
+  .bg-dotgrid {
+    background-image: radial-gradient(circle, theme('colors.ink.600') 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  /* Hide scrollbar but keep scrolling — used in dense horizontal areas */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
