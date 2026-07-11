@@ -9,42 +9,61 @@
  * crawlable URL: /json-to-csv, /json-formatter, etc. The prerender script
  * generates a static HTML file at each of those paths, so deep links land on
  * fully-formed pages and the SPA just hydrates on top.
+ *
+ * Robustness note: the GitHub Pages subpath prefix (e.g. /paimon-tools) and the
+ * per-tool segment (e.g. /json-to-csv) can both be present, and trailing
+ * slashes are inconsistent across environments. Rather than guessing the base
+ * by string surgery, we strip any KNOWN tool segment and treat what remains as
+ * the stable base. This avoids path-stacking bugs when navigating tool→tool.
  */
 
 import { TOOL_SEO } from './seo'
+
+/** All known tool path segments, used to locate & strip them reliably. */
+const TOOL_PATHS = Object.values(TOOL_SEO).map((s) => s.path)
 
 /** Reverse lookup: path segment -> tool id. */
 const PATH_TO_ID = Object.fromEntries(
   Object.entries(TOOL_SEO).map(([id, seo]) => [seo.path, id])
 )
 
-/** Strip the GitHub Pages subpath prefix if present (dev = none, prod = /paimon-tools). */
-function normalizePath(pathname) {
-  // Match either "/paimon-tools/<tool>" (prod) or "/<tool>" (dev/preview).
-  // We rely on the known tool paths to detect the segment robustly.
-  const segments = pathname.split('/').filter(Boolean)
-  for (let i = segments.length - 1; i >= 0; i--) {
-    if (PATH_TO_ID[segments[i]]) {
-      return segments[i] // return the tool path segment
-    }
-  }
-  return '' // home
-}
-
-/** Read the active tool id from the current URL. */
+/**
+ * Detect the active tool from the URL by scanning path segments for a known
+ * tool path. Returns the tool id, or null at the home page.
+ */
 export function toolIdFromLocation() {
-  const seg = normalizePath(window.location.pathname)
-  return PATH_TO_ID[seg] || null
+  const segments = window.location.pathname.split('/').filter(Boolean)
+  for (const seg of segments) {
+    if (PATH_TO_ID[seg]) return PATH_TO_ID[seg]
+  }
+  return null
 }
 
-/** Push a history entry for a tool. No-op if the tool isn't routable. */
+/**
+ * Compute the stable base path: everything in the current URL EXCEPT the tool
+ * segment (and any trailing slash). Examples (prod subpath /paimon-tools):
+ *   /paimon-tools/json-to-csv/  ->  /paimon-tools
+ *   /paimon-tools/json-to-csv   ->  /paimon-tools
+ *   /json-to-csv/               ->  ''           (dev, no subpath)
+ *   /paimon-tools/              ->  /paimon-tools
+ *   /                           ->  ''
+ *
+ * This is the key to avoiding path-stacking: we strip the tool segment rather
+ * than naively trimming the last path component.
+ */
+function detectBase() {
+  const segments = window.location.pathname.split('/').filter(Boolean)
+  const withoutTool = segments.filter((s) => !PATH_TO_ID[s])
+  return withoutTool.length ? '/' + withoutTool.join('/') : ''
+}
+
+/** Push a history entry for a tool. No-op if already there. */
 export function pushTool(toolId) {
   const seo = TOOL_SEO[toolId]
   if (!seo) return
-  const current = normalizePath(window.location.pathname)
-  if (current === seo.path) return // already there
-  // Build the new URL relative to the current base (handles both dev & prod).
-  const base = window.location.pathname.replace(/\/[^/]*$/, '').replace(/\/+$/, '')
+  if (toolIdFromLocation() === toolId) return // already on this tool
+
+  const base = detectBase()
   const next = `${base}/${seo.path}`
   window.history.pushState({ toolId }, '', next)
 }
