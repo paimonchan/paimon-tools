@@ -108,7 +108,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
               No tools match “{query}”.
             </div>
           ) : (
-            grouped(results).map(({ category, tools }) => (
+            group(results).map(({ category, tools }) => (
               <div key={category} className="mb-1">
                 <div className="px-3 py-1.5 text-[10px] font-600 uppercase tracking-[0.14em] text-ink-500">
                   {category}
