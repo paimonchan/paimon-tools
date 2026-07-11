@@ -2,23 +2,128 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./og-image.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary SEO -->
+    <title>Paimon Tools — Free JSON ⇄ CSV ⇄ Excel Converter (Runs In Your Browser)</title>
     <meta
       name="description"
-      content="Paimon Tools — a suite of 100% client-side data conversion tools (JSON / CSV / Excel). Your data never leaves your browser."
+      content="Free, private, in-browser data converter: JSON to CSV, CSV to Excel, Excel to JSON, JSON formatter and minifier. No sign-up, no uploads — your data never leaves your device. Open source."
     />
+    <meta name="keywords" content="json to csv, csv to json, json to excel, excel to json, csv to excel, json formatter, json minifier, json beautifier, convert json, data converter, online json tools, privacy-first tools" />
+    <meta name="author" content="Paimon Tools" />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#131110" />
-    <title>Paimon Tools · local data converters</title>
+    <link rel="canonical" href="https://paimonchan.github.io/paimon-tools/" />
+
+    <!-- Open Graph — how the link renders when shared (Facebook, LinkedIn, Slack, Discord, Telegram) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Paimon Tools" />
+    <meta property="og:title" content="Paimon Tools — Convert JSON, CSV & Excel In Your Browser" />
+    <meta property="og:description" content="Free, private, in-browser data converter for JSON, CSV and Excel. No uploads, no sign-up — your data never leaves your device." />
+    <meta property="og:url" content="https://paimonchan.github.io/paimon-tools/" />
+    <meta property="og:image" content="https://paimonchan.github.io/paimon-tools/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Paimon Tools — Convert JSON, CSV & Excel In Your Browser" />
+    <meta name="twitter:description" content="Free, private, in-browser data converter. No uploads, no sign-up — your data never leaves your device." />
+    <meta name="twitter:image" content="https://paimonchan.github.io/paimon-tools/og-image.png" />
+    <meta name="twitter:image:alt" content="Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser" />
+
+    <!-- Performance: preconnect to font origin -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <!--
+      JSON-LD structured data. Google reads this from the raw HTML regardless
+      of client-side rendering, so it powers rich results / knowledge panels.
+      Schema: WebApplication + SoftwareApplication with proper categorization.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Paimon Tools",
+      "alternateName": "Paimon Data Converter",
+      "url": "https://paimonchan.github.io/paimon-tools/",
+      "description": "Free, private, in-browser data converter for JSON, CSV and Excel. Convert JSON to CSV, CSV to Excel, Excel to JSON, format and minify JSON. No uploads — your data never leaves your device.",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "Data Conversion",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires a modern web browser with JavaScript enabled.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "isAccessibleForFree": true,
+      "featureList": [
+        "JSON to CSV converter",
+        "CSV to JSON converter",
+        "JSON to Excel (.xlsx) converter",
+        "Excel to JSON converter",
+        "CSV to Excel converter",
+        "Excel to CSV converter",
+        "JSON formatter (pretty print)",
+        "JSON minifier",
+        "Strict and Lenient (JSON5) JSON parsing"
+      ],
+      "keywords": "json to csv, csv to json, json to excel, excel to json, json formatter, json minifier, data converter",
+      "author": { "@type": "Person", "name": "paimonchan" },
+      "publisher": { "@type": "Person", "name": "paimonchan" },
+      "inLanguage": "en"
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+
+    <!--
+      Fallback for crawlers/bots that don't execute JavaScript (Bing, some
+      social scrapers, accessibility readers). Provides keyword-rich,
+      crawlable content so the SPA's empty root doesn't look like a blank page.
+      Hidden from sighted users; visible to machines.
+    -->
+    <noscript>
+      <div style="max-width:680px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;color:#1a1a1a">
+        <h1>Paimon Tools — Free In-Browser Data Converter</h1>
+        <p>
+          Convert between <strong>JSON, CSV, and Excel</strong> entirely in your
+          browser. No backend, no uploads, no sign-up — your data never leaves
+          your device.
+        </p>
+        <h2>Available tools</h2>
+        <ul>
+          <li>JSON to CSV converter</li>
+          <li>CSV to JSON converter</li>
+          <li>JSON to Excel (.xlsx) converter</li>
+          <li>Excel to JSON converter</li>
+          <li>CSV to Excel converter</li>
+          <li>Excel to CSV converter</li>
+          <li>JSON formatter and beautifier (pretty print, 2/4 spaces or tab)</li>
+          <li>JSON minifier (compact, remove whitespace)</li>
+        </ul>
+        <p>
+          Supports strict (spec-compliant) and lenient (JSON5) parsing, so
+          single-quoted JSON, trailing commas, and comments are accepted too.
+        </p>
+        <p>
+          This is an open-source, privacy-first tool. Please enable JavaScript
+          to use it.
+        </p>
+      </div>
+    </noscript>
+
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>

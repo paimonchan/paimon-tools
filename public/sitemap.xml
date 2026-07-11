@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Single-page app, so one canonical URL. We set rich metadata (changefreq,
+  priority) to signal the page is an active, primary tool.
+
+  If per-tool deep links are added later (hash routes like #json-to-csv),
+  add an <url> entry for each so search engines index them individually.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://paimonchan.github.io/paimon-tools/</loc>
+    <lastmod>2026-07-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

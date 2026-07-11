@@ -1,0 +1,8 @@
+# robots.txt — allow all good-faith crawlers.
+# We want this tool to be discoverable, so nothing is disallowed.
+
+User-agent: *
+Allow: /
+
+# Point crawlers at the sitemap for faster, more complete indexing.
+Sitemap: https://paimonchan.github.io/paimon-tools/sitemap.xml

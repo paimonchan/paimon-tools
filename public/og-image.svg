@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d1a16"/>
+      <stop offset="1" stop-color="#0c0b09"/>
+    </linearGradient>
+    <linearGradient id="honey" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eec35a"/>
+      <stop offset="0.5" stop-color="#e7ac34"/>
+      <stop offset="1" stop-color="#d9911e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#e7ac34" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#e7ac34" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#2e2a24"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#dots)" opacity="0.6"/>
+  <ellipse cx="600" cy="315" rx="520" ry="320" fill="url(#glow)"/>
+
+  <!-- Brand mark: { } on honey tile -->
+  <g transform="translate(96, 96)">
+    <rect width="96" height="96" rx="24" fill="url(#honey)"/>
+    <g fill="none" stroke="#0c0b09" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" transform="translate(24,24)">
+      <path d="M12 3C4 3 1 6 1 13c0 5-1 7-4 9-1 1-1 2 0 3 3 2 4 4 4 9 0 7 3 10 11 10"/>
+      <path d="M36 3c8 0 11 3 11 10 0 5 1 7 4 9 1 1 1 2 0 3-3 2-4 4-4 9 0 7-3 10-11 10"/>
+    </g>
+  </g>
+  <text x="216" y="120" font-family="'Segoe UI', Helvetica, sans-serif" font-size="34" font-weight="700" fill="#f7f5f1">Paimon Tools</text>
+  <text x="216" y="158" font-family="'Segoe UI', Helvetica, sans-serif" font-size="22" fill="#8a8074">local data converters</text>
+
+  <!-- Headline -->
+  <text x="96" y="330" font-family="'Segoe UI', Helvetica, sans-serif" font-size="76" font-weight="700" fill="#f7f5f1" letter-spacing="-2">Convert data,</text>
+  <text x="96" y="418" font-family="'Segoe UI', Helvetica, sans-serif" font-size="76" font-weight="700" fill="#eec35a" letter-spacing="-2">in your browser.</text>
+
+  <!-- Subhead -->
+  <text x="96" y="478" font-family="'Segoe UI', Helvetica, sans-serif" font-size="26" fill="#b8ad9c">JSON · CSV · Excel — 100% client-side, zero uploads.</text>
+
+  <!-- Feature pills -->
+  <g font-family="'Segoe UI', Helvetica, sans-serif" font-size="18" font-weight="600">
+    <g transform="translate(96, 520)">
+      <rect width="180" height="44" rx="22" fill="#2e2a24" stroke="#423d35"/>
+      <text x="90" y="29" text-anchor="middle" fill="#eec35a">No backend</text>
+    </g>
+    <g transform="translate(292, 520)">
+      <rect width="220" height="44" rx="22" fill="#2e2a24" stroke="#423d35"/>
+      <text x="110" y="29" text-anchor="middle" fill="#eec35a">Private by design</text>
+    </g>
+    <g transform="translate(528, 520)">
+      <rect width="200" height="44" rx="22" fill="#2e2a24" stroke="#423d35"/>
+      <text x="100" y="29" text-anchor="middle" fill="#eec35a">Free &amp; open source</text>
+    </g>
+  </g>
+
+  <!-- URL footer -->
+  <text x="1104" y="600" text-anchor="end" font-family="'Segoe UI', Helvetica, sans-serif" font-size="20" fill="#5f574d">paimonchan.github.io/paimon-tools</text>
+</svg>
