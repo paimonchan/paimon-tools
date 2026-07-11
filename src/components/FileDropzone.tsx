@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { FileUp, CheckCircle2 } from 'lucide-react'
 import { readFileAsArrayBuffer, readFileAsText } from '../lib/files'
-import { useToast } from '../context/ToastContext'
+import { useToast } from '../stores/toast-store'
 
 interface FileValue {
   value: string | ArrayBuffer

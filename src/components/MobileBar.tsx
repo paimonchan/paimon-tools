@@ -1,13 +1,19 @@
-import { Command, Menu, Moon, Sun } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
-import BrandMark from './BrandMark'
-
 /**
  * MobileBar — top bar shown only on small screens. Holds the menu trigger,
  * brand, command trigger, and theme toggle. Kept dense (h-12) to maximize
  * working space on mobile.
  */
-export default function MobileBar({ onMenuClick, onOpenPalette }) {
+
+import { Command, Menu, Moon, Sun } from 'lucide-react'
+import { useTheme } from '../stores/theme-store'
+import BrandMark from './BrandMark'
+
+interface MobileBarProps {
+  onMenuClick: () => void
+  onOpenPalette: () => void
+}
+
+export default function MobileBar({ onMenuClick, onOpenPalette }: MobileBarProps) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
 

@@ -5,20 +5,15 @@ import { useEffect, useState } from 'react'
  *
  * Used to survive reloads: the user's active tool, input text, theme, etc.
  * Everything stays local; nothing is ever transmitted.
- *
- * @template T
- * @param {string} key        storage key (namespaced under the app automatically)
- * @param {T}      initial    fallback when nothing is stored / on parse error
- * @returns {[T, (v: T | ((prev: T) => T)) => void]}
  */
-export function usePersistentState(key, initial) {
+export function usePersistentState<T>(key: string, initial: T): [T, (v: T | ((prev: T) => T)) => void] {
   const namespaced = `paimon.${key}`
-  const [value, setValue] = useState(() => {
+  const [value, setValue] = useState<T>(() => {
     if (typeof window === 'undefined') return initial
     try {
       const raw = window.localStorage.getItem(namespaced)
       if (raw == null) return initial
-      return JSON.parse(raw)
+      return JSON.parse(raw) as T
     } catch {
       return initial
     }

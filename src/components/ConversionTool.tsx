@@ -1,30 +1,3 @@
-// @ts-nocheck — will be fully decomposed and typed in Phase 2
-import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  AlertCircle,
-  ArrowLeftRight,
-  CheckCircle2,
-  Download,
-  Eraser,
-  FileCheck2,
-  Sparkles,
-} from 'lucide-react'
-
-import CopyButton from './CopyButton'
-import FileDropzone from './FileDropzone'
-import StatusBar from './StatusBar'
-import { useResizableSplit } from './Panes'
-import { useToast } from '../context/ToastContext'
-import { usePersistentState } from '../hooks/usePersistentState'
-import { TOOLS_BY_ID } from '../engine/registry'
-import { downloadArrayBuffer } from '../lib/files'
-
-const MIME = {
-  json: 'application/json',
-  csv: 'text/csv',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-}
-
 /**
  * ConversionTool — the workspace powering every tool in the registry.
  *
@@ -39,36 +12,119 @@ const MIME = {
  *
  * The component stays dumb about WHAT it converts; that lives in the registry.
  */
-export default function ConversionTool({ toolId, onSwap, registerActions }) {
-  const tool = TOOLS_BY_ID[toolId]
+
+import { useEffect, useRef, useState } from 'react'
+import { Download, Eraser, Sparkles } from 'lucide-react'
+
+import CopyButton from './CopyButton'
+import CodeArea from './CodeArea'
+import EmptyState from './EmptyState'
+import ErrorState from './ErrorState'
+import FileDropzone from './FileDropzone'
+import IndentPicker from './IndentPicker'
+import LenientToggle from './LenientToggle'
+import SuccessFileState from './SuccessFileState'
+import StatusBar from './StatusBar'
+import ToolHeader from './ToolHeader'
+import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
+import { useToast } from '../stores/toast-store'
+import { usePersistentState } from '../hooks/usePersistentState'
+import { TOOLS_BY_ID, type ToolDefinition, type ToolId } from '../engine/registry'
+import { downloadArrayBuffer } from '../lib/files'
+import { makeFilename } from '../lib/makeFilename'
+import type { Result } from '../engine/result'
+
+// ── Types ─────────────────────────────────────────────
+
+interface FileValue {
+  value: ArrayBuffer | string
+  name: string
+}
+
+type Status = 'empty' | 'error' | 'ok' | 'idle'
+
+// Mirror the shape of the actions object exposed upward for header buttons.
+
+/** Type representing the set of available toolbar actions exposed by the workspace. */
+export interface ToolActions {
+  copy: () => void
+  download: () => void
+  swap: () => void
+  clear: () => void
+  sample: () => void
+  canCopy: boolean
+  canDownload: boolean
+  canSwap: boolean
+  canSample: boolean
+}
+
+interface ConversionToolProps {
+  toolId: ToolId
+  onSwap: (id: ToolId) => void
+  registerActions: (actions: ToolActions) => void
+}
+
+// ── MIME map ──────────────────────────────────────────
+
+const MIME: Record<string, string> = {
+  json: 'application/json',
+  csv: 'text/csv',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
+// ── Helpers ───────────────────────────────────────────
+
+function deriveStatus(
+  currentValue: unknown,
+  result: Result<unknown> | null,
+  error: string | null,
+): Status {
+  if (currentValue == null || currentValue === '') return 'empty'
+  if (error) return 'error'
+  if (result?.ok) return 'ok'
+  return 'idle'
+}
+
+// ── Component ─────────────────────────────────────────
+
+export default function ConversionTool({ toolId, onSwap, registerActions }: ConversionToolProps) {
+  const tool: ToolDefinition = TOOLS_BY_ID[toolId]
   const toast = useToast()
 
   // ---- persisted state per tool -----------------------------------------
-  // We key storage by tool id so switching tools remembers each one's work.
-  const [storedInputs, setStoredInputs] = usePersistentState('inputs', {})
-  const [storedIndents, setStoredIndents] = usePersistentState('indents', {})
-  const [storedSplits, setStoredSplits] = usePersistentState('splits', {})
-  const [storedLenient, setStoredLenient] = usePersistentState('lenient', {})
+  const [storedInputs, setStoredInputs] = usePersistentState<Record<string, string>>('inputs', {})
+  const [storedIndents, setStoredIndents] = usePersistentState<Record<string, number | 'tab'>>(
+    'indents',
+    {},
+  )
+  const [storedSplits, setStoredSplits] = usePersistentState<Record<string, number>>('splits', {})
+  const [storedLenient, setStoredLenient] = usePersistentState<Record<string, boolean>>(
+    'lenient',
+    {},
+  )
 
   const inputText = storedInputs[toolId] ?? ''
   const indent = storedIndents[toolId] ?? 2
   const splitRatio = storedSplits[toolId] ?? 0.5
   const lenient = storedLenient[toolId] ?? false
 
-  const setInputText = (v) => setStoredInputs((s) => ({ ...s, [toolId]: v }))
-  const setIndent = (v) => setStoredIndents((s) => ({ ...s, [toolId]: v }))
-  const setLenient = (v) => setStoredLenient((s) => ({ ...s, [toolId]: v }))
+  const setInputText = (v: string) =>
+    setStoredInputs((s: Record<string, string>) => ({ ...s, [toolId]: v }))
+  const setIndent = (v: number | 'tab') =>
+    setStoredIndents((s: Record<string, number | 'tab'>) => ({ ...s, [toolId]: v }))
+  const setLenient = (v: boolean) =>
+    setStoredLenient((s: Record<string, boolean>) => ({ ...s, [toolId]: v }))
 
   const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(splitRatio)
   useEffect(() => {
-    setStoredSplits((s) => ({ ...s, [toolId]: ratio }))
+    setStoredSplits((s: Record<string, number>) => ({ ...s, [toolId]: ratio }))
   }, [ratio, toolId, setStoredSplits])
 
   // ---- file input state -------------------------------------------------
-  const [fileValue, setFileValue] = useState(null) // { value, name } | null
-  const [result, setResult] = useState(null)
-  const [durationMs, setDurationMs] = useState(null)
-  const outputRef = useRef(null)
+  const [fileValue, setFileValue] = useState<FileValue | null>(null)
+  const [result, setResult] = useState<Result<unknown> | null>(null)
+  const [durationMs, setDurationMs] = useState<number | null>(null)
+  const outputRef = useRef<HTMLDivElement | null>(null)
 
   const isFileInput = tool.input.type === 'file'
   const isFileOutput = tool.output.type === 'file'
@@ -89,8 +145,10 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
       setDurationMs(null)
       return
     }
-    const opts = { indent, lenient: tool.acceptsLenient ? lenient : false }
-    // Files convert immediately; text debounces.
+    const opts: Record<string, unknown> = {
+      indent,
+      lenient: tool.acceptsLenient ? lenient : false,
+    }
     if (isFileInput) {
       const t0 = performance.now()
       setResult(tool.convert(currentValue, opts))
@@ -106,14 +164,11 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
   }, [currentValue, tool, indent, lenient, isFileInput])
 
   const ok = result?.ok
-  const error = ok === false ? result.error : null
-  const outputText = ok && !isFileOutput ? result.value : ''
-  const outputBlob = ok && isFileOutput ? result.value : null
+  const error = ok === false ? (result as { ok: false; error: string }).error : null
+  const outputText = ok && !isFileOutput ? String((result as { ok: true; value: unknown }).value) : ''
+  const outputBlob = ok && isFileOutput ? (result as { ok: true; value: { arraybuffer: ArrayBuffer } }).value : null
 
-  const status = !currentValue || currentValue === '' ? 'empty'
-    : error ? 'error'
-    : ok ? 'ok'
-    : 'idle'
+  const status = deriveStatus(currentValue, result, error)
 
   // ---- actions ----------------------------------------------------------
   function handleClear() {
@@ -128,7 +183,7 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
       toast.push('Samples are unavailable for file inputs', { variant: 'info' })
       return
     }
-    setInputText(tool.sample)
+    setInputText(tool.sample ?? '')
     toast.push('Loaded sample data', { variant: 'success' })
   }
 
@@ -140,7 +195,11 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
   function handleDownload() {
     const filename = makeFilename(tool, fileValue?.name)
     if (outputBlob) {
-      downloadArrayBuffer({ arraybuffer: outputBlob.arraybuffer, filename, mime: MIME.xlsx })
+      downloadArrayBuffer({
+        arraybuffer: outputBlob.arraybuffer,
+        filename,
+        mime: MIME.xlsx,
+      })
     }
     toast.push(`Downloaded ${filename}`, { variant: 'success' })
   }
@@ -149,22 +208,31 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
     if (!tool.swap) return
     const partner = TOOLS_BY_ID[tool.swap]
     if (outputText && partner.input.type === 'text') {
-      setStoredInputs((s) => ({ ...s, [tool.swap]: outputText }))
+      setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.swap]: outputText }))
     }
-    onSwap(tool.swap)
+    onSwap(tool.swap as ToolId)
     toast.push(`Switched to ${partner.name}`, { variant: 'info' })
   }
 
   // ---- keyboard shortcuts ----------------------------------------------
   useEffect(() => {
-    function onKey(e) {
+    function onKey(e: KeyboardEvent) {
       const mod = e.metaKey || e.ctrlKey
       if (!mod) return
       const key = e.key.toLowerCase()
-      if (key === 's' && !e.shiftKey) { e.preventDefault(); handleDownload() }
-      else if (key === 's' && e.shiftKey) { e.preventDefault(); handleSwap() }
-      else if (key === 'c' && e.shiftKey) { e.preventDefault(); handleCopy() }
-      else if (e.key === 'Backspace' && e.shiftKey) { e.preventDefault(); handleClear() }
+      if (key === 's' && !e.shiftKey) {
+        e.preventDefault()
+        handleDownload()
+      } else if (key === 's' && e.shiftKey) {
+        e.preventDefault()
+        handleSwap()
+      } else if (key === 'c' && e.shiftKey) {
+        e.preventDefault()
+        handleCopy()
+      } else if (e.key === 'Backspace' && e.shiftKey) {
+        e.preventDefault()
+        handleClear()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -172,7 +240,7 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
 
   // Expose actions upward so the app-level header buttons can trigger them.
   useEffect(() => {
-    registerActions?.({
+    registerActions({
       copy: handleCopy,
       download: handleDownload,
       swap: handleSwap,
@@ -188,10 +256,9 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
   // ---- render -----------------------------------------------------------
   return (
     <div className="flex h-full flex-col">
-      {/* Tool header */}
       <ToolHeader tool={tool} onSwap={handleSwap} />
 
-      {/* Options row — shown when the tool has indent or lenient options */}
+      {/* Options row */}
       {(tool.hasOptions || tool.acceptsLenient) && (
         <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
           {tool.hasOptions && (
@@ -209,8 +276,11 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
         </div>
       )}
 
-      {/* Split workspace — stacks vertically on mobile, side-by-side on md+ */}
-      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-0">
+      {/* Split workspace */}
+      <div
+        ref={containerRef}
+        className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-0"
+      >
         {/* Input pane */}
         <Pane
           ratio={ratio}
@@ -229,10 +299,10 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
         >
           {isFileInput ? (
             <FileDropzone
-              accept={tool.input.accept}
+              accept={tool.input.accept ?? ''}
               readMode={tool.id.includes('excel') ? 'arraybuffer' : 'text'}
               onFile={setFileValue}
-              currentName={fileValue?.name}
+              currentName={fileValue?.name ?? undefined}
             />
           ) : (
             <CodeArea
@@ -243,7 +313,7 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
           )}
         </Pane>
 
-        {/* Resize handle — desktop only (horizontal split). Hidden on mobile where panes stack vertically. */}
+        {/* Resize handle — desktop only */}
         <div className="hidden md:flex">
           <ResizeHandle onDragStart={onDragStart} onDoubleClick={() => setRatio(0.5)} />
         </div>
@@ -266,7 +336,10 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
             <ErrorState message={error} />
           ) : ok ? (
             isFileOutput ? (
-              <SuccessFileState filename={makeFilename(tool, fileValue?.name)} onDownload={handleDownload} />
+              <SuccessFileState
+                filename={makeFilename(tool, fileValue?.name)}
+                onDownload={handleDownload}
+              />
             ) : (
               <CodeArea value={outputText} readOnly />
             )
@@ -286,206 +359,4 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
       />
     </div>
   )
-}
-
-/* --------------------------------------------------------------------- */
-/* Sub-components                                                         */
-/* --------------------------------------------------------------------- */
-
-function ToolHeader({ tool, onSwap }) {
-  const Icon = tool.icon
-  return (
-    <div className="mb-4 flex items-start justify-between gap-4">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-ink-700 bg-ink-800/60">
-          <Icon className="h-4 w-4 text-honey-300" />
-        </div>
-        <div>
-          <h1 className="font-display text-lg font-600 text-ink-50">{tool.name}</h1>
-          <p className="mt-0.5 max-w-2xl text-[13px] text-ink-400">{tool.description}</p>
-        </div>
-      </div>
-      {tool.swap && (
-        <button
-          onClick={onSwap}
-          className="group flex shrink-0 items-center gap-2 rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-1.5 text-xs font-500 text-ink-200 transition-colors hover:border-honey-500/50 hover:text-honey-200"
-          title="Swap direction (⌘⇧S)"
-        >
-          <ArrowLeftRight className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
-          <span className="hidden sm:inline">Swap</span>
-          <span className="kbd hidden sm:inline">⌘⇧S</span>
-        </button>
-      )}
-    </div>
-  )
-}
-
-function Pane({ ratio, side, label, actions, children }) {
-  return (
-    <div
-      // Mobile: flex-1 makes stacked panes share height evenly (flexBasis ignored in column
-      // direction because we set it via the grow/shrink, not basis). Desktop: flexBasis sets the
-      // horizontal split ratio from the resize handle.
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-ink-800 bg-ink-900/40 md:flex-initial"
-      style={{ flexBasis: `${ratio * 100}%` }}
-    >
-      <div className="flex items-center justify-between gap-2 border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
-        <span className="text-[10px] font-600 uppercase tracking-[0.14em] text-ink-400">{label}</span>
-        <div className="flex items-center gap-1">{actions}</div>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
-    </div>
-  )
-}
-
-function PaneAction({ onClick, icon: Icon, label }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-500 text-ink-300 transition-colors hover:bg-ink-700 hover:text-ink-50"
-    >
-      <Icon className="h-3 w-3" />
-      {label}
-    </button>
-  )
-}
-
-function ResizeHandle({ onDragStart, onDoubleClick }) {
-  return (
-    <div
-      onMouseDown={onDragStart}
-      onTouchStart={onDragStart}
-      onDoubleClick={onDoubleClick}
-      role="separator"
-      aria-orientation="vertical"
-      tabIndex={0}
-      className="group relative z-10 flex w-3 shrink-0 cursor-col-resize items-center justify-center"
-      title="Drag to resize · double-click to reset"
-    >
-      <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ink-800 transition-colors group-hover:bg-honey-500/60" />
-      <div className="relative flex h-8 w-1 flex-col items-center justify-center gap-0.5 rounded-full bg-ink-700 transition-colors group-hover:bg-honey-500">
-        <span className="h-0.5 w-0.5 rounded-full bg-ink-950" />
-        <span className="h-0.5 w-0.5 rounded-full bg-ink-950" />
-      </div>
-    </div>
-  )
-}
-
-function CodeArea({ value, onChange, placeholder, readOnly }) {
-  return (
-    <textarea
-      value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      spellCheck={false}
-      className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
-    />
-  )
-}
-
-function EmptyState({ isFileInput }) {
-  return (
-    <div className="flex h-full min-h-[20rem] flex-col items-center justify-center gap-2 bg-dotgrid px-6 text-center">
-      <div className="text-sm text-ink-400">
-        {isFileInput ? 'Drop a file to begin' : 'Paste or type to begin'}
-      </div>
-      <div className="text-xs text-ink-600">Output appears here in real time</div>
-    </div>
-  )
-}
-
-function ErrorState({ message }) {
-  return (
-    <div className="flex h-full min-h-[20rem] flex-col items-center justify-center gap-3 px-6 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
-        <AlertCircle className="h-5 w-5 text-red-400" />
-      </div>
-      <div className="text-sm font-500 text-red-300">Could not convert</div>
-      <code className="max-w-md rounded-md border border-red-500/20 bg-red-500/5 px-3 py-2 font-mono text-xs text-red-300/90">
-        {message}
-      </code>
-    </div>
-  )
-}
-
-function SuccessFileState({ filename, onDownload }) {
-  return (
-    <div className="flex h-full min-h-[20rem] flex-col items-center justify-center gap-3 px-6 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10">
-        <FileCheck2 className="h-6 w-6 text-emerald-400" />
-      </div>
-      <div className="text-sm font-500 text-emerald-300">Workbook ready</div>
-      <code className="font-mono text-xs text-emerald-400/80">{filename}</code>
-      <button
-        onClick={onDownload}
-        className="mt-1 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-500 text-emerald-200 transition-colors hover:bg-emerald-500/20"
-      >
-        <Download className="h-3.5 w-3.5" />
-        Download
-      </button>
-    </div>
-  )
-}
-
-function IndentPicker({ value, onChange }) {
-  const opts = [
-    { v: 2, label: '2 spaces' },
-    { v: 4, label: '4 spaces' },
-    { v: 'tab', label: 'Tab' },
-  ]
-  return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-ink-700 bg-ink-800/50 p-0.5">
-      {opts.map((o) => (
-        <button
-          key={String(o.v)}
-          onClick={() => onChange(o.v)}
-          className={[
-            'rounded-md px-2.5 py-1 text-[11px] font-500 transition-colors',
-            value === o.v ? 'bg-honey-400/15 text-honey-200' : 'text-ink-400 hover:text-ink-200',
-          ].join(' ')}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-/**
- * LenientToggle — switches the JSON parser between strict (spec) and lenient
- * (JSON5: single quotes, trailing commas, comments, unquoted keys). Lenient
- * is opt-in so validation stays strict by default.
- */
-function LenientToggle({ value, onChange }) {
-  return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-ink-700 bg-ink-800/50 p-0.5">
-      <button
-        onClick={() => onChange(false)}
-        title="Spec-compliant JSON.parse"
-        className={[
-          'rounded-md px-2.5 py-1 text-[11px] font-500 transition-colors',
-          !value ? 'bg-honey-400/15 text-honey-200' : 'text-ink-400 hover:text-ink-200',
-        ].join(' ')}
-      >
-        Strict
-      </button>
-      <button
-        onClick={() => onChange(true)}
-        title="JSON5: single quotes, trailing commas, comments, unquoted keys"
-        className={[
-          'rounded-md px-2.5 py-1 text-[11px] font-500 transition-colors',
-          value ? 'bg-honey-400/15 text-honey-200' : 'text-ink-400 hover:text-ink-200',
-        ].join(' ')}
-      >
-        Lenient
-      </button>
-    </div>
-  )
-}
-
-function makeFilename(tool, sourceName) {
-  const base = (sourceName || 'converted').replace(/\.[^.]+$/, '') || 'converted'
-  const ext = tool.output.ext || (tool.output.type === 'file' ? 'xlsx' : 'txt')
-  return `${base}.${ext}`
 }

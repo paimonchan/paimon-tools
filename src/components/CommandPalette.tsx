@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { CornerDownLeft, Search } from 'lucide-react'
-import { TOOLS } from '../engine/registry'
-
 /**
  * CommandPalette — ⌘K tool switcher with keyboard-first navigation.
  *
@@ -13,18 +9,29 @@ import { TOOLS } from '../engine/registry'
  * Filtering is a lightweight subsequence + keyword match (no deps). Results
  * keep category groupings so the list reads naturally.
  */
-export default function CommandPalette({ open, onClose, onSelect, activeId }) {
+
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { CornerDownLeft, Search } from 'lucide-react'
+import { TOOLS, type ToolDefinition, type ToolId } from '../engine/registry'
+
+interface CommandPaletteProps {
+  open: boolean
+  onClose: () => void
+  onSelect: (id: ToolId) => void
+  activeId: ToolId
+}
+
+export default function CommandPalette({ open, onClose, onSelect, activeId }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const inputRef = useRef(null)
-  const listRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
 
   // Reset query + selection whenever the palette opens.
   useEffect(() => {
     if (open) {
       setQuery('')
       setActive(0)
-      // focus next tick so the input is mounted
       requestAnimationFrame(() => inputRef.current?.focus())
     }
   }, [open])
@@ -32,15 +39,13 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
   const results = useMemo(() => filterTools(query), [query])
 
   // Clamp the active index into the valid range whenever results change.
-  // Without this, typing narrows the list while `active` stays put, leaving it
-  // pointing past the end — Enter would then select nothing.
   useEffect(() => {
     setActive((i) => (results.length === 0 ? 0 : Math.min(i, results.length - 1)))
   }, [results])
 
   useEffect(() => {
     if (!open) return
-    function onKey(e) {
+    function onKey(e: globalThis.KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault()
         onClose()
@@ -105,7 +110,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
         <div ref={listRef} className="max-h-[min(50vh,22rem)] overflow-y-auto p-1.5">
           {results.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-ink-500">
-              No tools match “{query}”.
+              No tools match &ldquo;{query}&rdquo;.
             </div>
           ) : (
             group(results).map(({ category, tools }) => (
@@ -127,17 +132,26 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
                         onSelect(tool.id)
                         onClose()
                       }}
-                      className={[
-                        'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors',
-                        isSelected ? 'bg-honey-400/10 text-honey-100' : 'text-ink-200 hover:bg-ink-800',
-                      ].join(' ')}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                        isSelected
+                          ? 'bg-honey-400/10 text-honey-100'
+                          : 'text-ink-200 hover:bg-ink-800'
+                      }`}
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-honey-300' : 'text-ink-400'}`} />
+                      <Icon
+                        className={`h-4 w-4 shrink-0 ${
+                          isSelected ? 'text-honey-300' : 'text-ink-400'
+                        }`}
+                      />
                       <span className="flex-1">
                         <span className="font-500">{tool.name}</span>
                         <span className="ml-2 text-xs text-ink-500">{tool.description}</span>
                       </span>
-                      {isActiveTool && <span className="text-[10px] uppercase tracking-wide text-ink-500">current</span>}
+                      {isActiveTool && (
+                        <span className="text-[10px] uppercase tracking-wide text-ink-500">
+                          current
+                        </span>
+                      )}
                       {isSelected && <CornerDownLeft className="h-3.5 w-3.5 text-ink-500" />}
                     </button>
                   )
@@ -150,8 +164,13 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-ink-800 px-4 py-2 text-[11px] text-ink-500">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1"><span className="kbd">↑</span><span className="kbd">↓</span> navigate</span>
-            <span className="flex items-center gap-1"><span className="kbd">↵</span> select</span>
+            <span className="flex items-center gap-1">
+              <span className="kbd">↑</span>
+              <span className="kbd">↓</span> navigate
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="kbd">↵</span> select
+            </span>
           </div>
           <span className="flex items-center gap-1 text-emerald-500/70">100% local</span>
         </div>
@@ -161,24 +180,23 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }) {
 }
 
 /** Subsequence + keyword match, scored so the best match floats up. */
-function filterTools(query) {
+function filterTools(query: string): ToolDefinition[] {
   const q = query.trim().toLowerCase()
   if (!q) return TOOLS
-  const scored = []
+  const scored: { t: ToolDefinition; score: number }[] = []
   for (const t of TOOLS) {
     const hay = `${t.name} ${t.category} ${(t.keywords || []).join(' ')}`.toLowerCase()
     let score = 0
     if (t.name.toLowerCase().startsWith(q)) score += 100
     if (t.name.toLowerCase().includes(q)) score += 40
     if (hay.includes(q)) score += 20
-    // subsequence bonus
     if (isSubsequence(q, t.name.toLowerCase())) score += 10
     if (score > 0) scored.push({ t, score })
   }
   return scored.sort((a, b) => b.score - a.score).map((s) => s.t)
 }
 
-function isSubsequence(needle, hay) {
+function isSubsequence(needle: string, hay: string): boolean {
   let i = 0
   for (const ch of hay) {
     if (ch === needle[i]) i++
@@ -187,7 +205,7 @@ function isSubsequence(needle, hay) {
   return false
 }
 
-function group(tools) {
+function group(tools: ToolDefinition[]): { category: string; tools: ToolDefinition[] }[] {
   const order = ['Convert', 'Format']
   return order
     .map((category) => ({ category, tools: tools.filter((t) => t.category === category) }))

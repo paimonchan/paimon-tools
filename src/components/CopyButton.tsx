@@ -1,11 +1,18 @@
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 
+interface CopyButtonProps {
+  value: string
+  onCopied?: () => void
+  bare?: boolean
+  disabled?: boolean
+}
+
 /**
  * CopyButton — copies `value` to the clipboard and shows a transient check.
  * Renders as a bare "pane action" by default to fit the workspace chrome.
  */
-export default function CopyButton({ value, onCopied, bare = false, disabled }) {
+export default function CopyButton({ value, onCopied, bare = false, disabled }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
   async function copy() {
