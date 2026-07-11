@@ -210,8 +210,8 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
         </div>
       )}
 
-      {/* Split workspace */}
-      <div ref={containerRef} className="flex min-h-0 flex-1 gap-0">
+      {/* Split workspace — stacks vertically on mobile, side-by-side on md+ */}
+      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-0">
         {/* Input pane */}
         <Pane
           ratio={ratio}
@@ -244,8 +244,10 @@ export default function ConversionTool({ toolId, onSwap, registerActions }) {
           )}
         </Pane>
 
-        {/* Resize handle */}
-        <ResizeHandle onDragStart={onDragStart} onDoubleClick={() => setRatio(0.5)} />
+        {/* Resize handle — desktop only (horizontal split). Hidden on mobile where panes stack vertically. */}
+        <div className="hidden md:flex">
+          <ResizeHandle onDragStart={onDragStart} onDoubleClick={() => setRatio(0.5)} />
+        </div>
 
         {/* Output pane */}
         <Pane
@@ -322,7 +324,10 @@ function ToolHeader({ tool, onSwap }) {
 function Pane({ ratio, side, label, actions, children }) {
   return (
     <div
-      className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-ink-800 bg-ink-900/40"
+      // Mobile: flex-1 makes stacked panes share height evenly (flexBasis ignored in column
+      // direction because we set it via the grow/shrink, not basis). Desktop: flexBasis sets the
+      // horizontal split ratio from the resize handle.
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-ink-800 bg-ink-900/40 md:flex-initial"
       style={{ flexBasis: `${ratio * 100}%` }}
     >
       <div className="flex items-center justify-between gap-2 border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
