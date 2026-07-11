@@ -6,7 +6,7 @@
   "description": "100% client-side data conversion tools. Your data never leaves the browser.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

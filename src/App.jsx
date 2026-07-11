@@ -8,13 +8,40 @@ import MobileBar from './components/MobileBar'
 import CommandPalette from './components/CommandPalette'
 import ConversionTool from './components/ConversionTool'
 import { TOOLS } from './lib/tools'
+import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 
 function Shell() {
   const { theme, toggleTheme } = useTheme()
-  const [activeId, setActiveId] = usePersistentState('activeTool', TOOLS[0].id)
+
+  // On first load, prefer the URL (deep link) over the persisted tool so a
+  // direct visit to /json-to-csv opens that tool. Falls back to the last-used
+  // tool, then the first tool.
+  const [activeId, setActiveId] = useState(() => {
+    const fromUrl = toolIdFromLocation()
+    return fromUrl || TOOLS[0].id
+  })
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const actionsRef = useRef({})
+
+  // Selecting a tool from the UI: update state, push a URL entry, sync the tab title.
+  const selectTool = (id) => {
+    setActiveId(id)
+    pushTool(id)
+    syncDocumentTitle(id)
+  }
+
+  // Keep the URL + tab title in sync whenever the active tool changes, and
+  // handle browser back/forward.
+  useEffect(() => {
+    syncDocumentTitle(activeId)
+    const onPop = () => {
+      const fromUrl = toolIdFromLocation()
+      if (fromUrl) setActiveId(fromUrl)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [activeId])
 
   // Global ⌘K to open the command palette.
   useEffect(() => {
@@ -34,7 +61,7 @@ function Shell() {
     <div className="flex h-screen overflow-hidden bg-ink-950 text-ink-100">
       <Sidebar
         activeId={activeId}
-        onSelect={setActiveId}
+        onSelect={selectTool}
         onOpenPalette={() => setPaletteOpen(true)}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -71,7 +98,7 @@ function Shell() {
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
           <ConversionTool
             toolId={activeId}
-            onSwap={setActiveId}
+            onSwap={selectTool}
             registerActions={registerActions}
           />
         </main>
@@ -80,7 +107,7 @@ function Shell() {
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        onSelect={setActiveId}
+        onSelect={selectTool}
         activeId={activeId}
       />
     </div>

@@ -37,6 +37,7 @@ import {
   xlsxToCsv,
   xlsxToJson,
 } from './converters'
+import { TOOL_SEO } from './seo'
 
 export const CATEGORIES = ['Convert', 'Format']
 
