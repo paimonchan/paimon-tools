@@ -13,11 +13,12 @@
 [![Live site](https://img.shields.io/badge/live-paimonchan.github.io%2Fpaimon--tools-d9911e?style=flat-square&logo=github&logoColor=white)](https://paimonchan.github.io/paimon-tools/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-423d35?style=flat-square)](LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-eec35a?style=flat-square)](#contributing)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6-646cff?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
-[![Tailwind](https://img.shields.io/badge/Tailwind-3-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Zustand](https://img.shields.io/badge/Zustand-5-443e38?style=flat-square)](https://github.com/pmndrs/zustand)
+|[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+|[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+|[![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+|[![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+|[![Zustand](https://img.shields.io/badge/Zustand-5-443e38?style=flat-square)](https://github.com/pmndrs/zustand)
+|[![CI/CD](https://img.shields.io/github/actions/workflow/status/paimonchan/paimon-tools/deploy.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=deploy)](https://github.com/paimonchan/paimon-tools/actions)|
 
 </div>
 
@@ -55,6 +56,8 @@ locally and discarded when you close the tab.
 - **Dark & light themes** — defaults to dark
 - **Drag & drop** file uploads
 - **Sample data** baked into every tool — try it before you trust it
+- **Optimized bundles** — 4 code-split chunks, SheetJS (487KB) loaded on demand
+- **SEO-ready** — JSON-LD structured data per page (WebApplication + BreadcrumbList)
 - **Fully typed** — TypeScript throughout, zero `any`
 - **Zustand stores** — lightweight state management, no context boilerplate
 
@@ -138,13 +141,16 @@ all keyboard shortcuts work without changes.
 
 ## Built with
 
-- **[TypeScript](https://www.typescriptlang.org/)** — fully typed, zero `@ts-nocheck`
-- **[React](https://react.dev/)** + **[Vite](https://vite.dev/)** — UI & build
-- **[Zustand](https://github.com/pmndrs/zustand)** — lightweight state management
-- **[Tailwind CSS](https://tailwindcss.com/)** — styling
+- **[TypeScript 7](https://www.typescriptlang.org/)** — fully typed, zero `@ts-nocheck`
+- **[React 19](https://react.dev/)** — UI
+- **[Vite 8](https://vite.dev/)** (Rolldown) — ~1s builds
+- **[Zustand 5](https://github.com/pmndrs/zustand)** — lightweight state management
+- **[Tailwind CSS 4](https://tailwindcss.com/)** — `@theme` tokens, `@import` syntax
 - **[PapaParse](https://www.papaparse.com/)** — CSV parsing
-- **[SheetJS](https://docs.sheetjs.com/)** — Excel read/write
+- **[SheetJS](https://docs.sheetjs.com/)** — Excel read/write (code-split, 487KB standalone chunk)
 - **[JSON5](https://json5.org/)** — lenient JSON parsing
+- **Bundling** — 4 manual chunks (react-vendor, xlsx, papaparse, app code)
+- **SEO** — JSON-LD WebApplication + BreadcrumbList per tool
 
 ## Contributing
 
