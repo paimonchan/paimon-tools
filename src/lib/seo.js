@@ -100,6 +100,43 @@ export const TOOL_SEO = {
 export const SITE_URL = 'https://paimonchan.github.io/paimon-tools'
 
 /**
+ * Build BreadcrumbList JSON-LD for a tool page.
+ */
+export function breadcrumbLdFor(toolId) {
+  const items = [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Paimon Tools',
+      item: `${SITE_URL}/`,
+    },
+  ]
+
+  if (toolId && TOOL_SEO[toolId]) {
+    const seo = TOOL_SEO[toolId]
+    const parts = seo.breadcrumb.split(' / ')
+    items.push({
+      '@type': 'ListItem',
+      position: 2,
+      name: parts[0],
+      item: `${SITE_URL}/#${parts[0].toLowerCase()}`,
+    })
+    items.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: seo.h1,
+      item: `${SITE_URL}/${seo.path}/`,
+    })
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
+  }
+}
+
+/**
  * Build JSON-LD structured data for a tool (or home) page. Read from raw HTML
  * by Google regardless of client-side rendering.
  */

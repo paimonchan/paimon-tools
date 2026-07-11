@@ -28,7 +28,7 @@ import { dirname, join, resolve } from 'node:path'
 // Import the SEO source of truth. This file is plain JS (no JSX, no bundler
 // needed) so Node can import it directly.
 const seoModule = await import('../src/lib/seo.js')
-const { HOME_SEO, TOOL_SEO, SITE_URL, jsonLdFor, noscriptBodyFor } = seoModule
+const { HOME_SEO, TOOL_SEO, SITE_URL, jsonLdFor, breadcrumbLdFor, noscriptBodyFor } = seoModule
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = join(ROOT, 'dist')
@@ -51,6 +51,7 @@ async function main() {
     keywords: HOME_SEO.keywords,
     canonical: `${SITE_URL}/`,
     jsonLd: JSON.stringify(jsonLdFor(null)),
+    breadcrumbLd: JSON.stringify(breadcrumbLdFor(null)),
     noscript: noscriptBodyFor(null),
   })
   await writeFile(templatePath, homeHtml, 'utf8')
@@ -65,6 +66,7 @@ async function main() {
       keywords: seo.keywords,
       canonical: `${SITE_URL}/${seo.path}/`,
       jsonLd: JSON.stringify(jsonLdFor(toolId)),
+      breadcrumbLd: JSON.stringify(breadcrumbLdFor(toolId)),
       noscript: noscriptBodyFor(toolId),
     })
     const deep = rewriteRelativePaths(html) // ./ → ../
@@ -78,13 +80,14 @@ async function main() {
 }
 
 /** Replace the %%SEO%% tokens with per-page values. */
-function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, noscript }) {
+function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, breadcrumbLd, noscript }) {
   return tpl
     .replace(/%%TITLE%%/g, escapeHtml(title))
     .replace(/%%DESCRIPTION%%/g, escapeHtml(description))
     .replace(/%%KEYWORDS%%/g, escapeHtml(keywords))
     .replace(/%%CANONICAL%%/g, escapeHtml(canonical))
     .replace(/%%JSONLD%%/g, jsonLd)
+    .replace(/%%BREADCRUMBLD%%/g, breadcrumbLd)
     .replace(/%%NOSCRIPT%%/g, noscript)
 }
 
