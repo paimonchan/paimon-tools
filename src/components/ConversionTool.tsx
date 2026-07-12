@@ -30,7 +30,7 @@ import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
 import { useToast } from '../stores/toast-store'
 import { usePersistentState } from '../hooks/usePersistentState'
 import { TOOLS_BY_ID, type ToolDefinition, type ToolId } from '../engine/registry'
-import { downloadArrayBuffer } from '../lib/files'
+import { downloadArrayBuffer, downloadBlob } from '../lib/files'
 import { makeFilename } from '../lib/makeFilename'
 import type { Result } from '../engine/result'
 
@@ -195,10 +195,18 @@ export default function ConversionTool({ toolId, onSwap, registerActions }: Conv
   function handleDownload() {
     const filename = makeFilename(tool, fileValue?.name)
     if (outputBlob) {
+      const mime = MIME[tool.output.ext ?? 'xlsx'] ?? MIME.xlsx
       downloadArrayBuffer({
         arraybuffer: outputBlob.arraybuffer,
         filename,
-        mime: MIME.xlsx,
+        mime,
+      })
+    } else if (outputText) {
+      const mime = MIME[tool.output.ext ?? 'txt'] ?? 'text/plain'
+      downloadBlob({
+        content: outputText,
+        filename,
+        mime,
       })
     }
     toast.push(`Downloaded ${filename}`, { variant: 'success' })
