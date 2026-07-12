@@ -2,10 +2,10 @@
  * ToolHeader — icon, name, description, optional swap button.
  */
 import { ArrowLeftRight } from 'lucide-react'
-import type { ToolDefinition } from '../engine/registry'
+import type { ConverterTool } from '../engine/registry'
 
 interface ToolHeaderProps {
-  tool: ToolDefinition
+  tool: ConverterTool
   onSwap: () => void
 }
 

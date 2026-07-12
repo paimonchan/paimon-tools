@@ -5,18 +5,17 @@
  * <html>, and ToastContainer renders toast notifications from the Zustand store.
  */
 
-import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
 import { ThemeEffect, useTheme } from './stores/theme-store'
-import { usePersistentState } from './hooks/usePersistentState'
 import Sidebar from './components/Sidebar'
 import MobileBar from './components/MobileBar'
 import CommandPalette from './components/CommandPalette'
 import ConversionTool from './components/ConversionTool'
 import ToastContainer from './components/ToastContainer'
 import type { ToolActions } from './components/ConversionTool'
-import { TOOLS } from './engine/registry'
+import { TOOLS_BY_ID } from './engine/registry'
 import type { ToolId } from './engine/registry'
 import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 
@@ -27,11 +26,11 @@ function Shell() {
   const { theme, toggleTheme } = useTheme()
 
   // On first load, prefer the URL (deep link) over the persisted tool so a
-  // direct visit to /json-to-csv opens that tool. Falls back to the last-used
-  // tool, then the first tool.
+  // direct visit to /json-to-csv opens that tool.
   const [activeId, setActiveId] = useState<ToolId>(() => {
     const fromUrl = toolIdFromLocation()
-    return fromUrl || TOOLS[0].id
+    // Fallback to the first converter tool
+    return fromUrl || Object.keys(TOOLS_BY_ID).find(id => TOOLS_BY_ID[id]?.type === 'converter') || 'json-to-csv'
   })
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -110,7 +109,7 @@ function Shell() {
 
         {/* Workspace */}
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
-          {activeId === 'playground' || activeId.startsWith('playground-') ? (
+          {activeId.startsWith('playground-') || TOOLS_BY_ID[activeId]?.type === 'ref' ? (
             <Suspense fallback={
               <div className="flex flex-1 items-center justify-center">
                 <div className="text-sm text-ink-400">Loading playground…</div>
@@ -124,13 +123,13 @@ function Shell() {
                 }
               />
             </Suspense>
-          ) : (
+          ) : TOOLS_BY_ID[activeId]?.type === 'converter' ? (
             <ConversionTool
-              toolId={activeId}
+              tool={TOOLS_BY_ID[activeId]}
               onSwap={selectTool}
               registerActions={registerActions}
             />
-          )}
+          ) : null}
         </main>
       </div>
 

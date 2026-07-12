@@ -29,7 +29,7 @@ import ToolHeader from './ToolHeader'
 import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
 import { useToast } from '../stores/toast-store'
 import { usePersistentState } from '../hooks/usePersistentState'
-import { TOOLS_BY_ID, type ToolDefinition, type ToolId } from '../engine/registry'
+import { TOOLS_BY_ID, type ConverterTool, type ToolId } from '../engine/registry'
 import { downloadArrayBuffer, downloadBlob } from '../lib/files'
 import { makeFilename } from '../lib/makeFilename'
 import type { Result } from '../engine/result'
@@ -59,7 +59,7 @@ export interface ToolActions {
 }
 
 interface ConversionToolProps {
-  toolId: ToolId
+  tool: ConverterTool
   onSwap: (id: ToolId) => void
   registerActions: (actions: ToolActions) => void
 }
@@ -87,8 +87,7 @@ function deriveStatus(
 
 // ── Component ─────────────────────────────────────────
 
-export default function ConversionTool({ toolId, onSwap, registerActions }: ConversionToolProps) {
-  const tool: ToolDefinition = TOOLS_BY_ID[toolId]
+export default function ConversionTool({ tool, onSwap, registerActions }: ConversionToolProps) {
   const toast = useToast()
 
   // ---- persisted state per tool -----------------------------------------
@@ -103,22 +102,22 @@ export default function ConversionTool({ toolId, onSwap, registerActions }: Conv
     {},
   )
 
-  const inputText = storedInputs[toolId] ?? ''
-  const indent = storedIndents[toolId] ?? 2
-  const splitRatio = storedSplits[toolId] ?? 0.5
-  const lenient = storedLenient[toolId] ?? false
+  const inputText = storedInputs[tool.id] ?? ''
+  const indent = storedIndents[tool.id] ?? 2
+  const splitRatio = storedSplits[tool.id] ?? 0.5
+  const lenient = storedLenient[tool.id] ?? false
 
   const setInputText = (v: string) =>
-    setStoredInputs((s: Record<string, string>) => ({ ...s, [toolId]: v }))
+    setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.id]: v }))
   const setIndent = (v: number | 'tab') =>
-    setStoredIndents((s: Record<string, number | 'tab'>) => ({ ...s, [toolId]: v }))
+    setStoredIndents((s: Record<string, number | 'tab'>) => ({ ...s, [tool.id]: v }))
   const setLenient = (v: boolean) =>
-    setStoredLenient((s: Record<string, boolean>) => ({ ...s, [toolId]: v }))
+    setStoredLenient((s: Record<string, boolean>) => ({ ...s, [tool.id]: v }))
 
   const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(splitRatio)
   useEffect(() => {
-    setStoredSplits((s: Record<string, number>) => ({ ...s, [toolId]: ratio }))
-  }, [ratio, toolId, setStoredSplits])
+    setStoredSplits((s: Record<string, number>) => ({ ...s, [tool.id]: ratio }))
+  }, [ratio, tool, setStoredSplits])
 
   // ---- file input state -------------------------------------------------
   const [fileValue, setFileValue] = useState<FileValue | null>(null)
@@ -134,7 +133,7 @@ export default function ConversionTool({ toolId, onSwap, registerActions }: Conv
     setFileValue(null)
     setResult(null)
     setDurationMs(null)
-  }, [toolId])
+  }, [tool])
 
   // ---- the conversion ---------------------------------------------------
   const currentValue = isFileInput ? fileValue?.value : inputText
