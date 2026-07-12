@@ -3,7 +3,7 @@
  *
  * Loaded lazily via React.lazy in App.tsx. Handles:
  * - Language tab switching (JavaScript, JSON)
- * - CodeMirror 6 progressive enhancement (textarea → CM on first run)
+ * - CodeMirror 6 lazy-loaded via React.Suspense (CodeArea fallback while loading)
  * - Web Worker execution for JavaScript
  * - Inline validation for JSON
  * - Output display with stdout/stderr capture
@@ -34,13 +34,7 @@ export default function PlaygroundTool() {
   const [jsonCode, setJsonCode] = usePersistentState('playground.json', '{\n  "name": "Paimon",\n  "role": "Guide"\n}')
   const [output, setOutput] = useState<RunResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
-  const [cmReady, setCmReady] = useState(false)
   const statusRef = useRef<string>('idle')
-
-  // Load CodeMirror in background after mount (progressive enhancement)
-  useEffect(() => {
-    import('./CodeMirrorWrapper').then(() => setCmReady(true))
-  }, [])
 
   const inputCode = language === 'javascript' ? code : jsonCode
   const setInputCode = useCallback(
@@ -185,17 +179,13 @@ export default function PlaygroundTool() {
             )}
           </div>
           <div className="flex-1">
-            {cmReady ? (
-              <React.Suspense fallback={<CodeArea value={inputCode} onChange={setInputCode} />}>
-                <CodeMirrorWrapper
-                  value={inputCode}
-                  onChange={setInputCode}
-                  language={language}
-                />
-              </React.Suspense>
-            ) : (
-              <CodeArea value={inputCode} onChange={setInputCode} placeholder={language === 'javascript' ? '// Write JavaScript' : 'Paste JSON here'} />
-            )}
+            <React.Suspense fallback={<CodeArea value={inputCode} onChange={setInputCode} placeholder={language === 'javascript' ? '// Write JavaScript' : 'Paste JSON here'} />}>
+              <CodeMirrorWrapper
+                value={inputCode}
+                onChange={setInputCode}
+                language={language}
+              />
+            </React.Suspense>
           </div>
         </div>
 
