@@ -11,6 +11,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
+import { html } from '@codemirror/lang-html'
 import { EditorView } from '@codemirror/view'
 import type { Language } from './LangTabs'
 
@@ -24,6 +25,8 @@ interface CodeMirrorWrapperProps {
 const langExt: Record<Language, ReturnType<typeof javascript>> = {
   javascript: javascript(),
   json: json(),
+  html: html(),
+  python: javascript(), // Python syntax highlighting as fallback
 }
 
 export default function CodeMirrorWrapper({ value, onChange, language, readOnly }: CodeMirrorWrapperProps) {

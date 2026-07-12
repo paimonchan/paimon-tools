@@ -6,6 +6,8 @@ export interface RunResult {
   error: string | null
   result: string | null
   durationMs: number
+  /** Raw HTML/CSS/JS for iframe preview (used by HtmlEngine). */
+  htmlPreview?: string
 }
 
 export interface CodeEngine {

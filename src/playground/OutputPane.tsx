@@ -4,12 +4,13 @@
  * Features:
  * - Max 500 lines (overflow trimmed with warning)
  * - Auto-scroll to bottom on new output
- * - Timestamped output lines
+ * - Tab toggle between Console and Preview (for HTML output)
  */
 
-import { useRef, useEffect } from 'react'
-import { Terminal } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Terminal, Eye } from 'lucide-react'
 import type { RunResult } from './engines/types'
+import PreviewPane from './PreviewPane'
 
 interface OutputPaneProps {
   output: RunResult | null
@@ -19,13 +20,23 @@ const MAX_LINES = 500
 
 export default function OutputPane({ output }: OutputPaneProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [previewMode, setPreviewMode] = useState(false)
 
-  // Auto-scroll to bottom on new output
+  // Auto-scroll to bottom on new output (only when in console mode)
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && !previewMode) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
+  }, [output, previewMode])
+
+  // Reset to console mode when new output comes without htmlPreview
+  useEffect(() => {
+    if (output && !output.htmlPreview) {
+      setPreviewMode(false)
+    }
   }, [output])
+
+  const hasPreview = output?.htmlPreview && output.htmlPreview.length > 0
 
   if (!output) {
     return (
@@ -42,6 +53,32 @@ export default function OutputPane({ output }: OutputPaneProps) {
     )
   }
 
+  // Render preview tab
+  if (previewMode && hasPreview) {
+    return (
+      <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
+        {/* Tabs */}
+        <div className="flex border-b border-ink-800">
+          <button
+            onClick={() => setPreviewMode(false)}
+            className="flex items-center gap-1.5 border-r border-ink-800 px-3 py-1.5 text-[11px] text-ink-400 transition-colors hover:text-ink-200"
+          >
+            <Terminal className="h-3 w-3" />
+            Console
+          </button>
+          <button
+            className="flex items-center gap-1.5 bg-ink-800/50 px-3 py-1.5 text-[11px] text-honey-200"
+          >
+            <Eye className="h-3 w-3" />
+            Preview
+          </button>
+        </div>
+        <PreviewPane html={output.htmlPreview!} />
+      </div>
+    )
+  }
+
+  // Console output
   const lines: string[] = []
   if (output.stdout) lines.push(...output.stdout.split('\n'))
   if (output.stderr) lines.push(...output.stderr.split('\n'))
@@ -52,13 +89,26 @@ export default function OutputPane({ output }: OutputPaneProps) {
 
   return (
     <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-ink-800 px-3 py-1.5">
-        <div className="flex items-center gap-1.5">
-          <Terminal className="h-3 w-3 text-ink-500" />
-          <span className="text-[11px] text-ink-400">Output</span>
+      {/* Tabs */}
+      <div className="flex items-center justify-between border-b border-ink-800">
+        <div className="flex">
+          <button
+            className="flex items-center gap-1.5 bg-ink-800/50 px-3 py-1.5 text-[11px] text-honey-200"
+          >
+            <Terminal className="h-3 w-3" />
+            Console
+          </button>
+          {hasPreview && (
+            <button
+              onClick={() => setPreviewMode(true)}
+              className="flex items-center gap-1.5 border-l border-ink-800 px-3 py-1.5 text-[11px] text-ink-400 transition-colors hover:text-ink-200"
+            >
+              <Eye className="h-3 w-3" />
+              Preview
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-ink-500">
+        <div className="flex items-center gap-2 pr-3 text-[10px] text-ink-500">
           {output.error && <span className="text-red-400">error</span>}
           <span>{output.durationMs.toFixed(0)}ms</span>
           <span>{lines.length} lines</span>

@@ -1,19 +1,20 @@
 /**
- * ActionBar — Run, Clear, and Copy actions for the playground.
+ * ActionBar — Run, Clear, Copy, and Share actions for the playground.
  */
 
-import { Play, Eraser, Copy } from 'lucide-react'
+import { Play, Eraser, Copy, Share2 } from 'lucide-react'
 
 interface ActionBarProps {
   onRun: () => void
   onClear: () => void
   onCopy: () => void
+  onShare: () => void
   isRunning: boolean
   hasOutput: boolean
   language: string
 }
 
-export default function ActionBar({ onRun, onClear, onCopy, isRunning, hasOutput, language }: ActionBarProps) {
+export default function ActionBar({ onRun, onClear, onCopy, onShare, isRunning, hasOutput, language }: ActionBarProps) {
   const isJson = language === 'json'
 
   return (
@@ -38,6 +39,14 @@ export default function ActionBar({ onRun, onClear, onCopy, isRunning, hasOutput
       >
         <Eraser className="h-3 w-3" />
         Clear
+      </button>
+
+      <button
+        onClick={onShare}
+        className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-200"
+      >
+        <Share2 className="h-3 w-3" />
+        Share
       </button>
 
       {hasOutput && (

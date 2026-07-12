@@ -2,17 +2,22 @@
  * PlaygroundTool — main component for the online code playground.
  *
  * Loaded lazily via React.lazy in App.tsx. Handles:
- * - Language tab switching (JavaScript, JSON)
+ * - Language tab switching (JavaScript, JSON, HTML, Python)
  * - CodeMirror 6 eager-imported (PlaygroundTool sendiri udah lazy-loaded dari App.tsx)
  * - Web Worker execution for JavaScript
  * - Inline validation for JSON
+ * - HTML iframe preview for HTML/CSS/JS
+ * - Pyodide WASM for Python (lazy ~12 MB load on first Run)
  * - Output display with stdout/stderr capture
+ * - URL-based code sharing via lz-string
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { usePersistentState } from '../hooks/usePersistentState'
 import { useToast } from '../stores/toast-store'
 import { WorkerEngine } from './engines/worker-engine'
+import { HtmlEngine } from './engines/html-engine'
+import { PyodideEngine } from './engines/pyodide-engine'
 import type { CodeEngine, RunResult } from './engines/types'
 import LangTabs from './LangTabs'
 import ActionBar from './ActionBar'
@@ -20,27 +25,97 @@ import OutputPane from './OutputPane'
 import CodeMirrorWrapper from './CodeMirrorWrapper'
 import StatusBar from '../components/StatusBar'
 import type { Language } from './LangTabs'
+import { buildShareHash, readShareHash, pushShareHash, clearShareHash } from './lib/share'
+
+// ── Template code per language ──────────────────────────────────────
+
+const TEMPLATES: Record<Language, string> = {
+  javascript: '// Write some JavaScript\nconsole.log("Hello, Paimon!");\n',
+  json: '{\n  "name": "Paimon",\n  "role": "Guide"\n}',
+  html: '<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: system-ui;\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      min-height: 100vh;\n      margin: 0;\n      background: #1a1a2e;\n      color: #eee;\n    }\n    h1 { color: #e94560; }\n  </style>\n</head>\n<body>\n  <h1>Hello, Paimon! 🎨</h1>\n  <p>Edit me and click Run</p>\n  <script>\n    document.querySelector(\'h1\').addEventListener(\'click\', () => {\n      alert(\'Hello from Paimon Tools!\');\n    });\n  </script>\n</body>\n</html>',
+  python: '# Write some Python\nprint("Hello, Paimon!")\n\n# Math\nimport math\nprint(f"Pi = {math.pi:.4f}")\n\n# List comprehension\nsquares = [x**2 for x in range(10)]\nprint(f"Squares: {squares}")',
+}
+
+// ── Engine factory ──────────────────────────────────────────────────
+
+function createEngine(language: Language): CodeEngine {
+  switch (language) {
+    case 'javascript': return new WorkerEngine()
+    case 'html':       return new HtmlEngine()
+    case 'python':     return new PyodideEngine()
+    default:           return new WorkerEngine()
+  }
+}
+
+// ── Component ───────────────────────────────────────────────────────
 
 export default function PlaygroundTool() {
   const toast = useToast()
   const engineRef = useRef<CodeEngine>(new WorkerEngine())
   const [language, setLanguage] = useState<Language>('javascript')
-  const [code, setCode] = usePersistentState('playground.js', '// Write some JavaScript\nconsole.log("Hello, Paimon!");\n')
-  const [jsonCode, setJsonCode] = usePersistentState('playground.json', '{\n  "name": "Paimon",\n  "role": "Guide"\n}')
+  const [isPythonLoading, setIsPythonLoading] = useState(false)
+
+  // Per-language code state
+  const [jsCode, setJsCode] = usePersistentState('playground.js', TEMPLATES.javascript)
+  const [jsonCode, setJsonCode] = usePersistentState('playground.json', TEMPLATES.json)
+  const [htmlCode, setHtmlCode] = usePersistentState('playground.html', TEMPLATES.html)
+  const [pythonCode, setPythonCode] = usePersistentState('playground.python', TEMPLATES.python)
+
   const [output, setOutput] = useState<RunResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
   const statusRef = useRef<string>('idle')
 
-  const inputCode = language === 'javascript' ? code : jsonCode
+  // ── Load shared code from URL hash on mount ──────────────────────
+
+  useEffect(() => {
+    const shared = readShareHash()
+    if (shared) {
+      setJsCode(shared)
+      setLanguage('javascript')
+      clearShareHash()
+      toast.push('Shared code loaded from URL', { variant: 'info' })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Current code based on language ───────────────────────────────
+
+  const getCode = useCallback((lang: Language): string => {
+    switch (lang) {
+      case 'javascript': return jsCode
+      case 'json':       return jsonCode
+      case 'html':       return htmlCode
+      case 'python':     return pythonCode
+    }
+  }, [jsCode, jsonCode, htmlCode, pythonCode])
+
+  const setCode = useCallback((lang: Language, value: string) => {
+    switch (lang) {
+      case 'javascript': setJsCode(value); break
+      case 'json':       setJsonCode(value); break
+      case 'html':       setHtmlCode(value); break
+      case 'python':     setPythonCode(value); break
+    }
+  }, [setJsCode, setJsonCode, setHtmlCode, setPythonCode])
+
+  const inputCode = getCode(language)
   const setInputCode = useCallback(
-    (v: string) => {
-      if (language === 'javascript') setCode(v)
-      else setJsonCode(v)
-    },
-    [language, setCode, setJsonCode],
+    (v: string) => setCode(language, v),
+    [language, setCode],
   )
 
-  // Auto-validate JSON on change
+  // ── Switch language → swap engine ────────────────────────────────
+
+  const handleLanguageChange = useCallback((lang: Language) => {
+    if (lang === language) return
+    engineRef.current.dispose()
+    engineRef.current = createEngine(lang)
+    setLanguage(lang)
+    setOutput(null)
+    statusRef.current = 'idle'
+  }, [language])
+
+  // ── Auto-validate JSON on change ─────────────────────────────────
+
   useEffect(() => {
     if (language !== 'json' || !inputCode) return
     try {
@@ -63,7 +138,8 @@ export default function PlaygroundTool() {
     }
   }, [inputCode, language])
 
-  // Also run on ⌘⏎
+  // ── Keyboard shortcut ⌘⏎ ─────────────────────────────────────────
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const mod = e.metaKey || e.ctrlKey
@@ -76,10 +152,12 @@ export default function PlaygroundTool() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
+  // ── Run ──────────────────────────────────────────────────────────
+
   async function handleRun() {
     if (isRunning) return
+
     if (language === 'json') {
-      // Re-validate
       try {
         const parsed = JSON.parse(inputCode)
         const formatted = JSON.stringify(parsed, null, 2)
@@ -100,6 +178,29 @@ export default function PlaygroundTool() {
         })
       }
       return
+    }
+
+    // Python — show loading state for first-run WASM download
+    if (language === 'python') {
+      const engine = engineRef.current as unknown as PyodideEngine
+      if (!engine.ready && !engine.loading) {
+        setIsPythonLoading(true)
+        toast.push('Loading Python engine (~12 MB, first time only)', { variant: 'info' })
+        try {
+          await engine.load()
+        } catch (err) {
+          setOutput({
+            stdout: '',
+            stderr: '',
+            error: `Failed to load Python: ${String(err)}`,
+            result: null,
+            durationMs: 0,
+          })
+          setIsPythonLoading(false)
+          return
+        }
+        setIsPythonLoading(false)
+      }
     }
 
     setIsRunning(true)
@@ -123,10 +224,14 @@ export default function PlaygroundTool() {
     }
   }
 
+  // ── Clear ────────────────────────────────────────────────────────
+
   function handleClear() {
     setOutput(null)
     toast.push('Output cleared', { variant: 'info' })
   }
+
+  // ── Copy ─────────────────────────────────────────────────────────
 
   function handleCopy() {
     const text = output?.stdout || output?.result || ''
@@ -137,11 +242,27 @@ export default function PlaygroundTool() {
     }
   }
 
+  // ── Share ────────────────────────────────────────────────────────
+
+  function handleShare() {
+    const hash = buildShareHash(inputCode)
+    const url = `${window.location.origin}${window.location.pathname}${hash}`
+    navigator.clipboard.writeText(url).then(() => {
+      pushShareHash(inputCode)
+      toast.push('Share link copied to clipboard!', { variant: 'success' })
+    }).catch(() => {
+      // Fallback: just update URL
+      pushShareHash(inputCode)
+      toast.push('URL updated in address bar', { variant: 'info' })
+    })
+  }
+
+  // ── Format JSON ──────────────────────────────────────────────────
+
   function handleFormat() {
     if (language !== 'json') return
     try {
       const parsed = JSON.parse(inputCode)
-      // Also set in the formatter: update input to formatted version
       setInputCode(JSON.stringify(parsed, null, 2))
       toast.push('Formatted JSON', { variant: 'success' })
     } catch {
@@ -154,7 +275,7 @@ export default function PlaygroundTool() {
   return (
     <div className="flex h-full flex-col">
       {/* Language tabs */}
-      <LangTabs value={language} onChange={setLanguage} />
+      <LangTabs value={language} onChange={handleLanguageChange} />
 
       {/* Editor + Output split */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 md:flex-row">
@@ -162,7 +283,7 @@ export default function PlaygroundTool() {
         <div className="flex min-h-[12rem] flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
           <div className="flex items-center justify-between border-b border-ink-800 px-3 py-1.5">
             <div className="text-[11px] font-500 text-ink-400">
-              {language === 'javascript' ? 'JavaScript' : 'JSON'}
+              {language === 'javascript' ? 'JavaScript' : language === 'json' ? 'JSON' : language === 'html' ? 'HTML' : 'Python'}
             </div>
             {language === 'json' && (
               <button
@@ -184,7 +305,19 @@ export default function PlaygroundTool() {
 
         {/* Output pane */}
         <div className="flex flex-1 flex-col">
-          <OutputPane output={output} />
+          {isPythonLoading ? (
+            <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
+              <div className="flex flex-1 items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-honey-400 border-t-transparent" />
+                  <p className="text-xs text-honey-300/80">Loading Python engine (~12 MB)</p>
+                  <p className="mt-1 text-[10px] text-ink-500">First-time download — cached after this</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <OutputPane output={output} />
+          )}
         </div>
       </div>
 
@@ -193,7 +326,8 @@ export default function PlaygroundTool() {
         onRun={handleRun}
         onClear={handleClear}
         onCopy={handleCopy}
-        isRunning={isRunning}
+        onShare={handleShare}
+        isRunning={isRunning || isPythonLoading}
         hasOutput={!!output}
         language={language}
       />

@@ -2,9 +2,7 @@
  * LangTabs — language selector for the playground.
  */
 
-import type { ReactNode } from 'react'
-
-export type Language = 'javascript' | 'json'
+export type Language = 'javascript' | 'json' | 'html' | 'python'
 
 interface LangTabsProps {
   value: Language
@@ -14,6 +12,8 @@ interface LangTabsProps {
 const TABS: { id: Language; label: string; desc: string }[] = [
   { id: 'javascript', label: 'JavaScript', desc: 'Run code via Web Worker' },
   { id: 'json', label: 'JSON', desc: 'Format & validate' },
+  { id: 'html', label: 'HTML', desc: 'Live preview in iframe' },
+  { id: 'python', label: 'Python', desc: 'Pyodide WASM (~12 MB)' },
 ]
 
 export default function LangTabs({ value, onChange }: LangTabsProps) {
