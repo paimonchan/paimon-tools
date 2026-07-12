@@ -42,12 +42,32 @@
       rel="stylesheet"
     />
 
+    <!--
+      Hide prerendered SEO content from sighted users to prevent FOUC.
+      Crawlers still read it (it's in the DOM, not hidden from bots).
+      React replaces the content on mount — no more flash between "plain text
+      fallback" and the real app.
+    -->
+    <style>
+      #root > .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border-width: 0;
+      }
+    </style>
+
     <!-- JSON-LD structured data (filled by build / prerender) -->
     <script type="application/ld+json">%%JSONLD%%</script>
     <script type="application/ld+json">%%BREADCRUMBLD%%</script>
   </head>
   <body>
-    <div id="root">%%PRERENDER_BODY%%</div>
+    <div id="root"><div class="sr-only">%%PRERENDER_BODY%%</div></div>
 
     <!--
       Fallback for crawlers/bots that don't execute JavaScript. Provides
