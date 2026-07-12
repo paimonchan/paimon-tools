@@ -1,10 +1,10 @@
 /**
- * pyodide-engine.ts — jalanin Python di browser pake Pyodide WASM.
+ * pyodide-engine.ts — run Python in the browser via Pyodide WASM.
  *
- * Pyodide (~12 MB) di-download dari CDN pas pertama Run, abis itu
- * di-cache sama browser. Kira-kira:
- *   Cold start: 3-6 detik (download 12 MB + compile WASM)
- *   Warm start: ~1 detik (WASM udah di cache)
+ * Pyodide (~12 MB) is fetched from CDN on first Run, then cached by
+ * the browser. Expect:
+ *   Cold start: 3-6s (download 12 MB + compile WASM)
+ *   Warm start: ~1s (WASM cached)
  */
 
 import type { CodeEngine, RunResult } from './types'

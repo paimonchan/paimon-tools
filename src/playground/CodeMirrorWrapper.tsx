@@ -1,8 +1,8 @@
 /**
- * CodeMirrorWrapper — editor kode pake CodeMirror 6.
+ * CodeMirrorWrapper — code editor backed by CodeMirror 6.
  *
- * Komponen ini di-import secara normal (gak lazy) karena PlaygroundTool
- * aja udah lazy-loaded dari route. Jadi gak nambah bundle awal.
+ * Imported normally (not lazy) since PlaygroundTool itself is already
+ * lazy-loaded from the route, so this doesn't bloat the initial bundle.
  */
 
 import { useMemo } from 'react'

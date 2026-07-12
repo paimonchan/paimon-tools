@@ -1,10 +1,9 @@
 /**
- * OutputPane — nampilin hasil eksekusi kaya terminal.
+ * OutputPane — renders execution output, terminal-style.
  *
- * Fitur:
- * - Maks 500 baris, kalo lebih bakal dipotong + warning
- * - Auto-scroll ke bawah pas ada output baru
- * - Bisa toggle Console / Preview tab (kalo outputnya HTML)
+ * - Caps at 500 lines, truncates with a warning if exceeded
+ * - Auto-scrolls to bottom on new output
+ * - Toggles between Console and Preview tabs (when output is HTML)
  */
 
 import { useState, useRef, useEffect } from 'react'

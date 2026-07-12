@@ -1,9 +1,9 @@
 /**
  * PlaygroundTool — the code playground.
  *
- * Lazy-loaded dari App.tsx. Urusan dia: ngatur tab bahasa, nyambungin
- * engine ke tiap bahasa (Worker buat JS, Pyodide buat Python, dll),
- * dan ngasih output ke layar.
+ * Lazy-loaded from App.tsx. Handles tab switching, wires up the right
+ * engine per language (Worker for JS, Pyodide for Python, etc.),
+ * and dumps output to screen.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -49,7 +49,7 @@ export default function PlaygroundTool() {
   const [language, setLanguage] = useState<Language>('javascript')
   const [isPythonLoading, setIsPythonLoading] = useState(false)
 
-  // tiap bahasa punya state sendiri, biar gak ilang pas ganti tab
+  // each language keeps its own code, survives tab switches
   const [jsCode, setJsCode] = usePersistentState('playground.js', TEMPLATES.javascript)
   const [jsonCode, setJsonCode] = usePersistentState('playground.json', TEMPLATES.json)
   const [htmlCode, setHtmlCode] = usePersistentState('playground.html', TEMPLATES.html)
@@ -59,7 +59,7 @@ export default function PlaygroundTool() {
   const [isRunning, setIsRunning] = useState(false)
   const statusRef = useRef<string>('idle')
 
-  // ambil engine dari cache, kalo belum ada ya bikin baru
+  // grab engine from cache, create one if it doesn't exist yet
   const getEngine = useCallback((lang: Language): CodeEngine => {
     let engine = enginesRef.current.get(lang)
     if (!engine) {
@@ -87,7 +87,7 @@ export default function PlaygroundTool() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Begitu komponen ilang, dispose semua engine biar gak bocor memory
+  // cleanup all engines on unmount so we don't leak workers/wasm
   useEffect(() => {
     return () => {
       enginesRef.current.forEach(engine => engine.dispose())
@@ -183,8 +183,8 @@ export default function PlaygroundTool() {
       return
     }
 
-    // pas pencet Run dan codenya Python, kita perlu load Pyodide dulu
-    // (12 MB WASM, cuma sekali — sisanya pake cache browser)
+    // on first Python run we need to fetch Pyodide (~12 MB WASM).
+    // browser caches it after that, so it's a one-time thing.
     if (language === 'python') {
       const engine = getEngine(language) as unknown as PyodideEngine
       if (!engine.ready && !engine.loading) {

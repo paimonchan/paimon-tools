@@ -1,5 +1,5 @@
 /**
- * PreviewPane — iframe buat liat hasil HTML/CSS/JS.
+ * PreviewPane — iframe that renders HTML/CSS/JS output.
  */
 
 import { useRef, useEffect } from 'react'

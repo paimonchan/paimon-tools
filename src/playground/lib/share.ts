@@ -1,11 +1,10 @@
 /**
- * share.ts — kompresi kode ke URL hash pake lz-string.
+ * share.ts — pack code into the URL hash via lz-string.
  *
- * Cara mainnya:
- *   Share → compress → taruh di #code=...
- *   Load  → baca hash → decompress → masukin ke editor
+ * Flow: Share → compress → stash in #code=...
+ *       Load  → read hash → decompress → fill editor
  *
- * Gak perlu server — semua di URL fragment, gak dikirim kemana-mana.
+ * No server involved — everything stays in the URL fragment.
  */
 
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
@@ -14,13 +13,13 @@ export type DetectedLanguage = 'javascript' | 'json' | 'html' | 'python'
 
 const HASH_KEY = 'code'
 
-/** Kompres kode jadi hash fragment buat di-share. */
+/** Compress code into a URL hash fragment for sharing. */
 export function buildShareHash(code: string): string {
   const compressed = compressToEncodedURIComponent(code)
   return `#${HASH_KEY}=${compressed}`
 }
 
-/** Baca kode dari URL hash. Balikin null kalo gak ada. */
+/** Read code from the URL hash. Returns null if nothing's there. */
 export function readShareHash(): string | null {
   if (!window.location.hash) return null
   const hash = window.location.hash.slice(1) // remove leading #
@@ -35,18 +34,18 @@ export function readShareHash(): string | null {
   }
 }
 
-/** Update URL hash tanpa trigger navigasi. */
+/** Update the URL hash without triggering navigation. */
 export function pushShareHash(code: string): void {
   const hash = buildShareHash(code)
   window.history.replaceState(null, '', hash)
 }
 
-/** Bersihin URL hash. */
+/** Clear the URL hash. */
 export function clearShareHash(): void {
   window.history.replaceState(null, '', window.location.pathname + window.location.search)
 }
 
-/** Tebak bahasa dari isi kode. Dipake pas load shared code yang gak ada metadata. */
+/** Guess the language of a code snippet. Used when loading shared code that has no language tag. */
 export function detectLanguage(code: string): DetectedLanguage {
   const trimmed = code.trim()
 

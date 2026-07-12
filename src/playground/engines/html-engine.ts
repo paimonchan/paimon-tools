@@ -1,7 +1,7 @@
 /**
- * html-engine.ts — preview HTML langsung via iframe.
+ * html-engine.ts — preview HTML/CSS/JS straight in an iframe.
  *
- * Gak pake library tambahan — tinggal srcdoc aja beres.
+ * No extra deps needed — srcdoc handles it all.
  */
 
 import type { CodeEngine, RunResult } from './types'
