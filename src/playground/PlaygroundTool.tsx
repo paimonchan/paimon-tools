@@ -3,7 +3,7 @@
  *
  * Loaded lazily via React.lazy in App.tsx. Handles:
  * - Language tab switching (JavaScript, JSON)
- * - CodeMirror 6 lazy-loaded via React.Suspense (CodeArea fallback while loading)
+ * - CodeMirror 6 eager-imported (PlaygroundTool sendiri udah lazy-loaded dari App.tsx)
  * - Web Worker execution for JavaScript
  * - Inline validation for JSON
  * - Output display with stdout/stderr capture
