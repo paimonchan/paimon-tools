@@ -13,6 +13,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { CornerDownLeft, Search } from 'lucide-react'
 import { TOOLS, CATEGORIES, type ToolDefinition, type ToolId } from '../engine/registry'
+import { ICON_MAP } from '../lib/icon-map'
 
 interface CommandPaletteProps {
   open: boolean
@@ -125,7 +126,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }: Co
                 </div>
                 {tools.map((tool) => {
                   const idx = results.indexOf(tool)
-                  const Icon = tool.icon
+                  const Icon = ICON_MAP[tool.icon]
                   const isSelected = idx === active
                   const isActiveTool = tool.id === activeId
                   return (

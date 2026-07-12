@@ -9,6 +9,7 @@
 import { Command, ShieldCheck } from 'lucide-react'
 import BrandMark from './BrandMark'
 import { TOOLS_BY_CATEGORY, type ToolId } from '../engine/registry'
+import { ICON_MAP } from '../lib/icon-map'
 
 interface SidebarProps {
   activeId: ToolId
@@ -71,7 +72,7 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
               </div>
               <ul className="space-y-0.5">
                 {tools.map((tool) => {
-                  const Icon = tool.icon
+                  const Icon = ICON_MAP[tool.icon]
                   const active = tool.id === activeId || (tool.id === 'playground' && activeId.startsWith('playground-'))
                   return (
                     <li key={tool.id}>

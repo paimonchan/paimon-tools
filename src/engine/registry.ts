@@ -8,16 +8,6 @@
 *
 * Both share base fields (id, name, category, icon) for sidebar/palette.
 */
-import type { ComponentType } from 'react'
-import {
-ArrowLeftRight,
-Braces,
-FileSpreadsheet,
-FileJson,
-FileText,
-Minimize2,
-Play,
-} from 'lucide-react'
 import type { Result } from './result'
 import { csvToJson, jsonToCsv } from './converters/csv-io'
 import { formatJson, minifyJson } from './converters/json-io'
@@ -36,11 +26,19 @@ label: string
 ext?: string
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
+export type IconName =
+  | 'arrow-left-right'
+  | 'braces'
+  | 'file-spreadsheet'
+  | 'file-json'
+  | 'file-text'
+  | 'minimize-2'
+  | 'play'
 export interface ToolBase {
 id: ToolId
 name: string
 category: 'Convert' | 'Format' | 'Tools'
-icon: ComponentType<{ className?: string }>
+icon: IconName
 keywords: string[]
 description: string
 }
@@ -83,7 +81,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'JSON to CSV',
     category: 'Convert',
     type: 'converter',
-    icon: ArrowLeftRight,
+    icon: 'arrow-left-right',
     keywords: ['export', 'table', 'flatten', 'excel'],
     description: 'Flatten an array of JSON objects into a comma-separated values table.',
     swap: 'csv-to-json',
@@ -98,7 +96,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'CSV to JSON',
     category: 'Convert',
     type: 'converter',
-    icon: ArrowLeftRight,
+    icon: 'arrow-left-right',
     keywords: ['parse', 'import', 'table'],
     description: 'Parse a CSV table (with header row) into an array of JSON objects.',
     swap: 'json-to-csv',
@@ -112,7 +110,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'JSON to Excel',
     category: 'Convert',
     type: 'converter',
-    icon: FileSpreadsheet,
+    icon: 'file-spreadsheet',
     keywords: ['xlsx', 'spreadsheet', 'export', 'workbook'],
     description: 'Export an array of JSON objects into a downloadable .xlsx workbook.',
     swap: 'excel-to-json',
@@ -127,7 +125,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'Excel to JSON',
     category: 'Convert',
     type: 'converter',
-    icon: FileJson,
+    icon: 'file-json',
     keywords: ['xlsx', 'spreadsheet', 'import', 'workbook'],
     description: 'Read the first sheet of an .xlsx file into an array of JSON objects.',
     swap: 'json-to-excel',
@@ -140,7 +138,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'CSV to Excel',
     category: 'Convert',
     type: 'converter',
-    icon: FileSpreadsheet,
+    icon: 'file-spreadsheet',
     keywords: ['xlsx', 'spreadsheet', 'export', 'workbook'],
     description: 'Convert a CSV table into a downloadable .xlsx workbook.',
     swap: 'excel-to-csv',
@@ -154,7 +152,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'Excel to CSV',
     category: 'Convert',
     type: 'converter',
-    icon: FileText,
+    icon: 'file-text',
     keywords: ['xlsx', 'spreadsheet', 'import'],
     description: 'Read the first sheet of an .xlsx file and emit CSV.',
     swap: 'csv-to-excel',
@@ -167,7 +165,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'JSON Formatter',
     category: 'Format',
     type: 'converter',
-    icon: Braces,
+    icon: 'braces',
     keywords: ['beautify', 'prettify', 'pretty', 'validate', 'indent'],
     description: 'Validate and pretty-print JSON. Choose your indentation below.',
     input: { type: 'text', label: 'JSON input', accept: '.json', placeholder: 'Paste JSON to format' },
@@ -182,7 +180,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'JSON Minifier',
     category: 'Format',
     type: 'converter',
-    icon: Minimize2,
+    icon: 'minimize-2',
     keywords: ['compact', 'compress', 'minify', 'uglify'],
     description: 'Strip all whitespace from JSON. Validates syntax in the process.',
     input: { type: 'text', label: 'JSON input', accept: '.json', placeholder: 'Paste JSON to minify' },
@@ -196,7 +194,7 @@ export const TOOLS: ToolDefinition[] = [
     name: 'Playground',
     category: 'Tools',
     type: 'ref',
-    icon: Play,
+    icon: 'play',
     keywords: ['code', 'run', 'javascript', 'python', 'html', 'editor', 'script', 'playground'],
     description: 'Write and run JavaScript, Python & HTML in your browser. JS via sandboxed Worker, Python via Pyodide WASM (fetched from CDN, cached locally), HTML with live iframe preview — 100% client-side, no sign-up.',
 },

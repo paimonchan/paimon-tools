@@ -3,6 +3,7 @@
  */
 import { ArrowLeftRight } from 'lucide-react'
 import type { ConverterTool } from '../engine/registry'
+import { ICON_MAP } from '../lib/icon-map'
 
 interface ToolHeaderProps {
   tool: ConverterTool
@@ -10,7 +11,7 @@ interface ToolHeaderProps {
 }
 
 export default function ToolHeader({ tool, onSwap }: ToolHeaderProps) {
-  const Icon = tool.icon
+  const Icon = ICON_MAP[tool.icon]
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
       <div className="flex items-start gap-3">
