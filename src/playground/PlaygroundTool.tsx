@@ -17,14 +17,9 @@ import type { CodeEngine, RunResult } from './engines/types'
 import LangTabs from './LangTabs'
 import ActionBar from './ActionBar'
 import OutputPane from './OutputPane'
-import CodeArea from '../components/CodeArea'
+import CodeMirrorWrapper from './CodeMirrorWrapper'
 import StatusBar from '../components/StatusBar'
 import type { Language } from './LangTabs'
-
-// Lazy-loaded CodeMirror wrapper — only imports on first Run or entry
-const CodeMirrorWrapper = React.lazy(() => import('./CodeMirrorWrapper'))
-
-import React from 'react'
 
 export default function PlaygroundTool() {
   const toast = useToast()
@@ -179,13 +174,11 @@ export default function PlaygroundTool() {
             )}
           </div>
           <div className="flex-1">
-            <React.Suspense fallback={<CodeArea value={inputCode} onChange={setInputCode} placeholder={language === 'javascript' ? '// Write JavaScript' : 'Paste JSON here'} />}>
               <CodeMirrorWrapper
                 value={inputCode}
                 onChange={setInputCode}
                 language={language}
               />
-            </React.Suspense>
           </div>
         </div>
 
