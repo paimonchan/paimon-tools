@@ -12,9 +12,6 @@ declare global {
   interface Window {
     loadPyodide?: (config: { indexURL: string }) => Promise<{
       runPython: (code: string) => unknown
-      globals: {
-        get(key: string): unknown
-      }
       setStdout: (opts: { batched?: (text: string) => void; raw?: (text: string) => void }) => void
       setStderr: (opts: { batched?: (text: string) => void; raw?: (text: string) => void }) => void
     }>

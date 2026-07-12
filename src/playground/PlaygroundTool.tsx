@@ -25,7 +25,7 @@ import OutputPane from './OutputPane'
 import CodeMirrorWrapper from './CodeMirrorWrapper'
 import StatusBar from '../components/StatusBar'
 import type { Language } from './LangTabs'
-import { buildShareHash, readShareHash, pushShareHash, clearShareHash } from './lib/share'
+import { buildShareHash, readShareHash, pushShareHash, clearShareHash, detectLanguage } from './lib/share'
 
 // ── Template code per language ──────────────────────────────────────
 
@@ -51,6 +51,7 @@ function createEngine(language: Language): CodeEngine {
 
 export default function PlaygroundTool() {
   const toast = useToast()
+  const enginesRef = useRef<Map<Language, CodeEngine>>(new Map())
   const engineRef = useRef<CodeEngine>(new WorkerEngine())
   const [language, setLanguage] = useState<Language>('javascript')
   const [isPythonLoading, setIsPythonLoading] = useState(false)
@@ -70,12 +71,26 @@ export default function PlaygroundTool() {
   useEffect(() => {
     const shared = readShareHash()
     if (shared) {
-      setJsCode(shared)
-      setLanguage('javascript')
+      const lang = detectLanguage(shared)
+      switch (lang) {
+        case 'html': setHtmlCode(shared); break
+        case 'python': setPythonCode(shared); break
+        case 'json': setJsonCode(shared); break
+        default: setJsCode(shared); break
+      }
+      setLanguage(lang)
       clearShareHash()
       toast.push('Shared code loaded from URL', { variant: 'info' })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cleanup all engines on unmount
+  useEffect(() => {
+    return () => {
+      enginesRef.current.forEach(engine => engine.dispose())
+      enginesRef.current.clear()
+    }
+  }, [])
 
   // ── Current code based on language ───────────────────────────────
 
@@ -107,12 +122,22 @@ export default function PlaygroundTool() {
 
   const handleLanguageChange = useCallback((lang: Language) => {
     if (lang === language) return
-    engineRef.current.dispose()
-    engineRef.current = createEngine(lang)
+    // Cache current engine before switching
+    enginesRef.current.set(language, engineRef.current)
+    // Get or create engine for target language
+    let engine = enginesRef.current.get(lang)
+    if (!engine) {
+      engine = createEngine(lang)
+      enginesRef.current.set(lang, engine)
+    }
+    engineRef.current = engine
     setLanguage(lang)
     setOutput(null)
     statusRef.current = 'idle'
   }, [language])
+
+  // Register initial engine in cache
+  enginesRef.current.set('javascript', engineRef.current)
 
   // ── Auto-validate JSON on change ─────────────────────────────────
 
@@ -138,23 +163,9 @@ export default function PlaygroundTool() {
     }
   }, [inputCode, language])
 
-  // ── Keyboard shortcut ⌘⏎ ─────────────────────────────────────────
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key === 'Enter') {
-        e.preventDefault()
-        handleRun()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  })
-
   // ── Run ──────────────────────────────────────────────────────────
 
-  async function handleRun() {
+  const handleRun = useCallback(async () => {
     if (isRunning) return
 
     if (language === 'json') {
@@ -222,7 +233,21 @@ export default function PlaygroundTool() {
       setIsRunning(false)
       statusRef.current = 'idle'
     }
-  }
+  }, [isRunning, language, inputCode, toast])
+
+  // ── Keyboard shortcut ⌘⏎ ─────────────────────────────────────────
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey
+      if (mod && e.key === 'Enter') {
+        e.preventDefault()
+        handleRun()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [handleRun])
 
   // ── Clear ────────────────────────────────────────────────────────
 
@@ -234,7 +259,11 @@ export default function PlaygroundTool() {
   // ── Copy ─────────────────────────────────────────────────────────
 
   function handleCopy() {
-    const text = output?.stdout || output?.result || ''
+    const parts: string[] = []
+    if (output?.stdout) parts.push(output.stdout)
+    if (output?.stderr) parts.push(output.stderr)
+    if (output?.result) parts.push(`⇒ ${output.result}`)
+    const text = parts.join('\n')
     if (text) {
       navigator.clipboard.writeText(text).then(() => {
         toast.push('Copied to clipboard', { variant: 'success' })

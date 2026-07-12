@@ -35,7 +35,7 @@ export default function PreviewPane({ html }: PreviewPaneProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-white">
+    <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-ink-800 px-3 py-1.5">
         <div className="flex items-center gap-1.5">
