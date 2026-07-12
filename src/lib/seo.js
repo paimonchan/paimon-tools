@@ -7,6 +7,12 @@
  * registry.ts and the prerender script both derive from it.
  */
 
+/** Base site URL — used for canonical URLs, OG, sitemap. */
+export const SITE_URL = 'https://paimonchan.github.io/paimon-tools'
+
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+const DEFAULT_OG_ALT = 'Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser'
+
 export const HOME_SEO = {
   title: 'Paimon Tools — Free JSON, CSV & Excel Converter',
   description:
@@ -14,6 +20,8 @@ export const HOME_SEO = {
   keywords:
     'json to csv, csv to json, json to excel, excel to json, csv to excel, json formatter, json minifier, json beautifier, convert json, data converter, online json tools, privacy-first tools',
   path: '',
+  ogImage: DEFAULT_OG_IMAGE,
+  ogImageAlt: DEFAULT_OG_ALT,
   bodyHtml: `<h1>Paimon Tools — Free Converter for JSON, CSV &amp; Excel</h1>
 <p>Convert between <strong>JSON, CSV, and Excel</strong> entirely in your browser — no uploads, no sign-up, no servers. Your data never leaves your device.</p>
 <h2>Available conversion tools</h2>
@@ -26,6 +34,7 @@ export const HOME_SEO = {
   <li><a href="excel-to-csv/">Excel to CSV</a> — extract CSV from .xlsx sheets</li>
   <li><a href="json-formatter/">JSON Formatter</a> — pretty-print and validate JSON</li>
   <li><a href="json-minifier/">JSON Minifier</a> — compress JSON by stripping whitespace</li>
+  <li><a href="code/">Code Playground</a> — run JavaScript, Python &amp; HTML online</li>
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
 }
@@ -41,6 +50,8 @@ export const TOOL_SEO = {
       'Convert JSON to CSV instantly in your browser. Paste a JSON array and get a clean CSV table — no uploads, no sign-up, your data never leaves your device.',
     keywords: 'json to csv, convert json to csv, json array to csv, csv export, json csv converter',
     path: 'json-to-csv',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'JSON to CSV Converter',
     breadcrumb: 'Convert / JSON to CSV',
     bodyHtml: `<h1>JSON to CSV Converter</h1>
@@ -54,6 +65,8 @@ export const TOOL_SEO = {
       'Convert CSV to JSON online, entirely in your browser. Paste a CSV table with headers and get a JSON array — no uploads, no sign-up, fully private.',
     keywords: 'csv to json, convert csv to json, csv parser, csv json converter, parse csv',
     path: 'csv-to-json',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'CSV to JSON Converter',
     breadcrumb: 'Convert / CSV to JSON',
     bodyHtml: `<h1>CSV to JSON Converter</h1>
@@ -67,6 +80,8 @@ export const TOOL_SEO = {
       'Convert JSON to Excel (.xlsx) instantly in your browser. Export a JSON array as a downloadable spreadsheet — no uploads, no sign-up, your data stays local.',
     keywords: 'json to excel, json to xlsx, convert json to excel, json spreadsheet export',
     path: 'json-to-excel',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'JSON to Excel Converter',
     breadcrumb: 'Convert / JSON to Excel',
     bodyHtml: `<h1>JSON to Excel (.xlsx) Converter</h1>
@@ -79,6 +94,8 @@ export const TOOL_SEO = {
       'Convert Excel (.xlsx) to JSON in your browser. Drop a spreadsheet and get a JSON array of its first sheet — no uploads, no sign-up, fully private.',
     keywords: 'excel to json, xlsx to json, convert excel to json, spreadsheet to json',
     path: 'excel-to-json',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'Excel to JSON Converter',
     breadcrumb: 'Convert / Excel to JSON',
     bodyHtml: `<h1>Excel to JSON Converter</h1>
@@ -91,6 +108,8 @@ export const TOOL_SEO = {
       'Convert CSV to Excel (.xlsx) instantly in your browser. Turn a CSV table into a downloadable spreadsheet — no uploads, no sign-up, your data stays local.',
     keywords: 'csv to excel, csv to xlsx, convert csv to excel, csv spreadsheet',
     path: 'csv-to-excel',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'CSV to Excel Converter',
     breadcrumb: 'Convert / CSV to Excel',
     bodyHtml: `<h1>CSV to Excel (.xlsx) Converter</h1>
@@ -103,6 +122,8 @@ export const TOOL_SEO = {
       'Convert Excel (.xlsx) to CSV in your browser. Drop a spreadsheet and get CSV from its first sheet — no uploads, no sign-up, fully private.',
     keywords: 'excel to csv, xlsx to csv, convert excel to csv, spreadsheet to csv',
     path: 'excel-to-csv',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'Excel to CSV Converter',
     breadcrumb: 'Convert / Excel to CSV',
     bodyHtml: `<h1>Excel to CSV Converter</h1>
@@ -116,6 +137,8 @@ export const TOOL_SEO = {
     keywords:
       'json formatter, json beautifier, pretty print json, format json, json validator, indent json',
     path: 'json-formatter',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'JSON Formatter & Beautifier',
     breadcrumb: 'Format / JSON Formatter',
     bodyHtml: `<h1>JSON Formatter &amp; Beautifier</h1>
@@ -129,6 +152,8 @@ export const TOOL_SEO = {
       'Minify JSON online, in your browser. Strip all whitespace to compress your JSON — validates syntax as it goes — no uploads, fully private.',
     keywords: 'json minifier, minify json, compress json, json compact, reduce json size',
     path: 'json-minifier',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
     h1: 'JSON Minifier',
     breadcrumb: 'Format / JSON Minifier',
     bodyHtml: `<h1>JSON Minifier</h1>
@@ -141,16 +166,87 @@ export const TOOL_SEO = {
       'Write and run JavaScript, Python & HTML online, free. Code playground with live preview, Pyodide WASM Python, syntax highlighting, and sandboxed execution — 100% in your browser, no sign-up.',
     keywords: 'code playground, online compiler, python online, html preview, javascript online, free code editor, web ide, live html editor, run python in browser, online code runner',
     path: 'code',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Code Playground — run JavaScript, Python & HTML in your browser',
     h1: 'Online Code Playground',
     breadcrumb: 'Tools / Playground',
     bodyHtml: `<h1>Online Code Playground</h1>
 <p>Write and run code in your browser. Choose from <strong>JavaScript</strong> (sandboxed execution), <strong>Python</strong> (via Pyodide WASM), <strong>HTML</strong> (live iframe preview), or <strong>JSON</strong> (format &amp; validate). Everything runs locally — no uploads, no sign-up, fully private.</p>
+<p><strong>Try a specific language:</strong></p>
+<ul>
+  <li><a href="code/javascript/">JavaScript Playground</a> — sandboxed JS execution</li>
+  <li><a href="code/python/">Python Playground</a> — Pyodide WASM Python</li>
+  <li><a href="code/html/">HTML Playground</a> — live iframe preview</li>
+  <li><a href="code/json/">JSON Playground</a> — format &amp; validate</li>
+</ul>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
-}
 
-/** Base site URL — used for canonical URLs, OG, sitemap. */
-export const SITE_URL = 'https://paimonchan.github.io/paimon-tools'
+  // Per-language playground sub-pages (deep links at /code/<language>/)
+  'playground-javascript': {
+    title: 'JavaScript Online — Run JS Code in Browser | Paimon Tools',
+    description:
+      'Write and run JavaScript online, free. Code playground with sandboxed execution, console output, syntax highlighting, and instant results — 100% in your browser, no sign-up.',
+    keywords: 'javascript online, run javascript online, js playground, javascript compiler online, free javascript editor, online js runner',
+    path: 'code/javascript',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'JavaScript Online Playground — run JS code in your browser, free',
+    h1: 'JavaScript Online Playground',
+    breadcrumb: 'Playground / JavaScript',
+    bodyHtml: `<h1>JavaScript Online Playground</h1>
+<p>Write and run JavaScript code in your browser. Sandboxed execution (Web Worker) with full console output, CodeMirror syntax highlighting, and instant results — no uploads, no sign-up, fully private.</p>
+<p>Try <a href="../html/">HTML Playground</a> · <a href="../python/">Python Playground</a> · <a href="../json/">JSON Playground</a></p>
+<p><a href="../../">← Back to all Paimon Tools</a></p>`,
+  },
+
+  'playground-python': {
+    title: 'Python Online — Run Python in Browser (Pyodide) | Paimon Tools',
+    description:
+      'Write and run Python online in your browser, free. Powered by Pyodide WASM — no server, no setup. Full Python with syntax highlighting and stdout output.',
+    keywords: 'python online, run python online, pyodide, python in browser, python playground, online python compiler, wasm python, free python editor',
+    path: 'code/python',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Python Online Playground — Pyodide WASM Python in your browser',
+    h1: 'Python Online Playground',
+    breadcrumb: 'Playground / Python',
+    bodyHtml: `<h1>Python Online Playground</h1>
+<p>Write and run Python code in your browser, powered by <strong>Pyodide WASM</strong> (~12 MB, cached after first load). Full Python with syntax highlighting and stdout output — no server, no setup, fully private.</p>
+<p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../html/">HTML Playground</a> · <a href="../json/">JSON Playground</a></p>
+<p><a href="../../">← Back to all Paimon Tools</a></p>`,
+  },
+
+  'playground-html': {
+    title: 'HTML Online — Live Preview HTML Editor | Paimon Tools',
+    description:
+      'Write HTML online with live iframe preview, free. Edit HTML, CSS and JavaScript in a live-reload sandbox — no uploads, no sign-up, 100% in your browser.',
+    keywords: 'html online, html editor, live html preview, html playground, html css editor, live preview html, web editor online, frontend playground',
+    path: 'code/html',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'HTML Online Playground — live preview HTML editor in your browser',
+    h1: 'HTML Online Playground',
+    breadcrumb: 'Playground / HTML',
+    bodyHtml: `<h1>HTML Online Playground</h1>
+<p>Write HTML, CSS and JavaScript with a live iframe preview — updates in real time. Edit and see results instantly, no uploads, no sign-up, fully private.</p>
+<p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../python/">Python Playground</a> · <a href="../json/">JSON Playground</a></p>
+<p><a href="../../">← Back to all Paimon Tools</a></p>`,
+  },
+
+  'playground-json': {
+    title: 'JSON Online — Format, Validate & Edit JSON | Paimon Tools',
+    description:
+      'Format, validate and edit JSON online, free. Syntax highlighting, auto-validation, and pretty-printing — 100% client-side, no uploads, fully private.',
+    keywords: 'json online, json editor, json formatter online, json validator online, edit json, json beautifier online, format json',
+    path: 'code/json',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'JSON Online Playground — format, validate and edit JSON in your browser',
+    h1: 'JSON Online Playground',
+    breadcrumb: 'Playground / JSON',
+    bodyHtml: `<h1>JSON Online Playground</h1>
+<p>Format, validate and edit JSON in your browser. Syntax highlighting with auto-validation, pretty-printing, and formatting tools — no uploads, no sign-up, fully private.</p>
+<p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../python/">Python Playground</a> · <a href="../html/">HTML Playground</a></p>
+<p><a href="../../">← Back to all Paimon Tools</a></p>`,
+  },
+}
 
 /**
  * Build BreadcrumbList JSON-LD for a tool page.

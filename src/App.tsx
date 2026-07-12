@@ -110,13 +110,20 @@ function Shell() {
 
         {/* Workspace */}
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
-          {activeId === 'playground' ? (
+          {activeId === 'playground' || activeId.startsWith('playground-') ? (
             <Suspense fallback={
               <div className="flex flex-1 items-center justify-center">
                 <div className="text-sm text-ink-400">Loading playground…</div>
               </div>
             }>
-              <PlaygroundTool />
+              <PlaygroundTool
+                key={activeId}
+                initialLanguage={
+                  activeId.startsWith('playground-')
+                    ? (activeId.slice('playground-'.length) as 'javascript' | 'python' | 'html' | 'json')
+                    : undefined
+                }
+              />
             </Suspense>
           ) : (
             <ConversionTool

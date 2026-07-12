@@ -20,6 +20,7 @@ import CodeMirrorWrapper from './CodeMirrorWrapper'
 import StatusBar from '../components/StatusBar'
 import type { Language } from './LangTabs'
 import { buildShareHash, readShareHash, pushShareHash, clearShareHash, detectLanguage } from './lib/share'
+import { replaceTool } from '../lib/router'
 
 // --- Template code per language ------------------------------------
 
@@ -43,10 +44,14 @@ function createEngine(language: Language): CodeEngine {
 
 // --- Component -----------------------------------------------------
 
-export default function PlaygroundTool() {
+interface PlaygroundToolProps {
+  initialLanguage?: Language
+}
+
+export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps) {
   const toast = useToast()
   const enginesRef = useRef<Map<Language, CodeEngine>>(new Map())
-  const [language, setLanguage] = useState<Language>('javascript')
+  const [language, setLanguage] = useState<Language>(() => initialLanguage || 'javascript')
   const [isPythonLoading, setIsPythonLoading] = useState(false)
 
   // each language keeps its own code, survives tab switches
@@ -130,10 +135,12 @@ export default function PlaygroundTool() {
 
   const handleLanguageChange = useCallback((lang: Language) => {
     if (lang === language) return
-    // Engine is lazy-created on first Run via getEngine()
     setLanguage(lang)
     setOutput(null)
     statusRef.current = 'idle'
+    // Sync URL to the per-language deep link (replaceState — no history pollution)
+    const langToolId = `playground-${lang}`
+    replaceTool(langToolId)
   }, [language])
 
   // --- Auto-validate JSON on change ----------------------------------

@@ -50,6 +50,8 @@ async function main() {
     description: HOME_SEO.description,
     keywords: HOME_SEO.keywords,
     canonical: `${SITE_URL}/`,
+    ogImage: HOME_SEO.ogImage || `${SITE_URL}/og-image.png`,
+    ogImageAlt: HOME_SEO.ogImageAlt || 'Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser',
     jsonLd: JSON.stringify(jsonLdFor(null)),
     breadcrumbLd: JSON.stringify(breadcrumbLdFor(null)),
     noscript: noscriptBodyFor(null),
@@ -59,19 +61,23 @@ async function main() {
   console.log(`[prerender] ✓ home (index.html)`)
 
   // --- Per-tool pages (dist/<path>/index.html) ---
-  // These live one directory deeper, so "./" asset paths must become "../".
+  // These live one or more directories deeper, so "./" asset paths must become
+  // "../" for single-level paths or "../../" for deeper paths.
   for (const [toolId, seo] of tools) {
     const html = fillSeo(template, {
       title: seo.title,
       description: seo.description,
       keywords: seo.keywords,
       canonical: `${SITE_URL}/${seo.path}/`,
+      ogImage: seo.ogImage || `${SITE_URL}/og-image.png`,
+      ogImageAlt: seo.ogImageAlt || 'Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser',
       jsonLd: JSON.stringify(jsonLdFor(toolId)),
       breadcrumbLd: JSON.stringify(breadcrumbLdFor(toolId)),
       noscript: noscriptBodyFor(toolId),
       bodyHtml: seo.bodyHtml,
     })
-    const deep = rewriteRelativePaths(html) // ./ → ../
+    const depth = seo.path.split('/').length
+    const deep = rewriteRelativePaths(html, depth)
     const dir = join(DIST, seo.path)
     await mkdir(dir, { recursive: true })
     await writeFile(join(dir, 'index.html'), deep, 'utf8')
@@ -99,12 +105,14 @@ ${urls.map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${today}</last
 }
 
 /** Replace the %%SEO%% tokens with per-page values. */
-function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, breadcrumbLd, noscript, bodyHtml }) {
+function fillSeo(tpl, { title, description, keywords, canonical, ogImage, ogImageAlt, jsonLd, breadcrumbLd, noscript, bodyHtml }) {
   return tpl
     .replace(/%%TITLE%%/g, escapeHtml(title))
     .replace(/%%DESCRIPTION%%/g, escapeHtml(description))
     .replace(/%%KEYWORDS%%/g, escapeHtml(keywords))
     .replace(/%%CANONICAL%%/g, escapeHtml(canonical))
+    .replace(/%%OG_IMAGE%%/g, ogImage)
+    .replace(/%%OG_IMAGE_ALT%%/g, escapeHtml(ogImageAlt))
     .replace(/%%JSONLD%%/g, jsonLd)
     .replace(/%%BREADCRUMBLD%%/g, breadcrumbLd)
     .replace(/%%NOSCRIPT%%/g, noscript)
@@ -112,12 +120,13 @@ function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, breadcr
 }
 
 /**
- * Rewrite "./assets/..." and other root-relative "./" references to "../" so
- * they resolve correctly from a deeper directory (dist/<tool>/index.html).
+ * Rewrite "./assets/..." and other root-relative "./" references to "../" (or
+ * "../../" for deeper paths) so they resolve correctly from deeper directories.
  * Only touches local asset references; leaves https:// URLs untouched.
  */
-function rewriteRelativePaths(html) {
-  return html.replace(/(href|src)="\.\/(?!\/)/g, '$1="../')
+function rewriteRelativePaths(html, depth = 1) {
+  const prefix = '../'.repeat(depth)
+  return html.replace(/(href|src)="\.\/(?!\/)/g, `$1="${prefix}`)
 }
 
 function escapeHtml(s) {
