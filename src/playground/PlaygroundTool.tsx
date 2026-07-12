@@ -1,15 +1,9 @@
 /**
- * PlaygroundTool — main component for the online code playground.
+ * PlaygroundTool — the code playground.
  *
- * Loaded lazily via React.lazy in App.tsx. Handles:
- * - Language tab switching (JavaScript, JSON, HTML, Python)
- * - CodeMirror 6 eager-imported (PlaygroundTool sendiri udah lazy-loaded dari App.tsx)
- * - Web Worker execution for JavaScript
- * - Inline validation for JSON
- * - HTML iframe preview for HTML/CSS/JS
- * - Pyodide WASM for Python (lazy ~12 MB load on first Run)
- * - Output display with stdout/stderr capture
- * - URL-based code sharing via lz-string
+ * Lazy-loaded dari App.tsx. Urusan dia: ngatur tab bahasa, nyambungin
+ * engine ke tiap bahasa (Worker buat JS, Pyodide buat Python, dll),
+ * dan ngasih output ke layar.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -55,7 +49,7 @@ export default function PlaygroundTool() {
   const [language, setLanguage] = useState<Language>('javascript')
   const [isPythonLoading, setIsPythonLoading] = useState(false)
 
-  // Per-language code state
+  // tiap bahasa punya state sendiri, biar gak ilang pas ganti tab
   const [jsCode, setJsCode] = usePersistentState('playground.js', TEMPLATES.javascript)
   const [jsonCode, setJsonCode] = usePersistentState('playground.json', TEMPLATES.json)
   const [htmlCode, setHtmlCode] = usePersistentState('playground.html', TEMPLATES.html)
@@ -65,7 +59,7 @@ export default function PlaygroundTool() {
   const [isRunning, setIsRunning] = useState(false)
   const statusRef = useRef<string>('idle')
 
-  // Get or create engine for a language (lazy — created on first use)
+  // ambil engine dari cache, kalo belum ada ya bikin baru
   const getEngine = useCallback((lang: Language): CodeEngine => {
     let engine = enginesRef.current.get(lang)
     if (!engine) {
@@ -93,7 +87,7 @@ export default function PlaygroundTool() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cleanup all engines on unmount
+  // Begitu komponen ilang, dispose semua engine biar gak bocor memory
   useEffect(() => {
     return () => {
       enginesRef.current.forEach(engine => engine.dispose())
@@ -189,7 +183,8 @@ export default function PlaygroundTool() {
       return
     }
 
-    // Python — show loading state for first-run WASM download
+    // pas pencet Run dan codenya Python, kita perlu load Pyodide dulu
+    // (12 MB WASM, cuma sekali — sisanya pake cache browser)
     if (language === 'python') {
       const engine = getEngine(language) as unknown as PyodideEngine
       if (!engine.ready && !engine.loading) {

@@ -1,5 +1,5 @@
 /**
- * PreviewPane — sandboxed iframe for rendering HTML/CSS/JS output.
+ * PreviewPane — iframe buat liat hasil HTML/CSS/JS.
  */
 
 import { useRef, useEffect } from 'react'

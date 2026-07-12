@@ -1,9 +1,8 @@
 /**
- * CodeMirrorWrapper — lazy-loaded CodeMirror 6 editor component.
+ * CodeMirrorWrapper — editor kode pake CodeMirror 6.
  *
- * Uses @uiw/react-codemirror with language-specific extensions.
- * Language extensions are static imports (CodeMirrorWrapper is already
- * lazy-loaded via the PlaygroundTool route, so no initial bundle impact).
+ * Komponen ini di-import secara normal (gak lazy) karena PlaygroundTool
+ * aja udah lazy-loaded dari route. Jadi gak nambah bundle awal.
  */
 
 import { useMemo } from 'react'

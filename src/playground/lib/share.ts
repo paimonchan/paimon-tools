@@ -1,11 +1,11 @@
 /**
- * share.ts — URL-based code sharing via lz-string compression.
+ * share.ts — kompresi kode ke URL hash pake lz-string.
  *
- * Flow:
- *   Share → compress(code) → base64 → set URL hash (#code=...)
- *   Load  → read URL hash → decompress → set code
+ * Cara mainnya:
+ *   Share → compress → taruh di #code=...
+ *   Load  → baca hash → decompress → masukin ke editor
  *
- * Zero server needed — everything in the URL fragment (not sent to server).
+ * Gak perlu server — semua di URL fragment, gak dikirim kemana-mana.
  */
 
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
@@ -14,13 +14,13 @@ export type DetectedLanguage = 'javascript' | 'json' | 'html' | 'python'
 
 const HASH_KEY = 'code'
 
-/** Compress code and return a shareable URL hash fragment. */
+/** Kompres kode jadi hash fragment buat di-share. */
 export function buildShareHash(code: string): string {
   const compressed = compressToEncodedURIComponent(code)
   return `#${HASH_KEY}=${compressed}`
 }
 
-/** Read code from the current URL hash, if present. Returns null if no shared code. */
+/** Baca kode dari URL hash. Balikin null kalo gak ada. */
 export function readShareHash(): string | null {
   if (!window.location.hash) return null
   const hash = window.location.hash.slice(1) // remove leading #
@@ -35,18 +35,18 @@ export function readShareHash(): string | null {
   }
 }
 
-/** Update the URL hash without triggering a navigation/reload. */
+/** Update URL hash tanpa trigger navigasi. */
 export function pushShareHash(code: string): void {
   const hash = buildShareHash(code)
   window.history.replaceState(null, '', hash)
 }
 
-/** Clear the URL hash. */
+/** Bersihin URL hash. */
 export function clearShareHash(): void {
   window.history.replaceState(null, '', window.location.pathname + window.location.search)
 }
 
-/** Detect language from code content. Used when loading shared code without language metadata. */
+/** Tebak bahasa dari isi kode. Dipake pas load shared code yang gak ada metadata. */
 export function detectLanguage(code: string): DetectedLanguage {
   const trimmed = code.trim()
 
