@@ -2,13 +2,15 @@
  * CodeMirrorWrapper — lazy-loaded CodeMirror 6 editor component.
  *
  * Uses @uiw/react-codemirror with language-specific extensions.
- * Language extensions are also lazy-imported per language.
+ * Language extensions are static imports (CodeMirrorWrapper is already
+ * lazy-loaded via the PlaygroundTool route, so no initial bundle impact).
  */
 
 import { useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { Compartment, type Extension } from '@codemirror/state'
+import { javascript } from '@codemirror/lang-javascript'
+import { json } from '@codemirror/lang-json'
 import { EditorView } from '@codemirror/view'
 import type { Language } from './LangTabs'
 
@@ -19,23 +21,19 @@ interface CodeMirrorWrapperProps {
   readOnly?: boolean
 }
 
-// Compartment lets us swap language extensions without recreating the editor
-const langCompartment = new Compartment()
-
-// Lazy language extension loaders
-const langExtensions: Record<Language, () => Promise<Extension>> = {
-  javascript: () => import('@codemirror/lang-javascript').then((m) => m.javascript()),
-  json: () => import('@codemirror/lang-json').then((m) => m.json()),
+const langExt: Record<Language, ReturnType<typeof javascript>> = {
+  javascript: javascript(),
+  json: json(),
 }
 
 export default function CodeMirrorWrapper({ value, onChange, language, readOnly }: CodeMirrorWrapperProps) {
   const extensions = useMemo(
     () => [
-      langCompartment.of([]), // placeholder — replaced dynamically
+      langExt[language],
       readOnly ? EditorView.editable.of(false) : [],
       EditorView.lineWrapping,
     ].flat(),
-    [readOnly],
+    [language, readOnly],
   )
 
   return (
