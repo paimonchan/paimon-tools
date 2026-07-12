@@ -35,7 +35,7 @@ These are strict — don't import across layers.
 | `engine/` | Pure conversion logic | Zero React, zero browser API, no DOM, no `window`. Pure functions only. |
 | `components/` | React UI components | Flat dir (no subdirs). Each file = one component, one default export. |
 | `playground/` | Code Playground (lazy) | `engines/` = execution backends. `sandbox-worker.js` = Web Worker (plain JS). Zero imports from `components/`. |
-| `lib/` | Browser I/O utilities | `files.ts`, `router.ts`, `makeFilename.ts`, `share.ts`. Side-effectful, but no JSX. |
+| `lib/` | Browser I/O + adapters | `files.ts`, `router.ts`, `makeFilename.ts`, `share.ts`, plus adapters like `icon-map.ts` that bridge domain → framework. Side-effectful, no JSX. |
 | `stores/` | Zustand stores | Theme + toast only. No per-tool state — use `usePersistentState` hook instead. |
 | `hooks/` | Shared React hooks | `usePersistentState` — generic localStorage hook. |
 
