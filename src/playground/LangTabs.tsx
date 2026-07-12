@@ -18,14 +18,14 @@ const TABS: { id: Language; label: string; desc: string }[] = [
 
 export default function LangTabs({ value, onChange }: LangTabsProps) {
   return (
-    <div className="mb-3 flex flex-wrap gap-1">
+    <div className="mb-3 flex gap-1 overflow-x-auto">
       {TABS.map((tab) => {
         const active = tab.id === value
         return (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
-            className={`group relative rounded-lg px-3 py-1.5 text-left text-xs transition-colors ${
+            className={`group relative shrink-0 rounded-lg px-3 py-1.5 text-left text-xs transition-colors ${
               active
                 ? 'bg-honey-400/10 text-honey-200'
                 : 'text-ink-400 hover:bg-ink-800 hover:text-ink-200'

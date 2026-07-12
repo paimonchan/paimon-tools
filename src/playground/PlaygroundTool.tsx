@@ -326,7 +326,7 @@ export default function PlaygroundTool() {
         </div>
 
         {/* Output pane */}
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-h-[8rem] flex-1 flex-col">
           {isPythonLoading ? (
             <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
               <div className="flex flex-1 items-center justify-center">
