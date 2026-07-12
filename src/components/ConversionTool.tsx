@@ -212,13 +212,14 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
   }
 
   function handleSwap() {
-    if (!tool.swap) return
-    const partner = TOOLS_BY_ID[tool.swap]
+    const swapId = tool.swap
+    if (!swapId) return
+    const partner = TOOLS_BY_ID[swapId]
     if (!partner || partner.type !== 'converter') return
     if (outputText && partner.input.type === 'text') {
-      setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.swap]: outputText }))
+      setStoredInputs((s: Record<string, string>) => ({ ...s, [swapId]: outputText }))
     }
-    onSwap(tool.swap)
+    onSwap(swapId)
     toast.push(`Switched to ${partner.name}`, { variant: 'info' })
   }
 
