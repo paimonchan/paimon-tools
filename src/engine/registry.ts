@@ -22,6 +22,7 @@ import {
   FileJson,
   FileText,
   Minimize2,
+  Play,
 } from 'lucide-react'
 import type { Result } from './result'
 
@@ -49,7 +50,7 @@ export interface ToolOutput {
 export interface ToolDefinition {
   id: ToolId
   name: string
-  category: 'Convert' | 'Format'
+  category: 'Convert' | 'Format' | 'Tools'
   icon: ComponentType<{ className?: string }>
   keywords: string[]
   description: string
@@ -79,7 +80,7 @@ const SAMPLE = {
 
 // ── Categories ────────────────────────────────────────
 
-export const CATEGORIES = ['Convert', 'Format'] as const
+export const CATEGORIES = ['Convert', 'Format', 'Tools'] as const
 
 // ── Tool registry ─────────────────────────────────────
 
@@ -188,6 +189,18 @@ export const TOOLS: ToolDefinition[] = [
     acceptsLenient: true,
     sample: SAMPLE.json,
     convert: (v, opts) => minifyJson(v as string, opts ?? {}),
+  },
+  {
+    id: 'playground',
+    name: 'Playground',
+    category: 'Tools',
+    icon: Play,
+    keywords: ['code', 'run', 'javascript', 'editor', 'script', 'playground'],
+    description: 'Write and run code in your browser. JavaScript & JSON — 100% client-side, no sign-up.',
+    input: { type: 'text', label: 'Code', placeholder: 'console.log("Hello, Paimon!")' },
+    output: { type: 'text', label: 'Output', ext: 'js' },
+    convert: () => ({ ok: true, value: '' }),
+    hasOptions: false,
   },
 ]
 

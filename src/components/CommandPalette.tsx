@@ -12,7 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { CornerDownLeft, Search } from 'lucide-react'
-import { TOOLS, type ToolDefinition, type ToolId } from '../engine/registry'
+import { TOOLS, CATEGORIES, type ToolDefinition, type ToolId } from '../engine/registry'
 
 interface CommandPaletteProps {
   open: boolean
@@ -211,7 +211,7 @@ function isSubsequence(needle: string, hay: string): boolean {
 }
 
 function group(tools: ToolDefinition[]): { category: string; tools: ToolDefinition[] }[] {
-  const order = ['Convert', 'Format']
+  const order = [...CATEGORIES]
   return order
     .map((category) => ({ category, tools: tools.filter((t) => t.category === category) }))
     .filter((g) => g.tools.length > 0)

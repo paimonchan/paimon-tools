@@ -43,7 +43,7 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
             <div className="font-display text-[15px] font-700 text-ink-50">
               Paimon<span className="text-honey-400"> Tools</span>
             </div>
-            <div className="text-[11px] text-ink-400">local data converters</div>
+            <div className="text-[11px] text-ink-400">privacy-first browser tools</div>
           </div>
         </div>
 

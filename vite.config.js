@@ -17,6 +17,10 @@ export default defineConfig({
             return 'vendor-react'
           if (id.includes('node_modules/xlsx')) return 'vendor-xlsx'
           if (id.includes('node_modules/papaparse')) return 'vendor-papaparse'
+          if (id.includes('codemirror') || id.includes('@codemirror'))
+            return 'vendor-codemirror-core'
+          if (id.includes('@uiw/react-codemirror'))
+            return 'vendor-codemirror-react'
         },
       },
     },

@@ -135,6 +135,18 @@ export const TOOL_SEO = {
 <p>Minify and compress JSON entirely in your browser. Strips all unnecessary whitespace to reduce file size — validates syntax as it goes. No uploads, fully private.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
+  playground: {
+    title: 'Online Code Playground — Free In-Browser Editor | Paimon Tools',
+    description:
+      'Write and run JavaScript & JSON online, free. Code playground with syntax highlighting and Web Worker sandbox — 100% in your browser, no sign-up.',
+    keywords: 'code playground, online compiler, javascript online, free code editor, run javascript',
+    path: 'code',
+    h1: 'Online Code Playground',
+    breadcrumb: 'Tools / Playground',
+    bodyHtml: `<h1>Online Code Playground</h1>
+<p>Write and run code in your browser. Choose from JavaScript (with execution) or JSON (format &amp; validate). Everything runs locally — no uploads, no sign-up, fully private.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
 }
 
 /** Base site URL — used for canonical URLs, OG, sitemap. */

@@ -5,7 +5,7 @@
  * <html>, and ToastContainer renders toast notifications from the Zustand store.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
 import { ThemeEffect, useTheme } from './stores/theme-store'
@@ -19,6 +19,9 @@ import type { ToolActions } from './components/ConversionTool'
 import { TOOLS } from './engine/registry'
 import type { ToolId } from './engine/registry'
 import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
+
+// Lazy import: PlaygroundTool only loads when user navigates to /code/
+const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
 
 function Shell() {
   const { theme, toggleTheme } = useTheme()
@@ -107,11 +110,21 @@ function Shell() {
 
         {/* Workspace */}
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
-          <ConversionTool
-            toolId={activeId}
-            onSwap={selectTool}
-            registerActions={registerActions}
-          />
+          {activeId === 'playground' ? (
+            <Suspense fallback={
+              <div className="flex flex-1 items-center justify-center">
+                <div className="text-sm text-ink-400">Loading playground…</div>
+              </div>
+            }>
+              <PlaygroundTool />
+            </Suspense>
+          ) : (
+            <ConversionTool
+              toolId={activeId}
+              onSwap={selectTool}
+              registerActions={registerActions}
+            />
+          )}
         </main>
       </div>
 
