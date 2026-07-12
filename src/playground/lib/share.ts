@@ -12,15 +12,20 @@ import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from
 export type DetectedLanguage = 'javascript' | 'json' | 'html' | 'python'
 
 const HASH_KEY = 'code'
+const LANG_KEY = 'lang'
 
 /** Compress code into a URL hash fragment for sharing. */
-export function buildShareHash(code: string): string {
+export function buildShareHash(code: string, language?: DetectedLanguage): string {
   const compressed = compressToEncodedURIComponent(code)
+  // Include language tag so shared code opens in the right mode
+  if (language) {
+    return `#${HASH_KEY}=${compressed}&${LANG_KEY}=${language}`
+  }
   return `#${HASH_KEY}=${compressed}`
 }
 
 /** Read code from the URL hash. Returns null if nothing's there. */
-export function readShareHash(): string | null {
+export function readShareHash(): { code: string; language?: DetectedLanguage } | null {
   if (!window.location.hash) return null
   const hash = window.location.hash.slice(1) // remove leading #
   const params = new URLSearchParams(hash)
@@ -28,7 +33,9 @@ export function readShareHash(): string | null {
   if (!compressed) return null
   try {
     const decompressed = decompressFromEncodedURIComponent(compressed)
-    return decompressed || null
+    if (!decompressed) return null
+    const language = params.get(LANG_KEY) as DetectedLanguage | null
+    return { code: decompressed, language: language ?? undefined }
   } catch {
     return null
   }

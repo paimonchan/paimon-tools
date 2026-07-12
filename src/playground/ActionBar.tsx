@@ -3,6 +3,7 @@
  */
 
 import { Play, Eraser, Copy, Share2 } from 'lucide-react'
+import type { Language } from './LangTabs'
 
 interface ActionBarProps {
   onRun: () => void
@@ -11,7 +12,7 @@ interface ActionBarProps {
   onShare: () => void
   isRunning: boolean
   hasOutput: boolean
-  language: string
+  language: Language
 }
 
 export default function ActionBar({ onRun, onClear, onCopy, onShare, isRunning, hasOutput, language }: ActionBarProps) {

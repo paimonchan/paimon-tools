@@ -64,9 +64,11 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   const [isRunning, setIsRunning] = useState(false)
   const statusRef = useRef<string>('idle')
   const [mobileView, setMobileView] = useState<'code' | 'output'>('code')
+  const outputFromRun = useRef(false)
 
-  // On mobile: auto-switch to Output when run completes, back to Code when tab changes
-  useEffect(() => { if (output) setMobileView('output') }, [output])
+  // On mobile: auto-switch to Output when run completes, back to Code when tab changes.
+  // Skip for JSON auto-validation (fires on every keystroke, would hide the editor).
+  useEffect(() => { if (output && outputFromRun.current) setMobileView('output') }, [output])
   useEffect(() => { setMobileView('code') }, [language])
 
   // grab engine from cache, create one if it doesn't exist yet
@@ -84,12 +86,12 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   useEffect(() => {
     const shared = readShareHash()
     if (shared) {
-      const lang = detectLanguage(shared)
+      const lang = shared.language || detectLanguage(shared.code)
       switch (lang) {
-        case 'html': setHtmlCode(shared); break
-        case 'python': setPythonCode(shared); break
-        case 'json': setJsonCode(shared); break
-        default: setJsCode(shared); break
+        case 'html': setHtmlCode(shared.code); break
+        case 'python': setPythonCode(shared.code); break
+        case 'json': setJsonCode(shared.code); break
+        default: setJsCode(shared.code); break
       }
       setLanguage(lang)
       clearShareHash()
@@ -234,6 +236,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
     try {
       const engine = getEngine(language)
       const result = await engine.run(inputCode)
+      outputFromRun.current = true
       setOutput(result)
     } catch (err) {
       setOutput({
@@ -288,7 +291,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   // --- Share ---------------------------------------------------------
 
   function handleShare() {
-    const hash = buildShareHash(inputCode)
+    const hash = buildShareHash(inputCode, language)
     const url = `${window.location.origin}${window.location.pathname}${hash}`
     navigator.clipboard.writeText(url).then(() => {
       pushShareHash(inputCode)

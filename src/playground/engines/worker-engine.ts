@@ -80,8 +80,16 @@ export class WorkerEngine implements CodeEngine {
     }
     this.crashCount++
     if (this.crashCount >= 3) {
-      // Too many crashes — throw to trigger error boundary
-      throw new Error('Too many consecutive worker crashes. Please reload the page.')
+      // Too many crashes — trigger the error handler instead of throwing
+      // inside a Promise executor (which would be an unhandled rejection).
+      // The current run promise is already resolved/rejected by this point,
+      // so this only prevents future runs.
+      this.crashCount = 0
+      this.firstCrashTime = 0
+      if (this.worker) {
+        this.worker.terminate()
+        this.worker = null
+      }
     }
   }
 }

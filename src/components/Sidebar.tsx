@@ -72,7 +72,7 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
               <ul className="space-y-0.5">
                 {tools.map((tool) => {
                   const Icon = tool.icon
-                  const active = tool.id === activeId
+                  const active = tool.id === activeId || (tool.id === 'playground' && activeId.startsWith('playground-'))
                   return (
                     <li key={tool.id}>
                       <button

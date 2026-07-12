@@ -268,7 +268,11 @@ export function breadcrumbLdFor(toolId) {
       '@type': 'ListItem',
       position: 2,
       name: parts[0],
-      item: `${SITE_URL}/#${parts[0].toLowerCase()}`,
+      // Link position 2 to the nearest actual page:
+      // "Playground" → /code/, everything else → home
+      item: parts[0].toLowerCase() === 'playground'
+        ? `${SITE_URL}/code/`
+        : `${SITE_URL}/`,
     })
     items.push({
       '@type': 'ListItem',
@@ -343,6 +347,7 @@ export function noscriptBodyFor(toolId) {
         <li><a href="${SITE_URL}/excel-to-csv/">Excel to CSV converter</a></li>
         <li><a href="${SITE_URL}/json-formatter/">JSON formatter and beautifier</a></li>
         <li><a href="${SITE_URL}/json-minifier/">JSON minifier</a></li>
+        <li><a href="${SITE_URL}/code/">Code Playground</a> — run JavaScript, Python &amp; HTML</li>
       </ul>
       <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`
   }
