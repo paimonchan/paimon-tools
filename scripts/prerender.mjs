@@ -53,6 +53,7 @@ async function main() {
     jsonLd: JSON.stringify(jsonLdFor(null)),
     breadcrumbLd: JSON.stringify(breadcrumbLdFor(null)),
     noscript: noscriptBodyFor(null),
+    bodyHtml: HOME_SEO.bodyHtml,
   })
   await writeFile(templatePath, homeHtml, 'utf8')
   console.log(`[prerender] ✓ home (index.html)`)
@@ -68,6 +69,7 @@ async function main() {
       jsonLd: JSON.stringify(jsonLdFor(toolId)),
       breadcrumbLd: JSON.stringify(breadcrumbLdFor(toolId)),
       noscript: noscriptBodyFor(toolId),
+      bodyHtml: seo.bodyHtml,
     })
     const deep = rewriteRelativePaths(html) // ./ → ../
     const dir = join(DIST, seo.path)
@@ -80,7 +82,7 @@ async function main() {
 }
 
 /** Replace the %%SEO%% tokens with per-page values. */
-function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, breadcrumbLd, noscript }) {
+function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, breadcrumbLd, noscript, bodyHtml }) {
   return tpl
     .replace(/%%TITLE%%/g, escapeHtml(title))
     .replace(/%%DESCRIPTION%%/g, escapeHtml(description))
@@ -89,6 +91,7 @@ function fillSeo(tpl, { title, description, keywords, canonical, jsonLd, breadcr
     .replace(/%%JSONLD%%/g, jsonLd)
     .replace(/%%BREADCRUMBLD%%/g, breadcrumbLd)
     .replace(/%%NOSCRIPT%%/g, noscript)
+    .replace(/%%PRERENDER_BODY%%/g, bodyHtml || '')
 }
 
 /**
