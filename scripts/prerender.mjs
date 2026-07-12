@@ -79,6 +79,23 @@ async function main() {
   }
 
   console.log(`[prerender] Done: 1 home + ${tools.length} tool pages.`)
+
+  // --- Sitemap (generate XML with today's date as lastmod) ---
+  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+  const urls = [
+    { loc: `${SITE_URL}/`, priority: '1.0', freq: 'weekly' },
+    ...tools.map(([, seo]) => ({
+      loc: `${SITE_URL}/${seo.path}/`,
+      priority: '0.9',
+      freq: 'monthly',
+    })),
+  ]
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${u.freq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`).join('\n')}
+</urlset>`
+  await writeFile(join(DIST, 'sitemap.xml'), sitemap, 'utf8')
+  console.log(`[prerender] ✓ sitemap.xml (${urls.length} URLs, lastmod: ${today})`)
 }
 
 /** Replace the %%SEO%% tokens with per-page values. */

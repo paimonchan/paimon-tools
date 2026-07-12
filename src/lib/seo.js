@@ -8,7 +8,7 @@
  */
 
 export const HOME_SEO = {
-  title: 'Paimon Tools — Free JSON ⇄ CSV ⇄ Excel Converter (Runs In Your Browser)',
+  title: 'Paimon Tools — Free JSON, CSV & Excel Converter',
   description:
     'Free, private, in-browser data converter: JSON to CSV, CSV to Excel, Excel to JSON, JSON formatter and minifier. No sign-up, no uploads — your data never leaves your device. Open source.',
   keywords:
