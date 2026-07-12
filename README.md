@@ -50,6 +50,9 @@ locally and discarded when you close the tab.
 
 - **8 conversion tools + 1 Code Playground** across JSON / CSV / Excel
 - **Online Code Playground** — run HTML/CSS/JS right in the browser with a secure sandbox
+- **Python support (Pyodide)** — run Python code directly in the browser via WebAssembly (lazy-loaded ~12 MB)
+- **Live HTML Preview** — see HTML/CSS/JS rendered in a sandboxed iframe in real-time
+- **Share via URL** — compress your code into the URL hash and share with one click
 - **Strict & Lenient JSON parsing** — single quotes, trailing commas, comments
   all accepted in Lenient mode (powered by JSON5)
 - **Command palette** (`⌘K` / `Ctrl K`) to jump between tools
@@ -77,7 +80,7 @@ locally and discarded when you close the tab.
 | Convert | Excel → CSV | `.xlsx` first sheet to CSV |
 | Format | JSON Formatter | Pretty-print (2/4 spaces or tab) |
 | Format | JSON Minifier | Strip all whitespace |
-| Play  | Code Playground | Run HTML/CSS/JS in a sandboxed iframe |
+| Play  | Code Playground | Run HTML/CSS/JS/Python in a sandboxed iframe |
 
 ## Project structure
 
@@ -94,11 +97,14 @@ src/
 ├── playground/               # Code Playground (lazy-loaded, zero initial cost)
 │   ├── PlaygroundTool.tsx    # Main playground orchestrator
 │   ├── LangTabs.tsx          # Language selector tabs
-│   ├── ActionBar.tsx         # Run/Download/Copy controls
-│   ├── OutputPane.tsx        # Output renderer (iframe sandbox)
+│   ├── ActionBar.tsx         # Run/Download/Copy/Share controls
+│   ├── OutputPane.tsx        # Output renderer (iframe sandbox, Console/Preview tabs)
+│   ├── PreviewPane.tsx       # Live HTML/CSS/JS preview iframe
 │   ├── CodeMirrorWrapper.tsx  # Code editor wrapper (lazy + CodeMirror 6)
-│   ├── engines/
-│   │   └── worker-engine.ts  # Secure sandbox execution engine
+|│   ├── engines/
+│   │   ├── worker-engine.ts  # Secure sandbox execution engine (Worker)
+│   │   ├── html-engine.ts    # HTML/CSS/JS preview engine
+│   │   └── pyodide-engine.ts # Python via Pyodide WASM
 │   ├── types.ts              # Playground-specific types
 │   └── sandbox-worker.js     # Isolated Worker for running user code
 ├── stores/                   # Zustand state management
@@ -119,7 +125,8 @@ src/
 ├── lib/                     # Browser I/O utilities
 │   ├── files.ts             # File read/download helpers
 │   ├── router.ts            # History-based SPA routing
-│   └── makeFilename.ts      # Download filename helper
+│   ├── makeFilename.ts      # Download filename helper
+│   └── share.ts             # URL share via lz-string compression
 ├── App.tsx                  # Root shell component
 └── main.tsx                 # Entry point
 ```
@@ -158,8 +165,10 @@ all keyboard shortcuts work without changes.
 
 ### Playground language
 To add a new language to the Code Playground, add an entry to the `languages`
-array in `playground/PlaygroundTool.tsx` with a label, value, and default
-template code. The tabs and execution engine pick it up automatically.
+array in `playground/PlaygroundTool.tsx` with a label, value, engine, and default
+template code. The tabs and execution engine pick it up automatically. For
+backed languages, create an engine in `playground/engines/` and register it in
+the language entry.
 
 ## Built with
 
