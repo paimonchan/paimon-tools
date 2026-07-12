@@ -163,7 +163,7 @@ export const TOOL_SEO = {
   playground: {
     title: 'Online Code Playground — Free In-Browser Code Editor | Paimon Tools',
     description:
-      'Write and run JavaScript, Python & HTML online, free. Code playground with live preview, Pyodide WASM Python, syntax highlighting, and sandboxed execution — 100% in your browser, no sign-up.',
+      'Write and run JavaScript, Python & HTML online, free. Code playground with live preview, Pyodide WASM Python (fetched from CDN, cached locally), syntax highlighting, and sandboxed execution — 100% client-side, no sign-up.',
     keywords: 'code playground, online compiler, python online, html preview, javascript online, free code editor, web ide, live html editor, run python in browser, online code runner',
     path: 'code',
     ogImage: DEFAULT_OG_IMAGE,
@@ -202,7 +202,7 @@ export const TOOL_SEO = {
   'playground-python': {
     title: 'Python Online — Run Python in Browser (Pyodide) | Paimon Tools',
     description:
-      'Write and run Python online in your browser, free. Powered by Pyodide WASM — no server, no setup. Full Python with syntax highlighting and stdout output.',
+      'Write and run Python online in your browser, free. Powered by Pyodide WASM (fetched from CDN, cached locally) — no server, no setup. Full Python with syntax highlighting and stdout output.',
     keywords: 'python online, run python online, pyodide, python in browser, python playground, online python compiler, wasm python, free python editor',
     path: 'code/python',
     ogImage: DEFAULT_OG_IMAGE,
@@ -210,7 +210,7 @@ export const TOOL_SEO = {
     h1: 'Python Online Playground',
     breadcrumb: 'Playground / Python',
     bodyHtml: `<h1>Python Online Playground</h1>
-<p>Write and run Python code in your browser, powered by <strong>Pyodide WASM</strong> (~12 MB, cached after first load). Full Python with syntax highlighting and stdout output — no server, no setup, fully private.</p>
+<p>Write and run Python code in your browser, powered by <strong>Pyodide WASM</strong> (fetched from CDN, cached locally). Full Python with syntax highlighting and stdout output — no server, no setup, fully private.</p>
 <p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../html/">HTML Playground</a> · <a href="../json/">JSON Playground</a></p>
 <p><a href="../../">← Back to all Paimon Tools</a></p>`,
   },

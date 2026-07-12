@@ -117,7 +117,6 @@ function Shell() {
               </div>
             }>
               <PlaygroundTool
-                key={activeId}
                 initialLanguage={
                   activeId.startsWith('playground-')
                     ? (activeId.slice('playground-'.length) as 'javascript' | 'python' | 'html' | 'json')

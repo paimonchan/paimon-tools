@@ -105,6 +105,15 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
     }
   }, [])
 
+  // Sync language when initialLanguage changes externally (browser back/forward)
+  useEffect(() => {
+    if (initialLanguage && initialLanguage !== language) {
+      setLanguage(initialLanguage)
+      setOutput(null)
+      statusRef.current = 'idle'
+    }
+  }, [initialLanguage]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // --- Current code based on language --------------------------------
 
   const getCode = useCallback((lang: Language): string => {
