@@ -19,7 +19,7 @@ import OutputPane from './OutputPane'
 import CodeMirrorWrapper from './CodeMirrorWrapper'
 import StatusBar from '../components/StatusBar'
 import type { Language } from './LangTabs'
-import { buildShareHash, readShareHash, pushShareHash, clearShareHash, detectLanguage } from './lib/share'
+import { buildShareHash, readShareHash, pushShareHash, clearShareHash, detectLanguage } from '../lib/playground-share'
 import { replaceTool } from '../lib/router'
 
 // --- Template code per language ------------------------------------
