@@ -1,31 +1,29 @@
 # paimon-tools — Project Conventions
 
 ## Indentation
-- **4 spaces** — never tabs, never 2 spaces.
-- Object properties inside arrays: indent 4 spaces relative to the opening brace.
-- Closing braces: align with the opening brace.
+- **2 spaces** — never tabs, never 4 spaces.
+- Every indent level = exactly 2 spaces.
+- All files formatted via **Prettier** (see `.prettierrc`).
+- JSX/TSX follows the same 2-space rule.
 
 ✅ Correct:
 ```ts
 const TOOLS = [
-    {
-        id: 'example',
-        name: 'Example',
-    },
-]
-```
-
-❌ Wrong (2-space):
-```ts
-const TOOLS = [
   {
     id: 'example',
+    name: 'Example',
   },
 ]
 ```
 
-- JSX/TSX: **2 spaces** (React standard).
-- Non-TS files (CSS, JSON, YAML): **2 spaces**.
+❌ Wrong:
+```ts
+const TOOLS = [
+    {
+        id: 'example',    // 4-space indent
+    },
+]
+```
 
 ## Architecture — Layer Rules
 These are strict — don't import across layers.
