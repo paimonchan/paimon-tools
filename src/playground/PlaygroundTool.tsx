@@ -58,6 +58,11 @@ export default function PlaygroundTool() {
   const [output, setOutput] = useState<RunResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
   const statusRef = useRef<string>('idle')
+  const [mobileView, setMobileView] = useState<'code' | 'output'>('code')
+
+  // On mobile: auto-switch to Output when run completes, back to Code when tab changes
+  useEffect(() => { if (output) setMobileView('output') }, [output])
+  useEffect(() => { setMobileView('code') }, [language])
 
   // grab engine from cache, create one if it doesn't exist yet
   const getEngine = useCallback((lang: Language): CodeEngine => {
@@ -299,10 +304,38 @@ export default function PlaygroundTool() {
       {/* Language tabs */}
       <LangTabs value={language} onChange={handleLanguageChange} />
 
+      {/* Mobile view toggle */}
+      <div className="mb-3 flex gap-1 border-b border-ink-800 pb-2 md:hidden">
+        <button
+          onClick={() => setMobileView('code')}
+          className={`rounded-md px-3 py-1 text-xs transition-colors ${
+            mobileView === 'code'
+              ? 'bg-honey-400/10 text-honey-200'
+              : 'text-ink-400 hover:text-ink-200'
+          }`}
+        >
+          Code
+        </button>
+        {output && (
+          <button
+            onClick={() => setMobileView('output')}
+            className={`rounded-md px-3 py-1 text-xs transition-colors ${
+              mobileView === 'output'
+                ? 'bg-honey-400/10 text-honey-200'
+                : 'text-ink-400 hover:text-ink-200'
+            }`}
+          >
+            Output
+          </button>
+        )}
+      </div>
+
       {/* Editor + Output split */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 md:flex-row">
         {/* Editor pane */}
-        <div className="flex min-h-[12rem] flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
+        <div className={`flex min-h-[12rem] flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50 ${
+          mobileView !== 'code' ? 'hidden' : ''
+        } md:flex`}>
           <div className="flex items-center justify-between border-b border-ink-800 px-3 py-1.5">
             <div className="text-[11px] font-500 text-ink-400">
               {language === 'javascript' ? 'JavaScript' : language === 'json' ? 'JSON' : language === 'html' ? 'HTML' : 'Python'}
@@ -326,7 +359,9 @@ export default function PlaygroundTool() {
         </div>
 
         {/* Output pane */}
-        <div className="flex min-h-[8rem] flex-1 flex-col">
+        <div className={`flex min-h-[8rem] flex-1 flex-col ${
+          mobileView !== 'output' || !output ? 'hidden' : ''
+        } md:flex`}>
           {isPythonLoading ? (
             <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
               <div className="flex flex-1 items-center justify-center">
