@@ -29,10 +29,10 @@ export default function OutputPane({ output }: OutputPaneProps) {
     }
   }, [output, previewMode])
 
-  // Reset to console mode when new output comes without htmlPreview
+  // Auto-switch: Console for non-HTML, Preview for HTML output
   useEffect(() => {
-    if (output && !output.htmlPreview) {
-      setPreviewMode(false)
+    if (output) {
+      setPreviewMode(!!output.htmlPreview)
     }
   }, [output])
 

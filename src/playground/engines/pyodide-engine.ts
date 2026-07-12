@@ -15,6 +15,8 @@ declare global {
       globals: {
         get(key: string): unknown
       }
+      setStdout: (opts: { batched?: (text: string) => void; raw?: (text: string) => void }) => void
+      setStderr: (opts: { batched?: (text: string) => void; raw?: (text: string) => void }) => void
     }>
   }
 }
@@ -87,14 +89,13 @@ export class PyodideEngine implements CodeEngine {
     const stdout: string[] = []
     const stderr: string[] = []
 
-    // Capture stdout
-    const origStdout = (self as any).__pyodide_stdout
-    ;(self as any).__pyodide_stdout = (text: string) => stdout.push(text)
+    // Capture stdout/stderr via Pyodide's official API
+    this.pyodide.setStdout({ batched: (text: string) => stdout.push(text) })
+    this.pyodide.setStderr({ batched: (text: string) => stderr.push(text) })
 
     try {
       const result = this.pyodide.runPython(code)
       const durationMs = performance.now() - start
-      // Try to get captured stdout from Pyodide's internal buffer
       return {
         stdout: stdout.join('\n'),
         stderr: stderr.join('\n'),
@@ -111,8 +112,6 @@ export class PyodideEngine implements CodeEngine {
         result: null,
         durationMs,
       }
-    } finally {
-      ;(self as any).__pyodide_stdout = origStdout
     }
   }
 
