@@ -21,7 +21,7 @@ import StatusBar from '../components/StatusBar'
 import type { Language } from './LangTabs'
 import { buildShareHash, readShareHash, pushShareHash, clearShareHash, detectLanguage } from './lib/share'
 
-// ── Template code per language ──────────────────────────────────────
+// --- Template code per language ------------------------------------
 
 const TEMPLATES: Record<Language, string> = {
   javascript: '// Write some JavaScript\nconsole.log("Hello, Paimon!");\n',
@@ -30,7 +30,7 @@ const TEMPLATES: Record<Language, string> = {
   python: '# Write some Python\nprint("Hello, Paimon!")\n\n# Math\nimport math\nprint(f"Pi = {math.pi:.4f}")\n\n# List comprehension\nsquares = [x**2 for x in range(10)]\nprint(f"Squares: {squares}")',
 }
 
-// ── Engine factory + cache ────────────────────────────────────────
+// --- Engine factory + cache ----------------------------------------
 
 function createEngine(language: Language): CodeEngine {
   switch (language) {
@@ -41,7 +41,7 @@ function createEngine(language: Language): CodeEngine {
   }
 }
 
-// ── Component ───────────────────────────────────────────────────────
+// --- Component -----------------------------------------------------
 
 export default function PlaygroundTool() {
   const toast = useToast()
@@ -69,7 +69,7 @@ export default function PlaygroundTool() {
     return engine
   }, [])
 
-  // ── Load shared code from URL hash on mount ──────────────────────
+  // --- Load shared code from URL hash on mount -----------------------
 
   useEffect(() => {
     const shared = readShareHash()
@@ -95,7 +95,7 @@ export default function PlaygroundTool() {
     }
   }, [])
 
-  // ── Current code based on language ───────────────────────────────
+  // --- Current code based on language --------------------------------
 
   const getCode = useCallback((lang: Language): string => {
     switch (lang) {
@@ -121,7 +121,7 @@ export default function PlaygroundTool() {
     [language, setCode],
   )
 
-  // ── Switch language ──────────────────────────────────────────────
+  // --- Switch language -----------------------------------------------
 
   const handleLanguageChange = useCallback((lang: Language) => {
     if (lang === language) return
@@ -131,7 +131,7 @@ export default function PlaygroundTool() {
     statusRef.current = 'idle'
   }, [language])
 
-  // ── Auto-validate JSON on change ─────────────────────────────────
+  // --- Auto-validate JSON on change ----------------------------------
 
   useEffect(() => {
     if (language !== 'json' || !inputCode) return
@@ -155,7 +155,7 @@ export default function PlaygroundTool() {
     }
   }, [inputCode, language])
 
-  // ── Run ──────────────────────────────────────────────────────────
+  // --- Run -----------------------------------------------------------
 
   const handleRun = useCallback(async () => {
     if (isRunning) return
@@ -228,7 +228,7 @@ export default function PlaygroundTool() {
     }
   }, [isRunning, language, inputCode, toast])
 
-  // ── Keyboard shortcut ⌘⏎ ─────────────────────────────────────────
+  // --- Keyboard shortcut ⌘⏎ ------------------------------------------
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -242,14 +242,14 @@ export default function PlaygroundTool() {
     return () => window.removeEventListener('keydown', onKey)
   }, [handleRun])
 
-  // ── Clear ────────────────────────────────────────────────────────
+  // --- Clear ---------------------------------------------------------
 
   function handleClear() {
     setOutput(null)
     toast.push('Output cleared', { variant: 'info' })
   }
 
-  // ── Copy ─────────────────────────────────────────────────────────
+  // --- Copy ----------------------------------------------------------
 
   function handleCopy() {
     const parts: string[] = []
@@ -264,7 +264,7 @@ export default function PlaygroundTool() {
     }
   }
 
-  // ── Share ────────────────────────────────────────────────────────
+  // --- Share ---------------------------------------------------------
 
   function handleShare() {
     const hash = buildShareHash(inputCode)
@@ -279,7 +279,7 @@ export default function PlaygroundTool() {
     })
   }
 
-  // ── Format JSON ──────────────────────────────────────────────────
+  // --- Format JSON ---------------------------------------------------
 
   function handleFormat() {
     if (language !== 'json') return
