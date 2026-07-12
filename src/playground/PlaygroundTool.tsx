@@ -36,7 +36,7 @@ const TEMPLATES: Record<Language, string> = {
   python: '# Write some Python\nprint("Hello, Paimon!")\n\n# Math\nimport math\nprint(f"Pi = {math.pi:.4f}")\n\n# List comprehension\nsquares = [x**2 for x in range(10)]\nprint(f"Squares: {squares}")',
 }
 
-// ── Engine factory ──────────────────────────────────────────────────
+// ── Engine factory + cache ────────────────────────────────────────
 
 function createEngine(language: Language): CodeEngine {
   switch (language) {
@@ -52,7 +52,6 @@ function createEngine(language: Language): CodeEngine {
 export default function PlaygroundTool() {
   const toast = useToast()
   const enginesRef = useRef<Map<Language, CodeEngine>>(new Map())
-  const engineRef = useRef<CodeEngine>(new WorkerEngine())
   const [language, setLanguage] = useState<Language>('javascript')
   const [isPythonLoading, setIsPythonLoading] = useState(false)
 
@@ -65,6 +64,16 @@ export default function PlaygroundTool() {
   const [output, setOutput] = useState<RunResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
   const statusRef = useRef<string>('idle')
+
+  // Get or create engine for a language (lazy — created on first use)
+  const getEngine = useCallback((lang: Language): CodeEngine => {
+    let engine = enginesRef.current.get(lang)
+    if (!engine) {
+      engine = createEngine(lang)
+      enginesRef.current.set(lang, engine)
+    }
+    return engine
+  }, [])
 
   // ── Load shared code from URL hash on mount ──────────────────────
 
@@ -118,26 +127,15 @@ export default function PlaygroundTool() {
     [language, setCode],
   )
 
-  // ── Switch language → swap engine ────────────────────────────────
+  // ── Switch language ──────────────────────────────────────────────
 
   const handleLanguageChange = useCallback((lang: Language) => {
     if (lang === language) return
-    // Cache current engine before switching
-    enginesRef.current.set(language, engineRef.current)
-    // Get or create engine for target language
-    let engine = enginesRef.current.get(lang)
-    if (!engine) {
-      engine = createEngine(lang)
-      enginesRef.current.set(lang, engine)
-    }
-    engineRef.current = engine
+    // Engine is lazy-created on first Run via getEngine()
     setLanguage(lang)
     setOutput(null)
     statusRef.current = 'idle'
   }, [language])
-
-  // Register initial engine in cache
-  enginesRef.current.set('javascript', engineRef.current)
 
   // ── Auto-validate JSON on change ─────────────────────────────────
 
@@ -193,7 +191,7 @@ export default function PlaygroundTool() {
 
     // Python — show loading state for first-run WASM download
     if (language === 'python') {
-      const engine = engineRef.current as unknown as PyodideEngine
+      const engine = getEngine(language) as unknown as PyodideEngine
       if (!engine.ready && !engine.loading) {
         setIsPythonLoading(true)
         toast.push('Loading Python engine (~12 MB, first time only)', { variant: 'info' })
@@ -218,7 +216,7 @@ export default function PlaygroundTool() {
     statusRef.current = 'running'
 
     try {
-      const engine = engineRef.current
+      const engine = getEngine(language)
       const result = await engine.run(inputCode)
       setOutput(result)
     } catch (err) {
