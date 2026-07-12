@@ -27,18 +27,23 @@ import { replaceTool } from '../lib/router'
 const TEMPLATES: Record<Language, string> = {
   javascript: '// Write some JavaScript\nconsole.log("Hello, Paimon!");\n',
   json: '{\n  "name": "Paimon",\n  "role": "Guide"\n}',
-  html: '<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: system-ui;\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      min-height: 100vh;\n      margin: 0;\n      background: #1a1a2e;\n      color: #eee;\n    }\n    h1 { color: #e94560; }\n  </style>\n</head>\n<body>\n  <h1>Hello, Paimon! 🎨</h1>\n  <p>Edit me and click Run</p>\n  <script>\n    document.querySelector(\'h1\').addEventListener(\'click\', () => {\n      alert(\'Hello from Paimon Tools!\');\n    });\n  </script>\n</body>\n</html>',
-  python: '# Write some Python\nprint("Hello, Paimon!")\n\n# Math\nimport math\nprint(f"Pi = {math.pi:.4f}")\n\n# List comprehension\nsquares = [x**2 for x in range(10)]\nprint(f"Squares: {squares}")',
+  html: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: system-ui;\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      min-height: 100vh;\n      margin: 0;\n      background: #1a1a2e;\n      color: #eee;\n    }\n    h1 { color: #e94560; }\n  </style>\n</head>\n<body>\n  <h1>Hello, Paimon! 🎨</h1>\n  <p>Edit me and click Run</p>\n  <script>\n    document.querySelector('h1').addEventListener('click', () => {\n      alert('Hello from Paimon Tools!');\n    });\n  </script>\n</body>\n</html>",
+  python:
+    '# Write some Python\nprint("Hello, Paimon!")\n\n# Math\nimport math\nprint(f"Pi = {math.pi:.4f}")\n\n# List comprehension\nsquares = [x**2 for x in range(10)]\nprint(f"Squares: {squares}")',
 }
 
 // --- Engine factory + cache ----------------------------------------
 
 function createEngine(language: Language): CodeEngine {
   switch (language) {
-    case 'javascript': return new WorkerEngine()
-    case 'html':       return new HtmlEngine()
-    case 'python':     return new PyodideEngine()
-    default:           return new WorkerEngine()
+    case 'javascript':
+      return new WorkerEngine()
+    case 'html':
+      return new HtmlEngine()
+    case 'python':
+      return new PyodideEngine()
+    default:
+      return new WorkerEngine()
   }
 }
 
@@ -68,8 +73,12 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
   // On mobile: auto-switch to Output when run completes, back to Code when tab changes.
   // Skip for JSON auto-validation (fires on every keystroke, would hide the editor).
-  useEffect(() => { if (output && outputFromRun.current) setMobileView('output') }, [output])
-  useEffect(() => { setMobileView('code') }, [language])
+  useEffect(() => {
+    if (output && outputFromRun.current) setMobileView('output')
+  }, [output])
+  useEffect(() => {
+    setMobileView('code')
+  }, [language])
 
   // grab engine from cache, create one if it doesn't exist yet
   const getEngine = useCallback((lang: Language): CodeEngine => {
@@ -88,10 +97,18 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
     if (shared) {
       const lang = shared.language || detectLanguage(shared.code)
       switch (lang) {
-        case 'html': setHtmlCode(shared.code); break
-        case 'python': setPythonCode(shared.code); break
-        case 'json': setJsonCode(shared.code); break
-        default: setJsCode(shared.code); break
+        case 'html':
+          setHtmlCode(shared.code)
+          break
+        case 'python':
+          setPythonCode(shared.code)
+          break
+        case 'json':
+          setJsonCode(shared.code)
+          break
+        default:
+          setJsCode(shared.code)
+          break
       }
       setLanguage(lang)
       clearShareHash()
@@ -102,7 +119,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   // cleanup all engines on unmount so we don't leak workers/wasm
   useEffect(() => {
     return () => {
-      enginesRef.current.forEach(engine => engine.dispose())
+      enginesRef.current.forEach((engine) => engine.dispose())
       enginesRef.current.clear()
     }
   }, [])
@@ -118,41 +135,59 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
   // --- Current code based on language --------------------------------
 
-  const getCode = useCallback((lang: Language): string => {
-    switch (lang) {
-      case 'javascript': return jsCode
-      case 'json':       return jsonCode
-      case 'html':       return htmlCode
-      case 'python':     return pythonCode
-    }
-  }, [jsCode, jsonCode, htmlCode, pythonCode])
+  const getCode = useCallback(
+    (lang: Language): string => {
+      switch (lang) {
+        case 'javascript':
+          return jsCode
+        case 'json':
+          return jsonCode
+        case 'html':
+          return htmlCode
+        case 'python':
+          return pythonCode
+      }
+    },
+    [jsCode, jsonCode, htmlCode, pythonCode]
+  )
 
-  const setCode = useCallback((lang: Language, value: string) => {
-    switch (lang) {
-      case 'javascript': setJsCode(value); break
-      case 'json':       setJsonCode(value); break
-      case 'html':       setHtmlCode(value); break
-      case 'python':     setPythonCode(value); break
-    }
-  }, [setJsCode, setJsonCode, setHtmlCode, setPythonCode])
+  const setCode = useCallback(
+    (lang: Language, value: string) => {
+      switch (lang) {
+        case 'javascript':
+          setJsCode(value)
+          break
+        case 'json':
+          setJsonCode(value)
+          break
+        case 'html':
+          setHtmlCode(value)
+          break
+        case 'python':
+          setPythonCode(value)
+          break
+      }
+    },
+    [setJsCode, setJsonCode, setHtmlCode, setPythonCode]
+  )
 
   const inputCode = getCode(language)
-  const setInputCode = useCallback(
-    (v: string) => setCode(language, v),
-    [language, setCode],
-  )
+  const setInputCode = useCallback((v: string) => setCode(language, v), [language, setCode])
 
   // --- Switch language -----------------------------------------------
 
-  const handleLanguageChange = useCallback((lang: Language) => {
-    if (lang === language) return
-    setLanguage(lang)
-    setOutput(null)
-    statusRef.current = 'idle'
-    // Sync URL to the per-language deep link (replaceState — no history pollution)
-    const langToolId = `playground-${lang}`
-    replaceTool(langToolId)
-  }, [language])
+  const handleLanguageChange = useCallback(
+    (lang: Language) => {
+      if (lang === language) return
+      setLanguage(lang)
+      setOutput(null)
+      statusRef.current = 'idle'
+      // Sync URL to the per-language deep link (replaceState — no history pollution)
+      const langToolId = `playground-${lang}`
+      replaceTool(langToolId)
+    },
+    [language]
+  )
 
   // --- Auto-validate JSON on change ----------------------------------
 
@@ -293,14 +328,17 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   function handleShare() {
     const hash = buildShareHash(inputCode, language)
     const url = `${window.location.origin}${window.location.pathname}${hash}`
-    navigator.clipboard.writeText(url).then(() => {
-      pushShareHash(inputCode)
-      toast.push('Share link copied to clipboard!', { variant: 'success' })
-    }).catch(() => {
-      // Fallback: just update URL
-      pushShareHash(inputCode)
-      toast.push('URL updated in address bar', { variant: 'info' })
-    })
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        pushShareHash(inputCode)
+        toast.push('Share link copied to clipboard!', { variant: 'success' })
+      })
+      .catch(() => {
+        // Fallback: just update URL
+        pushShareHash(inputCode)
+        toast.push('URL updated in address bar', { variant: 'info' })
+      })
   }
 
   // --- Format JSON ---------------------------------------------------
@@ -328,9 +366,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
         <button
           onClick={() => setMobileView('code')}
           className={`rounded-md px-3 py-1 text-xs transition-colors ${
-            mobileView === 'code'
-              ? 'bg-honey-400/10 text-honey-200'
-              : 'text-ink-400 hover:text-ink-200'
+            mobileView === 'code' ? 'bg-honey-400/10 text-honey-200' : 'text-ink-400 hover:text-ink-200'
           }`}
         >
           Code
@@ -339,9 +375,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
           <button
             onClick={() => setMobileView('output')}
             className={`rounded-md px-3 py-1 text-xs transition-colors ${
-              mobileView === 'output'
-                ? 'bg-honey-400/10 text-honey-200'
-                : 'text-ink-400 hover:text-ink-200'
+              mobileView === 'output' ? 'bg-honey-400/10 text-honey-200' : 'text-ink-400 hover:text-ink-200'
             }`}
           >
             Output
@@ -352,12 +386,20 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       {/* Editor + Output split */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 md:flex-row">
         {/* Editor pane */}
-        <div className={`flex min-h-[12rem] flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50 ${
-          mobileView !== 'code' ? 'hidden' : ''
-        } md:flex`}>
+        <div
+          className={`flex min-h-[12rem] flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50 ${
+            mobileView !== 'code' ? 'hidden' : ''
+          } md:flex`}
+        >
           <div className="flex items-center justify-between border-b border-ink-800 px-3 py-1.5">
             <div className="text-[11px] font-500 text-ink-400">
-              {language === 'javascript' ? 'JavaScript' : language === 'json' ? 'JSON' : language === 'html' ? 'HTML' : 'Python'}
+              {language === 'javascript'
+                ? 'JavaScript'
+                : language === 'json'
+                  ? 'JSON'
+                  : language === 'html'
+                    ? 'HTML'
+                    : 'Python'}
             </div>
             {language === 'json' && (
               <button
@@ -369,18 +411,14 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
             )}
           </div>
           <div className="flex-1">
-              <CodeMirrorWrapper
-                value={inputCode}
-                onChange={setInputCode}
-                language={language}
-              />
+            <CodeMirrorWrapper value={inputCode} onChange={setInputCode} language={language} />
           </div>
         </div>
 
         {/* Output pane */}
-        <div className={`flex min-h-[8rem] flex-1 flex-col ${
-          mobileView !== 'output' || !output ? 'hidden' : ''
-        } md:flex`}>
+        <div
+          className={`flex min-h-[8rem] flex-1 flex-col ${mobileView !== 'output' || !output ? 'hidden' : ''} md:flex`}
+        >
           {isPythonLoading ? (
             <div className="flex flex-1 flex-col rounded-lg border border-ink-800 bg-ink-900/50">
               <div className="flex flex-1 items-center justify-center">

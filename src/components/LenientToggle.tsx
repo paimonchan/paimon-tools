@@ -13,9 +13,7 @@ export default function LenientToggle({ value, onChange }: LenientToggleProps) {
         onClick={() => onChange(false)}
         title="Spec-compliant JSON.parse"
         className={`rounded-md px-2.5 py-1 text-[11px] font-500 transition-colors ${
-          !value
-            ? 'bg-honey-400/15 text-honey-200'
-            : 'text-ink-400 hover:text-ink-200'
+          !value ? 'bg-honey-400/15 text-honey-200' : 'text-ink-400 hover:text-ink-200'
         }`}
       >
         Strict
@@ -24,9 +22,7 @@ export default function LenientToggle({ value, onChange }: LenientToggleProps) {
         onClick={() => onChange(true)}
         title="JSON5: single quotes, trailing commas, comments, unquoted keys"
         className={`rounded-md px-2.5 py-1 text-[11px] font-500 transition-colors ${
-          value
-            ? 'bg-honey-400/15 text-honey-200'
-            : 'text-ink-400 hover:text-ink-200'
+          value ? 'bg-honey-400/15 text-honey-200' : 'text-ink-400 hover:text-ink-200'
         }`}
       >
         Lenient

@@ -10,13 +10,7 @@ export default function BrandMark({ size = 36, className = '' }) {
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <svg
-        width={size * 0.56}
-        height={size * 0.56}
-        viewBox="0 0 24 24"
-        fill="none"
-        className="text-ink-950"
-      >
+      <svg width={size * 0.56} height={size * 0.56} viewBox="0 0 24 24" fill="none" className="text-ink-950">
         {/* Curly braces, weight tuned to read as a single mark */}
         <path
           d="M9 3.5c-2.5 0-3.5 1-3.5 3.2 0 1.7-.4 2.8-1.5 3.3-.4.2-.4.8 0 1 1.1.5 1.5 1.6 1.5 3.3 0 2.2 1 3.2 3.5 3.2"

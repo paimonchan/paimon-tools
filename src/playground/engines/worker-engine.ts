@@ -20,10 +20,7 @@ export class WorkerEngine implements CodeEngine {
 
   async load(): Promise<void> {
     if (!this.worker) {
-      this.worker = new Worker(
-        new URL('../worker/sandbox-worker.ts', import.meta.url),
-        { type: 'module' },
-      )
+      this.worker = new Worker(new URL('../worker/sandbox-worker.ts', import.meta.url), { type: 'module' })
     }
   }
 

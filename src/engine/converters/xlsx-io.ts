@@ -44,9 +44,7 @@ export function xlsxToJson(input: ArrayBuffer): Result<string> {
 /**
  * Convert a CSV string into an .xlsx workbook (ArrayBuffer).
  */
-export function csvToXlsx(
-  input: string
-): Result<{ arraybuffer: ArrayBuffer; filename: string }> {
+export function csvToXlsx(input: string): Result<{ arraybuffer: ArrayBuffer; filename: string }> {
   return run(() => {
     if (typeof input !== 'string' || input.trim() === '') {
       throw new Error('CSV input is empty.')

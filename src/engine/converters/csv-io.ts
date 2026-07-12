@@ -46,10 +46,7 @@ export function csvToJson(input: string, opts: CsvOpts = {}): Result<string> {
  * Convert JSON (array of objects) to a CSV string.
  * Lives here because PapaParse is the CSV engine.
  */
-export function jsonToCsv(
-  input: unknown,
-  opts: { delimiter?: string; lenient?: boolean } = {}
-): Result<string> {
+export function jsonToCsv(input: unknown, opts: { delimiter?: string; lenient?: boolean } = {}): Result<string> {
   return run(() => {
     const rows = toJsonArray(input, opts)
     if (rows.length === 0) return ''

@@ -74,11 +74,7 @@ const MIME: Record<string, string> = {
 
 // ── Helpers ───────────────────────────────────────────
 
-function deriveStatus(
-  currentValue: unknown,
-  result: Result<unknown> | null,
-  error: string | null,
-): Status {
+function deriveStatus(currentValue: unknown, result: Result<unknown> | null, error: string | null): Status {
   if (currentValue == null || currentValue === '') return 'empty'
   if (error) return 'error'
   if (result?.ok) return 'ok'
@@ -92,27 +88,19 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
 
   // ---- persisted state per tool -----------------------------------------
   const [storedInputs, setStoredInputs] = usePersistentState<Record<string, string>>('inputs', {})
-  const [storedIndents, setStoredIndents] = usePersistentState<Record<string, number | 'tab'>>(
-    'indents',
-    {},
-  )
+  const [storedIndents, setStoredIndents] = usePersistentState<Record<string, number | 'tab'>>('indents', {})
   const [storedSplits, setStoredSplits] = usePersistentState<Record<string, number>>('splits', {})
-  const [storedLenient, setStoredLenient] = usePersistentState<Record<string, boolean>>(
-    'lenient',
-    {},
-  )
+  const [storedLenient, setStoredLenient] = usePersistentState<Record<string, boolean>>('lenient', {})
 
   const inputText = storedInputs[tool.id] ?? ''
   const indent = storedIndents[tool.id] ?? 2
   const splitRatio = storedSplits[tool.id] ?? 0.5
   const lenient = storedLenient[tool.id] ?? false
 
-  const setInputText = (v: string) =>
-    setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.id]: v }))
+  const setInputText = (v: string) => setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.id]: v }))
   const setIndent = (v: number | 'tab') =>
     setStoredIndents((s: Record<string, number | 'tab'>) => ({ ...s, [tool.id]: v }))
-  const setLenient = (v: boolean) =>
-    setStoredLenient((s: Record<string, boolean>) => ({ ...s, [tool.id]: v }))
+  const setLenient = (v: boolean) => setStoredLenient((s: Record<string, boolean>) => ({ ...s, [tool.id]: v }))
 
   const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(splitRatio)
   useEffect(() => {
@@ -286,22 +274,15 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
       )}
 
       {/* Split workspace */}
-      <div
-        ref={containerRef}
-        className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-0"
-      >
+      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-0">
         {/* Input pane */}
         <Pane
           ratio={ratio}
           label={tool.input.label}
           actions={
             <>
-              {!isFileInput && tool.sample && (
-                <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />
-              )}
-              {(inputText || fileValue) && (
-                <PaneAction onClick={handleClear} icon={Eraser} label="Clear" />
-              )}
+              {!isFileInput && tool.sample && <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />}
+              {(inputText || fileValue) && <PaneAction onClick={handleClear} icon={Eraser} label="Clear" />}
             </>
           }
         >
@@ -313,11 +294,7 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
               currentName={fileValue?.name ?? undefined}
             />
           ) : (
-            <CodeArea
-              value={inputText}
-              onChange={setInputText}
-              placeholder={tool.input.placeholder}
-            />
+            <CodeArea value={inputText} onChange={setInputText} placeholder={tool.input.placeholder} />
           )}
         </Pane>
 
@@ -333,9 +310,7 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
           actions={
             <>
               {outputText && <CopyButton value={outputText} onCopied={handleCopy} bare />}
-              {(outputBlob || outputText) && (
-                <PaneAction onClick={handleDownload} icon={Download} label="Save" />
-              )}
+              {(outputBlob || outputText) && <PaneAction onClick={handleDownload} icon={Download} label="Save" />}
             </>
           }
         >
@@ -343,10 +318,7 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
             <ErrorState message={error} />
           ) : ok ? (
             isFileOutput ? (
-              <SuccessFileState
-                filename={makeFilename(tool, fileValue?.name)}
-                onDownload={handleDownload}
-              />
+              <SuccessFileState filename={makeFilename(tool, fileValue?.name)} onDownload={handleDownload} />
             ) : (
               <CodeArea value={outputText} readOnly />
             )

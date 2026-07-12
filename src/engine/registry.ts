@@ -1,13 +1,13 @@
 /**
-* registry.ts — typed tool registry.
-*
-* Two discrimated types:
-*   ConverterTool — full conversion pipeline (input, output, convert)
-*   ToolRef       — references a non-converter tool (e.g. Playground, Diff)
-*                   rendered via a separate component, not ConversionTool.
-*
-* Both share base fields (id, name, category, icon) for sidebar/palette.
-*/
+ * registry.ts — typed tool registry.
+ *
+ * Two discrimated types:
+ *   ConverterTool — full conversion pipeline (input, output, convert)
+ *   ToolRef       — references a non-converter tool (e.g. Playground, Diff)
+ *                   rendered via a separate component, not ConversionTool.
+ *
+ * Both share base fields (id, name, category, icon) for sidebar/palette.
+ */
 import type { Result } from './result'
 import { csvToJson, jsonToCsv } from './converters/csv-io'
 import { formatJson, minifyJson } from './converters/json-io'
@@ -15,68 +15,62 @@ import { jsonToXlsx, xlsxToJson, csvToXlsx, xlsxToCsv } from './converters/xlsx-
 // ── Types ─────────────────────────────────────────────
 export type ToolId = string
 export interface ToolInput {
-type: 'text' | 'file'
-accept?: string
-label: string
-placeholder?: string
+  type: 'text' | 'file'
+  accept?: string
+  label: string
+  placeholder?: string
 }
 export interface ToolOutput {
-type: 'text' | 'file'
-label: string
-ext?: string
+  type: 'text' | 'file'
+  label: string
+  ext?: string
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  | 'arrow-left-right'
-  | 'braces'
-  | 'file-spreadsheet'
-  | 'file-json'
-  | 'file-text'
-  | 'minimize-2'
-  | 'play'
+  'arrow-left-right' | 'braces' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'minimize-2' | 'play'
 export interface ToolBase {
-id: ToolId
-name: string
-category: 'Convert' | 'Format' | 'Tools'
-icon: IconName
-keywords: string[]
-description: string
+  id: ToolId
+  name: string
+  category: 'Convert' | 'Format' | 'Tools'
+  icon: IconName
+  keywords: string[]
+  description: string
 }
 /** A full converter tool — rendered via ConversionTool. */
 export interface ConverterTool extends ToolBase {
-type: 'converter'
-swap?: ToolId
-input: ToolInput
-output: ToolOutput
-sample?: string
-hasOptions?: boolean
-acceptsLenient?: boolean
-convert: (value: unknown, opts?: Record<string, unknown>) => Result<unknown>
+  type: 'converter'
+  swap?: ToolId
+  input: ToolInput
+  output: ToolOutput
+  sample?: string
+  hasOptions?: boolean
+  acceptsLenient?: boolean
+  convert: (value: unknown, opts?: Record<string, unknown>) => Result<unknown>
 }
 /** A non-converter tool — rendered via its own component (PlaygroundTool, etc.). */
 export interface ToolRef extends ToolBase {
-type: 'ref'
-/** Ref tools are rendered by matching their id to a lazy-loaded component. */
+  type: 'ref'
+  /** Ref tools are rendered by matching their id to a lazy-loaded component. */
 }
 export type ToolDefinition = ConverterTool | ToolRef
 // ── Sample data ───────────────────────────────────────
 const SAMPLE = {
-json: `[
+  json: `[
 { "id": 1, "name": "Paimon", "role": "Guide", "joined": "2020-09-28" },
 { "id": 2, "name": "Lumine", "role": "Traveler", "joined": "2020-09-28" },
 { "id": 3, "name": "Zhongli", "role": "Consultant", "joined": "2020-12-01" }
 ]`,
-csv: `id,name,role,joined
+  csv: `id,name,role,joined
 1,Paimon,Guide,2020-09-28
 2,Lumine,Traveler,2020-09-28
 3,Zhongli,Consultant,2020-12-01`,
-uglyJson: `{"id":1,"name":"Paimon","role":"Guide","stats":{"hp":10164,"atk":311,"def":1234},"tags":["emergency","food","best"]}`,
+  uglyJson: `{"id":1,"name":"Paimon","role":"Guide","stats":{"hp":10164,"atk":311,"def":1234},"tags":["emergency","food","best"]}`,
 }
 // ── Categories ────────────────────────────────────────
 export const CATEGORIES = ['Convert', 'Format', 'Tools'] as const
 // ── Tool registry ─────────────────────────────────────
 export const TOOLS: ToolDefinition[] = [
-{
+  {
     id: 'json-to-csv',
     name: 'JSON to CSV',
     category: 'Convert',
@@ -90,8 +84,8 @@ export const TOOLS: ToolDefinition[] = [
     sample: SAMPLE.json,
     acceptsLenient: true,
     convert: (v, opts) => jsonToCsv(v as string, opts ?? {}),
-},
-{
+  },
+  {
     id: 'csv-to-json',
     name: 'CSV to JSON',
     category: 'Convert',
@@ -104,8 +98,8 @@ export const TOOLS: ToolDefinition[] = [
     output: { type: 'text', label: 'JSON output', ext: 'json' },
     sample: SAMPLE.csv,
     convert: (v) => csvToJson(v as string),
-},
-{
+  },
+  {
     id: 'json-to-excel',
     name: 'JSON to Excel',
     category: 'Convert',
@@ -119,8 +113,8 @@ export const TOOLS: ToolDefinition[] = [
     sample: SAMPLE.json,
     acceptsLenient: true,
     convert: (v, opts) => jsonToXlsx(v, opts ?? {}),
-},
-{
+  },
+  {
     id: 'excel-to-json',
     name: 'Excel to JSON',
     category: 'Convert',
@@ -132,8 +126,8 @@ export const TOOLS: ToolDefinition[] = [
     input: { type: 'file', label: 'Drop an .xlsx file', accept: '.xlsx,.xls' },
     output: { type: 'text', label: 'JSON output', ext: 'json' },
     convert: (v) => xlsxToJson(v as ArrayBuffer),
-},
-{
+  },
+  {
     id: 'csv-to-excel',
     name: 'CSV to Excel',
     category: 'Convert',
@@ -146,8 +140,8 @@ export const TOOLS: ToolDefinition[] = [
     output: { type: 'file', label: '.xlsx download', ext: 'xlsx' },
     sample: SAMPLE.csv,
     convert: (v) => csvToXlsx(v as string),
-},
-{
+  },
+  {
     id: 'excel-to-csv',
     name: 'Excel to CSV',
     category: 'Convert',
@@ -159,8 +153,8 @@ export const TOOLS: ToolDefinition[] = [
     input: { type: 'file', label: 'Drop an .xlsx file', accept: '.xlsx,.xls' },
     output: { type: 'text', label: 'CSV output', ext: 'csv' },
     convert: (v) => xlsxToCsv(v as ArrayBuffer),
-},
-{
+  },
+  {
     id: 'json-formatter',
     name: 'JSON Formatter',
     category: 'Format',
@@ -174,8 +168,8 @@ export const TOOLS: ToolDefinition[] = [
     acceptsLenient: true,
     sample: SAMPLE.uglyJson,
     convert: (v, opts) => formatJson(v as string, opts ?? {}),
-},
-{
+  },
+  {
     id: 'json-minifier',
     name: 'JSON Minifier',
     category: 'Format',
@@ -188,16 +182,17 @@ export const TOOLS: ToolDefinition[] = [
     acceptsLenient: true,
     sample: SAMPLE.json,
     convert: (v, opts) => minifyJson(v as string, opts ?? {}),
-},
-{
+  },
+  {
     id: 'playground',
     name: 'Playground',
     category: 'Tools',
     type: 'ref',
     icon: 'play',
     keywords: ['code', 'run', 'javascript', 'python', 'html', 'editor', 'script', 'playground'],
-    description: 'Write and run JavaScript, Python & HTML in your browser. JS via sandboxed Worker, Python via Pyodide WASM (fetched from CDN, cached locally), HTML with live iframe preview — 100% client-side, no sign-up.',
-},
+    description:
+      'Write and run JavaScript, Python & HTML in your browser. JS via sandboxed Worker, Python via Pyodide WASM (fetched from CDN, cached locally), HTML with live iframe preview — 100% client-side, no sign-up.',
+  },
 ]
 // ── Lookup helpers ────────────────────────────────────
 

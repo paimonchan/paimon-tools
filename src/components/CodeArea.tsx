@@ -14,9 +14,7 @@ export default function CodeArea({ value, onChange, placeholder, readOnly }: Cod
   return (
     <textarea
       value={value}
-      onChange={
-        onChange ? (e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value) : undefined
-      }
+      onChange={onChange ? (e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value) : undefined}
       placeholder={placeholder}
       readOnly={readOnly}
       spellCheck={false}

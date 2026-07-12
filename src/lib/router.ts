@@ -8,7 +8,7 @@
 import { TOOL_SEO } from './seo'
 import type { ToolId } from '../engine/registry'
 
-const SEO = TOOL_SEO as Record<string, (typeof TOOL_SEO)[keyof typeof TOOL_SEO]>; // index signature for dynamic lookup
+const SEO = TOOL_SEO as Record<string, (typeof TOOL_SEO)[keyof typeof TOOL_SEO]> // index signature for dynamic lookup
 
 /**
  * Parse the current location into { base, toolId }.

@@ -23,10 +23,7 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
   return (
     <>
       {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden animate-fade-in"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden animate-fade-in" onClick={onClose} />
       )}
 
       <aside
@@ -73,7 +70,8 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
               <ul className="space-y-0.5">
                 {tools.map((tool) => {
                   const Icon = ICON_MAP[tool.icon]
-                  const active = tool.id === activeId || (tool.id === 'playground' && activeId.startsWith('playground-'))
+                  const active =
+                    tool.id === activeId || (tool.id === 'playground' && activeId.startsWith('playground-'))
                   return (
                     <li key={tool.id}>
                       <button
@@ -92,9 +90,7 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
                         )}
                         <Icon
                           className={`h-3.5 w-3.5 shrink-0 transition-colors ${
-                            active
-                              ? 'text-honey-300'
-                              : 'text-ink-500 group-hover:text-ink-300'
+                            active ? 'text-honey-300' : 'text-ink-500 group-hover:text-ink-300'
                           }`}
                         />
                         <span className="truncate">{tool.name}</span>

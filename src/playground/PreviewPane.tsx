@@ -25,9 +25,7 @@ export default function PreviewPane({ html }: PreviewPaneProps) {
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <Eye className="mx-auto mb-2 h-6 w-6 text-ink-600" />
-            <p className="text-xs text-ink-500">
-              Run HTML code to see a live preview
-            </p>
+            <p className="text-xs text-ink-500">Run HTML code to see a live preview</p>
           </div>
         </div>
       </div>

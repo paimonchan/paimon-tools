@@ -131,9 +131,7 @@ export class PyodideEngine implements CodeEngine {
       return {
         stdout: stdout.join('\n'),
         stderr: stderr.join('\n'),
-        error: isTimeout
-          ? `Execution timed out after ${RUN_TIMEOUT_MS / 1000}s`
-          : errorMsg,
+        error: isTimeout ? `Execution timed out after ${RUN_TIMEOUT_MS / 1000}s` : errorMsg,
         result: null,
         durationMs,
       }

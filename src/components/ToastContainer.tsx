@@ -5,10 +5,7 @@
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 import { useToastStore, type ToastItem } from '../stores/toast-store'
 
-const VARIANTS: Record<
-  string,
-  { icon: typeof CheckCircle2; ring: string; text: string; iconColor: string }
-> = {
+const VARIANTS: Record<string, { icon: typeof CheckCircle2; ring: string; text: string; iconColor: string }> = {
   success: {
     icon: CheckCircle2,
     ring: 'border-emerald-500/40',

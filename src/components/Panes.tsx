@@ -73,9 +73,7 @@ export function Pane({ ratio, label, actions, children }: PaneProps) {
       style={{ flexBasis: `${ratio * 100}%` }}
     >
       <div className="flex items-center justify-between gap-2 border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
-        <span className="text-[10px] font-600 uppercase tracking-[0.14em] text-ink-400">
-          {label}
-        </span>
+        <span className="text-[10px] font-600 uppercase tracking-[0.14em] text-ink-400">{label}</span>
         <div className="flex items-center gap-1">{actions}</div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">{children}</div>

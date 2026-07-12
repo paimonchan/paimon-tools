@@ -76,7 +76,7 @@ export function detectLanguage(code: string): DetectedLanguage {
 
   // Python heuristics: import/def/class/print at line start, # comments, triple quotes
   const lines = trimmed.split('\n')
-  const pythonIndicators = lines.some(line => {
+  const pythonIndicators = lines.some((line) => {
     const s = line.trimStart()
     return /^(import |from |def |class |print\(|# |if __name__|elif |else:|try:|except |with |async |await )/.test(s)
   })

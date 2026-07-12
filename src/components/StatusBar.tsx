@@ -13,13 +13,7 @@ interface StatusBarProps {
  * (input size, output size, char count, status) plus the persistent privacy
  * indicator. Inspired by editor status bars (VS Code, Vim).
  */
-export default function StatusBar({
-  inputChars,
-  outputChars,
-  status,
-  error,
-  durationMs,
-}: StatusBarProps) {
+export default function StatusBar({ inputChars, outputChars, status, error, durationMs }: StatusBarProps) {
   const statusMeta = {
     idle: { label: 'Ready', dot: 'bg-ink-500', text: 'text-ink-400' },
     empty: { label: 'Awaiting input', dot: 'bg-ink-600', text: 'text-ink-500' },

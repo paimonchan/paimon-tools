@@ -39,10 +39,7 @@ export function toJsonArray(input: unknown, opts: JsonOpts = {}): unknown[] {
 /**
  * Pretty-print a JSON string.
  */
-export function formatJson(
-  input: string,
-  opts: { indent?: number | 'tab'; lenient?: boolean } = {}
-): Result<string> {
+export function formatJson(input: string, opts: { indent?: number | 'tab'; lenient?: boolean } = {}): Result<string> {
   return run(() => {
     if (typeof input !== 'string' || input.trim() === '') {
       throw new Error('JSON input is empty.')

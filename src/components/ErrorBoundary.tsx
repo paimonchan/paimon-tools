@@ -28,12 +28,8 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
         <div className="flex min-h-screen items-center justify-center bg-ink-950 p-6 text-center">
           <div className="max-w-md">
             <div className="mb-3 text-4xl">⚠️</div>
-            <h1 className="mb-2 font-display text-lg font-600 text-ink-50">
-              Something went wrong
-            </h1>
-            <p className="mb-4 text-sm text-ink-400">
-              The app hit an unexpected error while rendering.
-            </p>
+            <h1 className="mb-2 font-display text-lg font-600 text-ink-50">Something went wrong</h1>
+            <p className="mb-4 text-sm text-ink-400">The app hit an unexpected error while rendering.</p>
             <pre className="mb-4 max-h-40 overflow-auto rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-left font-mono text-xs text-red-300">
               {String(this.state.error?.message || this.state.error)}
             </pre>

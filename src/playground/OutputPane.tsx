@@ -43,9 +43,7 @@ export default function OutputPane({ output }: OutputPaneProps) {
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <Terminal className="mx-auto mb-2 h-6 w-6 text-ink-600" />
-            <p className="text-xs text-ink-500">
-              Run some code to see results
-            </p>
+            <p className="text-xs text-ink-500">Run some code to see results</p>
           </div>
         </div>
       </div>
@@ -65,9 +63,7 @@ export default function OutputPane({ output }: OutputPaneProps) {
             <Terminal className="h-3 w-3" />
             Console
           </button>
-          <button
-            className="flex items-center gap-1.5 bg-ink-800/50 px-3 py-1.5 text-[11px] text-honey-200"
-          >
+          <button className="flex items-center gap-1.5 bg-ink-800/50 px-3 py-1.5 text-[11px] text-honey-200">
             <Eye className="h-3 w-3" />
             Preview
           </button>
@@ -91,9 +87,7 @@ export default function OutputPane({ output }: OutputPaneProps) {
       {/* Tabs */}
       <div className="flex items-center justify-between border-b border-ink-800">
         <div className="flex">
-          <button
-            className="flex items-center gap-1.5 bg-ink-800/50 px-3 py-1.5 text-[11px] text-honey-200"
-          >
+          <button className="flex items-center gap-1.5 bg-ink-800/50 px-3 py-1.5 text-[11px] text-honey-200">
             <Terminal className="h-3 w-3" />
             Console
           </button>
@@ -126,19 +120,11 @@ export default function OutputPane({ output }: OutputPaneProps) {
           </div>
         )}
 
-        {output.error && (
-          <div className="mb-2 rounded bg-red-500/10 px-2 py-1 text-red-400">
-            {output.error}
-          </div>
-        )}
+        {output.error && <div className="mb-2 rounded bg-red-500/10 px-2 py-1 text-red-400">{output.error}</div>}
 
-        {output.stdout && (
-          <pre className="text-ink-100">{output.stdout}</pre>
-        )}
+        {output.stdout && <pre className="text-ink-100">{output.stdout}</pre>}
 
-        {output.stderr && (
-          <pre className="text-orange-400">{output.stderr}</pre>
-        )}
+        {output.stderr && <pre className="text-orange-400">{output.stderr}</pre>}
 
         {output.result !== null && !output.stdout && !output.stderr && (
           <pre className="text-honey-300">⇒ {output.result}</pre>

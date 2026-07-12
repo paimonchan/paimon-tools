@@ -87,10 +87,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }: Co
       className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh]"
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
       {/* Panel */}
       <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-pop animate-scale-in">
@@ -115,9 +112,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }: Co
         {/* Results */}
         <div ref={listRef} className="max-h-[min(50vh,22rem)] overflow-y-auto p-1.5">
           {results.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-ink-500">
-              No tools match &ldquo;{query}&rdquo;.
-            </div>
+            <div className="px-4 py-8 text-center text-sm text-ink-500">No tools match &ldquo;{query}&rdquo;.</div>
           ) : (
             group(results).map(({ category, tools }) => (
               <div key={category} className="mb-1">
@@ -139,24 +134,16 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }: Co
                         onClose()
                       }}
                       className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                        isSelected
-                          ? 'bg-honey-400/10 text-honey-100'
-                          : 'text-ink-200 hover:bg-ink-800'
+                        isSelected ? 'bg-honey-400/10 text-honey-100' : 'text-ink-200 hover:bg-ink-800'
                       }`}
                     >
-                      <Icon
-                        className={`h-4 w-4 shrink-0 ${
-                          isSelected ? 'text-honey-300' : 'text-ink-400'
-                        }`}
-                      />
+                      <Icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-honey-300' : 'text-ink-400'}`} />
                       <span className="flex-1">
                         <span className="font-500">{tool.name}</span>
                         <span className="ml-2 text-xs text-ink-500">{tool.description}</span>
                       </span>
                       {isActiveTool && (
-                        <span className="text-[10px] uppercase tracking-wide text-ink-500">
-                          current
-                        </span>
+                        <span className="text-[10px] uppercase tracking-wide text-ink-500">current</span>
                       )}
                       {isSelected && <CornerDownLeft className="h-3.5 w-3.5 text-ink-500" />}
                     </button>

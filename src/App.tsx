@@ -30,7 +30,7 @@ function Shell() {
   const [activeId, setActiveId] = useState<ToolId>(() => {
     const fromUrl = toolIdFromLocation()
     // Fallback to the first converter tool
-    return fromUrl || Object.keys(TOOLS_BY_ID).find(id => TOOLS_BY_ID[id]?.type === 'converter') || 'json-to-csv'
+    return fromUrl || Object.keys(TOOLS_BY_ID).find((id) => TOOLS_BY_ID[id]?.type === 'converter') || 'json-to-csv'
   })
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -81,10 +81,7 @@ function Shell() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileBar
-          onMenuClick={() => setSidebarOpen(true)}
-          onOpenPalette={() => setPaletteOpen(true)}
-        />
+        <MobileBar onMenuClick={() => setSidebarOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
 
         {/* Desktop top-right controls */}
         <div className="hidden items-center justify-between px-6 pt-3 md:flex">
@@ -110,11 +107,13 @@ function Shell() {
         {/* Workspace */}
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
           {activeId.startsWith('playground-') || TOOLS_BY_ID[activeId]?.type === 'ref' ? (
-            <Suspense fallback={
-              <div className="flex flex-1 items-center justify-center">
-                <div className="text-sm text-ink-400">Loading playground…</div>
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="flex flex-1 items-center justify-center">
+                  <div className="text-sm text-ink-400">Loading playground…</div>
+                </div>
+              }
+            >
               <PlaygroundTool
                 initialLanguage={
                   activeId.startsWith('playground-')
@@ -124,11 +123,7 @@ function Shell() {
               />
             </Suspense>
           ) : TOOLS_BY_ID[activeId]?.type === 'converter' ? (
-            <ConversionTool
-              tool={TOOLS_BY_ID[activeId]}
-              onSwap={selectTool}
-              registerActions={registerActions}
-            />
+            <ConversionTool tool={TOOLS_BY_ID[activeId]} onSwap={selectTool} registerActions={registerActions} />
           ) : null}
         </main>
       </div>

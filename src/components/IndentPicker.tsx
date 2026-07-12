@@ -20,9 +20,7 @@ export default function IndentPicker({ value, onChange }: IndentPickerProps) {
           key={String(o.v)}
           onClick={() => onChange(o.v)}
           className={`rounded-md px-2.5 py-1 text-[11px] font-500 transition-colors ${
-            value === o.v
-              ? 'bg-honey-400/15 text-honey-200'
-              : 'text-ink-400 hover:text-ink-200'
+            value === o.v ? 'bg-honey-400/15 text-honey-200' : 'text-ink-400 hover:text-ink-200'
           }`}
         >
           {o.label}

@@ -31,12 +31,8 @@ const langExt: Record<Language, ReturnType<typeof javascript>> = {
 
 export default function CodeMirrorWrapper({ value, onChange, language, readOnly }: CodeMirrorWrapperProps) {
   const extensions = useMemo(
-    () => [
-      langExt[language],
-      readOnly ? EditorView.editable.of(false) : [],
-      EditorView.lineWrapping,
-    ].flat(),
-    [language, readOnly],
+    () => [langExt[language], readOnly ? EditorView.editable.of(false) : [], EditorView.lineWrapping].flat(),
+    [language, readOnly]
   )
 
   return (

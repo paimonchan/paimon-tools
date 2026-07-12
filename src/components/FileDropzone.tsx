@@ -23,9 +23,7 @@ export default function FileDropzone({ accept, readMode = 'text', onFile, curren
   async function handleFile(file: File | null | undefined) {
     if (!file) return
     try {
-      const value = readMode === 'arraybuffer'
-        ? await readFileAsArrayBuffer(file)
-        : await readFileAsText(file)
+      const value = readMode === 'arraybuffer' ? await readFileAsArrayBuffer(file) : await readFileAsText(file)
       onFile?.({ value, name: file.name })
       toast.push(`Loaded ${file.name}`, { variant: 'success' })
     } catch (e) {
@@ -36,7 +34,10 @@ export default function FileDropzone({ accept, readMode = 'text', onFile, curren
 
   return (
     <div
-      onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+      onDragOver={(e) => {
+        e.preventDefault()
+        setDragging(true)
+      }}
       onDragLeave={() => setDragging(false)}
       onDrop={(e) => {
         e.preventDefault()
@@ -71,10 +72,12 @@ export default function FileDropzone({ accept, readMode = 'text', onFile, curren
         </>
       ) : (
         <>
-          <div className={[
-            'flex h-12 w-12 items-center justify-center rounded-xl border transition-colors',
-            dragging ? 'border-honey-400/50 bg-honey-400/10' : 'border-ink-700 bg-ink-800/50',
-          ].join(' ')}>
+          <div
+            className={[
+              'flex h-12 w-12 items-center justify-center rounded-xl border transition-colors',
+              dragging ? 'border-honey-400/50 bg-honey-400/10' : 'border-ink-700 bg-ink-800/50',
+            ].join(' ')}
+          >
             <FileUp className={['h-6 w-6 transition-colors', dragging ? 'text-honey-300' : 'text-ink-400'].join(' ')} />
           </div>
           <div className="text-sm">
