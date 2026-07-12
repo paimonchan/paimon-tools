@@ -1,10 +1,10 @@
 /**
  * seo.js — per-tool SEO metadata, kept in a dependency-free module so it can
- * be imported both by the app (tools.js) and by the prerender build script
+ * be imported both by the app (registry.ts) and by the prerender build script
  * (which runs in plain Node, no JSX/bundler).
  *
  * This is the single source of truth for titles, descriptions and keywords.
- * tools.js and the prerender script both derive from it.
+ * registry.ts and the prerender script both derive from it.
  */
 
 export const HOME_SEO = {
@@ -32,7 +32,7 @@ export const HOME_SEO = {
 
 /**
  * Per-tool SEO. `path` is the URL segment (e.g. 'json-to-csv' → /json-to-csv).
- * Keep these aligned with the `id` field in tools.js.
+ * Keep these aligned with the `id` field in registry.ts.
  */
 export const TOOL_SEO = {
   'json-to-csv': {

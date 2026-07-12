@@ -1,5 +1,13 @@
 import { Cpu, Lock } from 'lucide-react'
 
+interface StatusBarProps {
+  inputChars: number
+  outputChars: number
+  status: 'idle' | 'ok' | 'error' | 'empty'
+  error: string | null
+  durationMs: number | null
+}
+
 /**
  * StatusBar — a thin footer bar under the workspace that surfaces live stats
  * (input size, output size, char count, status) plus the persistent privacy
@@ -8,10 +16,10 @@ import { Cpu, Lock } from 'lucide-react'
 export default function StatusBar({
   inputChars,
   outputChars,
-  status, // 'idle' | 'ok' | 'error' | 'empty'
+  status,
   error,
   durationMs,
-}) {
+}: StatusBarProps) {
   const statusMeta = {
     idle: { label: 'Ready', dot: 'bg-ink-500', text: 'text-ink-400' },
     empty: { label: 'Awaiting input', dot: 'bg-ink-600', text: 'text-ink-500' },
@@ -59,7 +67,7 @@ export default function StatusBar({
   )
 }
 
-function formatCount(n) {
+function formatCount(n: number | null | undefined): string {
   if (n == null) return '0'
   if (n < 1000) return String(n)
   if (n < 1_000_000) return `${(n / 1000).toFixed(1)}k`

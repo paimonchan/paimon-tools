@@ -3,6 +3,9 @@
  */
 
 import { TOOL_SEO } from './seo'
+import type { ToolId } from '../engine/registry'
+
+const SEO = TOOL_SEO as Record<string, (typeof TOOL_SEO)[keyof typeof TOOL_SEO]>; // index signature for dynamic lookup
 
 /**
  * Detect the active tool from the URL.
@@ -10,9 +13,9 @@ import { TOOL_SEO } from './seo'
 export function toolIdFromLocation(): string | null {
   const segments = window.location.pathname.split('/').filter(Boolean)
   for (const seg of segments) {
-    const seo = Object.values(TOOL_SEO).find((s) => s.path === seg)
+    const seo = Object.values(SEO).find((s) => s.path === seg)
     if (seo) {
-      return Object.keys(TOOL_SEO).find((key) => TOOL_SEO[key].path === seg) ?? null
+      return Object.keys(SEO).find((key) => SEO[key].path === seg) ?? null
     }
   }
   return null
@@ -23,7 +26,7 @@ export function toolIdFromLocation(): string | null {
  */
 function detectBase(): string {
   const segments = window.location.pathname.split('/').filter(Boolean)
-  const toolPaths = new Set(Object.values(TOOL_SEO).map((s) => s.path))
+  const toolPaths = new Set(Object.values(SEO).map((s) => s.path))
   const withoutTool = segments.filter((s) => !toolPaths.has(s))
   return withoutTool.length ? '/' + withoutTool.join('/') : ''
 }
@@ -32,7 +35,7 @@ function detectBase(): string {
  * Push a history entry for a tool. No-op if already there.
  */
 export function pushTool(toolId: string): void {
-  const seo = TOOL_SEO[toolId]
+  const seo = SEO[toolId]
   if (!seo) return
   if (toolIdFromLocation() === toolId) return
 
@@ -45,7 +48,7 @@ export function pushTool(toolId: string): void {
  * Update the document title to match the active tool.
  */
 export function syncDocumentTitle(toolId: string | null): void {
-  const seo = toolId ? TOOL_SEO[toolId] : null
+  const seo = toolId ? SEO[toolId] : null
   if (seo) {
     document.title = seo.title
   }

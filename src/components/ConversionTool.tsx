@@ -208,7 +208,7 @@ export default function ConversionTool({ toolId, onSwap, registerActions }: Conv
     if (!tool.swap) return
     const partner = TOOLS_BY_ID[tool.swap]
     if (outputText && partner.input.type === 'text') {
-      setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.swap]: outputText }))
+      setStoredInputs((s: Record<string, string>) => ({ ...s, [tool.swap!]: outputText }))
     }
     onSwap(tool.swap as ToolId)
     toast.push(`Switched to ${partner.name}`, { variant: 'info' })
@@ -284,7 +284,6 @@ export default function ConversionTool({ toolId, onSwap, registerActions }: Conv
         {/* Input pane */}
         <Pane
           ratio={ratio}
-          side="left"
           label={tool.input.label}
           actions={
             <>
@@ -321,7 +320,6 @@ export default function ConversionTool({ toolId, onSwap, registerActions }: Conv
         {/* Output pane */}
         <Pane
           ratio={1 - ratio}
-          side="right"
           label={tool.output.label}
           actions={
             <>

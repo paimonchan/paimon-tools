@@ -61,7 +61,6 @@ export function useResizableSplit(initialRatio = 0.5) {
 
 interface PaneProps {
   ratio: number
-  side: 'left' | 'right'
   label: string
   actions?: ReactNode
   children: ReactNode

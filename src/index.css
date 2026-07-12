@@ -138,9 +138,14 @@ h4 {
   background-color: var(--color-ink-500);
 }
 
-/* Reset focus ring globally; we apply focus-visible rings per component */
+/* Focus ring — visible only for keyboard navigation */
 *:focus {
   outline: none;
+}
+*:focus-visible {
+  outline: 2px solid var(--color-honey-500);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ── Component utilities ───────────────────────────── */
