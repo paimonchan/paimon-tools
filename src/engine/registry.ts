@@ -12,6 +12,7 @@ import type { Result } from './result'
 import { csvToJson, jsonToCsv } from './converters/csv-io'
 import { formatJson, minifyJson } from './converters/json-io'
 import { jsonToXlsx, xlsxToJson, csvToXlsx, xlsxToCsv } from './converters/xlsx-io'
+import { encodeBase64, decodeBase64 } from './converters/base64-io'
 // ── Types ─────────────────────────────────────────────
 export type ToolId = string
 export interface ToolInput {
@@ -27,7 +28,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'minimize-2' | 'play'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'minimize-2' | 'play'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -182,6 +183,40 @@ export const TOOLS: ToolDefinition[] = [
     acceptsLenient: true,
     sample: SAMPLE.json,
     convert: (v, opts) => minifyJson(v as string, opts ?? {}),
+  },
+  {
+    id: 'base64-encode',
+    name: 'Base64 Encode',
+    category: 'Convert',
+    type: 'converter',
+    icon: 'file-code',
+    keywords: ['base64', 'encode', 'text to base64', 'base64 encoder'],
+    description: 'Encode any text to Base64. UTF-8 safe — handles Unicode, emoji, and special characters.',
+    input: {
+      type: 'text',
+      label: 'Text input',
+      placeholder: 'Paste text to encode to Base64',
+    },
+    output: { type: 'text', label: 'Base64 output', ext: 'txt' },
+    sample: 'Hello, Paimon! 👋',
+    convert: (v) => encodeBase64(v as string),
+  },
+  {
+    id: 'base64-decode',
+    name: 'Base64 Decode',
+    category: 'Convert',
+    type: 'converter',
+    icon: 'file-code',
+    keywords: ['base64', 'decode', 'base64 to text', 'base64 decoder'],
+    description: 'Decode Base64 back to readable text. Supports standard Base64 encoded strings.',
+    input: {
+      type: 'text',
+      label: 'Base64 input',
+      placeholder: 'Paste Base64 string to decode',
+    },
+    output: { type: 'text', label: 'Decoded text', ext: 'txt' },
+    sample: 'SGVsbG8sIFBhaW1vbiEg8J+Riw==',
+    convert: (v) => decodeBase64(v as string),
   },
   {
     id: 'playground',

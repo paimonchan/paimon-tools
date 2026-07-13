@@ -35,6 +35,8 @@ export const HOME_SEO = {
   <li><a href="json-formatter/">JSON Formatter</a> — pretty-print and validate JSON</li>
   <li><a href="json-minifier/">JSON Minifier</a> — compress JSON by stripping whitespace</li>
   <li><a href="code/">Code Playground</a> — run JavaScript, Python &amp; HTML online</li>
+  <li><a href="base64-encode/">Base64 Encode</a> — encode text to Base64</li>
+  <li><a href="base64-decode/">Base64 Decode</a> — decode Base64 back to text</li>
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
 }
@@ -158,6 +160,36 @@ export const TOOL_SEO = {
     breadcrumb: 'Format / JSON Minifier',
     bodyHtml: `<h1>JSON Minifier</h1>
 <p>Minify and compress JSON entirely in your browser. Strips all unnecessary whitespace to reduce file size — validates syntax as it goes. No uploads, fully private.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+  'base64-encode': {
+    title: 'Base64 Encode — Free Online Base64 Encoder | Paimon Tools',
+    description:
+      'Encode text to Base64 online, free. UTF-8 safe — handles Unicode, emoji & special characters. 100% in-browser, no uploads, no sign-up, fully private.',
+    keywords: 'base64 encode, base64 encoder, text to base64, encode to base64, base64 encoding online',
+    path: 'base64-encode',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'Base64 Encode',
+    breadcrumb: 'Convert / Base64 Encode',
+    bodyHtml: `<h1>Base64 Encode</h1>
+<p>Encode any text to Base64 entirely in your browser. UTF-8 safe — handles Unicode, emoji, and special characters. No uploads, no sign-up, fully private.</p>
+<p>Example input: <code>Hello, World!</code> → <code>SGVsbG8sIFdvcmxkIQ==</code></p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+  'base64-decode': {
+    title: 'Base64 Decode — Free Online Base64 Decoder | Paimon Tools',
+    description:
+      'Decode Base64 to text online, free. Convert Base64 strings back to readable text — 100% in-browser, no uploads, no sign-up, fully private.',
+    keywords: 'base64 decode, base64 decoder, base64 to text, decode base64, base64 decoding online',
+    path: 'base64-decode',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'Base64 Decode',
+    breadcrumb: 'Convert / Base64 Decode',
+    bodyHtml: `<h1>Base64 Decode</h1>
+<p>Decode Base64 strings back to readable text entirely in your browser. Supports standard Base64 encoded strings. No uploads, no sign-up, fully private.</p>
+<p>Example input: <code>SGVsbG8sIFdvcmxkIQ==</code> → <code>Hello, World!</code></p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
   playground: {
@@ -347,6 +379,8 @@ export function noscriptBodyFor(toolId) {
         <li><a href="${SITE_URL}/excel-to-csv/">Excel to CSV converter</a></li>
         <li><a href="${SITE_URL}/json-formatter/">JSON formatter and beautifier</a></li>
         <li><a href="${SITE_URL}/json-minifier/">JSON minifier</a></li>
+        <li><a href="${SITE_URL}/base64-encode/">Base64 encoder</a></li>
+        <li><a href="${SITE_URL}/base64-decode/">Base64 decoder</a></li>
         <li><a href="${SITE_URL}/code/">Code Playground</a> — run JavaScript, Python &amp; HTML</li>
       </ul>
       <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`
