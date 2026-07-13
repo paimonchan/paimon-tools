@@ -13,6 +13,9 @@ import { csvToJson, jsonToCsv } from './converters/csv-io'
 import { formatJson, minifyJson } from './converters/json-io'
 import { jsonToXlsx, xlsxToJson, csvToXlsx, xlsxToCsv } from './converters/xlsx-io'
 import { encodeBase64, decodeBase64 } from './converters/base64-io'
+import { generateUuid } from './converters/uuid-gen'
+import { yamlToJson, jsonToYaml } from './converters/yaml-io'
+import { sha256 } from './converters/hash-gen'
 // ── Types ─────────────────────────────────────────────
 export type ToolId = string
 export interface ToolInput {
@@ -28,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'minimize-2' | 'play'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'hash' | 'minimize-2' | 'play'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -217,6 +220,59 @@ export const TOOLS: ToolDefinition[] = [
     output: { type: 'text', label: 'Decoded text', ext: 'txt' },
     sample: 'SGVsbG8sIFBhaW1vbiEg8J+Riw==',
     convert: (v) => decodeBase64(v as string),
+  },
+  {
+    id: 'yaml-to-json',
+    name: 'YAML to JSON',
+    category: 'Convert',
+    type: 'converter',
+    icon: 'arrow-left-right',
+    swap: 'json-to-yaml',
+    keywords: ['yaml', 'yml', 'to json', 'yaml converter', 'parse yaml'],
+    description: 'Convert YAML to JSON. Paste YAML and get formatted JSON — 100% in your browser, no uploads.',
+    input: { type: 'text', label: 'YAML input', placeholder: 'Paste YAML, or drop a .yaml file' },
+    output: { type: 'text', label: 'JSON output', ext: 'json' },
+    sample: 'name: Paimon\nrole: Guide\nskills:\n  - flying\n  - cooking',
+    convert: (v) => yamlToJson(v as string),
+  },
+  {
+    id: 'json-to-yaml',
+    name: 'JSON to YAML',
+    category: 'Convert',
+    type: 'converter',
+    icon: 'arrow-left-right',
+    swap: 'yaml-to-json',
+    keywords: ['json', 'to yaml', 'yml', 'json converter', 'json to yml'],
+    description: 'Convert JSON to YAML. Paste JSON and get clean YAML output — 100% in your browser, no uploads.',
+    input: { type: 'text', label: 'JSON input', accept: '.json', placeholder: 'Paste JSON' },
+    output: { type: 'text', label: 'YAML output', ext: 'yaml' },
+    sample: '{"name": "Paimon", "role": "Guide", "skills": ["flying", "cooking"]}',
+    convert: (v) => jsonToYaml(v as string),
+  },
+  {
+    id: 'hash-generator',
+    name: 'SHA-256 Hash',
+    category: 'Tools',
+    type: 'converter',
+    icon: 'hash',
+    keywords: ['sha256', 'hash', 'sha-256', 'checksum', 'fingerprint', 'digest'],
+    description: 'Generate SHA-256 hash of any text. Pure JS implementation — 100% in your browser, no uploads, no sign-up.',
+    input: { type: 'text', label: 'Text input', placeholder: 'Paste text to hash' },
+    output: { type: 'text', label: 'SHA-256 hash', ext: 'txt' },
+    sample: 'Hello, Paimon!',
+    convert: (v) => sha256(v as string),
+  },
+  {
+    id: 'uuid-generator',
+    name: 'UUID Generator',
+    category: 'Tools',
+    type: 'converter',
+    icon: 'fingerprint',
+    keywords: ['uuid', 'guid', 'id', 'generator', 'uuid v4', 'random'],
+    description: 'Generate UUID v4 (random) identifiers. Create one or multiple UUIDs instantly — 100% in your browser, no uploads.',
+    input: { type: 'text', label: 'Count (optional)', placeholder: 'Leave empty for 1, or enter a number (1-100)' },
+    output: { type: 'text', label: 'UUID output', ext: 'txt' },
+    convert: (v) => generateUuid(),
   },
   {
     id: 'playground',

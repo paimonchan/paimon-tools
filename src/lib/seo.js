@@ -37,6 +37,9 @@ export const HOME_SEO = {
   <li><a href="code/">Code Playground</a> — run JavaScript, Python &amp; HTML online</li>
   <li><a href="base64-encode/">Base64 Encode</a> — encode text to Base64</li>
   <li><a href="base64-decode/">Base64 Decode</a> — decode Base64 back to text</li>
+  <li><a href="yaml-to-json/">YAML to JSON</a> — convert YAML to JSON</li>
+  <li><a href="json-to-yaml/">JSON to YAML</a> — convert JSON to YAML</li>
+  <li><a href="hash-generator/">SHA-256 Hash</a> — generate SHA-256 checksum</li>
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
 }
@@ -190,6 +193,62 @@ export const TOOL_SEO = {
     bodyHtml: `<h1>Base64 Decode</h1>
 <p>Decode Base64 strings back to readable text entirely in your browser. Supports standard Base64 encoded strings. No uploads, no sign-up, fully private.</p>
 <p>Example input: <code>SGVsbG8sIFdvcmxkIQ==</code> → <code>Hello, World!</code></p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+  'uuid-generator': {
+    title: 'UUID Generator — Free Online UUID v4 Generator | Paimon Tools',
+    description:
+      'Generate UUID v4 identifiers online, free. Create random UUIDs instantly — 100% in-browser, no uploads, no sign-up, fully private.',
+    keywords: 'uuid generator, uuid v4, generate uuid, guid generator, random uuid, online uuid',
+    path: 'uuid-generator',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'UUID Generator',
+    breadcrumb: 'Tools / UUID Generator',
+    bodyHtml: `<h1>UUID Generator</h1>
+<p>Generate random UUID v4 identifiers entirely in your browser. Click to generate — no uploads, no sign-up, fully private.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+  'yaml-to-json': {
+    title: 'YAML to JSON Converter — Free Online | Paimon Tools',
+    description:
+      'Convert YAML to JSON online, free. Paste YAML and get formatted JSON — 100% in-browser, no uploads, no sign-up, fully private.',
+    keywords: 'yaml to json, convert yaml to json, yaml parser, yaml to json converter, yml to json',
+    path: 'yaml-to-json',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'YAML to JSON Converter',
+    breadcrumb: 'Convert / YAML to JSON',
+    bodyHtml: `<h1>YAML to JSON Converter</h1>
+<p>Convert YAML to JSON entirely in your browser. Paste YAML and get clean, formatted JSON — no uploads, no sign-up, fully private.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+  'json-to-yaml': {
+    title: 'JSON to YAML Converter — Free Online | Paimon Tools',
+    description:
+      'Convert JSON to YAML online, free. Paste JSON and get clean YAML output — 100% in-browser, no uploads, no sign-up, fully private.',
+    keywords: 'json to yaml, convert json to yaml, json to yml, yaml converter',
+    path: 'json-to-yaml',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'JSON to YAML Converter',
+    breadcrumb: 'Convert / JSON to YAML',
+    bodyHtml: `<h1>JSON to YAML Converter</h1>
+<p>Convert JSON to YAML entirely in your browser. Paste JSON and get clean, readable YAML output — no uploads, no sign-up, fully private.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+  'hash-generator': {
+    title: 'SHA-256 Hash Generator — Free Online | Paimon Tools',
+    description:
+      'Generate SHA-256 hash of any text online, free. Pure JS implementation — 100% in-browser, no uploads, no sign-up, fully private.',
+    keywords: 'sha256, sha-256, hash generator, checksum, hash text, online hash, sha256 hash',
+    path: 'hash-generator',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'SHA-256 Hash Generator',
+    breadcrumb: 'Tools / Hash Generator',
+    bodyHtml: `<h1>SHA-256 Hash Generator</h1>
+<p>Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation — your data never leaves your device. No uploads, no sign-up, fully private.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
   playground: {
@@ -381,6 +440,9 @@ export function noscriptBodyFor(toolId) {
         <li><a href="${SITE_URL}/json-minifier/">JSON minifier</a></li>
         <li><a href="${SITE_URL}/base64-encode/">Base64 encoder</a></li>
         <li><a href="${SITE_URL}/base64-decode/">Base64 decoder</a></li>
+        <li><a href="${SITE_URL}/yaml-to-json/">YAML to JSON converter</a></li>
+        <li><a href="${SITE_URL}/json-to-yaml/">JSON to YAML converter</a></li>
+        <li><a href="${SITE_URL}/hash-generator/">SHA-256 hash generator</a></li>
         <li><a href="${SITE_URL}/code/">Code Playground</a> — run JavaScript, Python &amp; HTML</li>
       </ul>
       <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`
