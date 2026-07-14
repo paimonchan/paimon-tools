@@ -13,7 +13,7 @@ import { csvToJson, jsonToCsv } from './converters/csv-io'
 import { formatJson, minifyJson } from './converters/json-io'
 import { jsonToXlsx, xlsxToJson, csvToXlsx, xlsxToCsv } from './converters/xlsx-io'
 import { encodeBase64, decodeBase64 } from './converters/base64-io'
-import { generateUuid } from './converters/uuid-gen'
+import { generateUuid, generateUuids } from './converters/uuid-gen'
 import { yamlToJson, jsonToYaml } from './converters/yaml-io'
 import { sha256 } from './converters/hash-gen'
 // ── Types ─────────────────────────────────────────────
@@ -272,7 +272,13 @@ export const TOOLS: ToolDefinition[] = [
     description: 'Generate UUID v4 (random) identifiers. Create one or multiple UUIDs instantly — 100% in your browser, no uploads.',
     input: { type: 'text', label: 'Count (optional)', placeholder: 'Leave empty for 1, or enter a number (1-100)' },
     output: { type: 'text', label: 'UUID output', ext: 'txt' },
-    convert: (v) => generateUuid(),
+    convert: (v) => {
+      const input = (v as string)?.trim()
+      if (!input) return generateUuid()
+      const count = parseInt(input, 10)
+      if (isNaN(count) || count < 1) return generateUuid()
+      return generateUuids(count)
+    },
   },
   {
     id: 'playground',
