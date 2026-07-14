@@ -50,6 +50,28 @@ export function jsonToCsv(input: unknown, opts: { delimiter?: string; lenient?: 
   return run(() => {
     const rows = toJsonArray(input, opts)
     if (rows.length === 0) return ''
+
+    // Reject primitive arrays — CSV requires objects
+    if (rows.some((r) => typeof r !== 'object' || r === null)) {
+      throw new Error(
+        'JSON to CSV requires an array of objects, not primitives.\n' +
+          'Try: [{"key": "value"}, {"key": "value"}]\n' +
+          'Got: mixed or primitive values',
+      )
+    }
+
+    // Warn about nested objects/arrays — CSV flattens to "[object Object]"
+    const nested = rows.find((r) =>
+      Object.values(r as Record<string, unknown>).some((v) => typeof v === 'object' && v !== null && !(v instanceof Date)),
+    )
+    if (nested) {
+      throw new Error(
+        'CSV does not support nested objects or arrays. ' +
+          'Values like objects or arrays become "[object Object]" in CSV output.\n' +
+          'Flatten nested data first or use JSON format instead.',
+      )
+    }
+
     return Papa.unparse(rows as Record<string, unknown>[], { delimiter: opts.delimiter ?? ',' })
   })
 }

@@ -41,6 +41,12 @@ interface FileValue {
   name: string
 }
 
+/** Shape of a file-output converter result (e.g. jsonToXlsx, csvToXlsx). */
+interface FileOutputValue {
+  arraybuffer: ArrayBuffer
+  filename?: string
+}
+
 type Status = 'empty' | 'error' | 'ok' | 'idle'
 
 // Mirror the shape of the actions object exposed upward for header buttons.
@@ -152,8 +158,11 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
 
   const ok = result?.ok
   const error = ok === false ? (result as { ok: false; error: string }).error : null
-  const outputText = ok && !isFileOutput ? String((result as { ok: true; value: unknown }).value) : ''
-  const outputBlob = ok && isFileOutput ? (result as { ok: true; value: { arraybuffer: ArrayBuffer } }).value : null
+  const outputText = ok && !isFileOutput ? String(result.value) : ''
+  const outputBlob: FileOutputValue | null =
+    ok && isFileOutput && result.value && typeof result.value === 'object' && 'arraybuffer' in result.value
+      ? (result.value as FileOutputValue)
+      : null
 
   const status = deriveStatus(currentValue, result, error)
 

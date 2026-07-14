@@ -7,7 +7,7 @@
 
 import * as XLSX from 'xlsx'
 import { parseCsv } from './csv-io'
-import { parseJson } from './json-io'
+import { toJsonArray } from './json-io'
 import { type Result, run } from '../result'
 
 /**
@@ -18,7 +18,7 @@ export function jsonToXlsx(
   opts: { lenient?: boolean } = {}
 ): Result<{ arraybuffer: ArrayBuffer; filename: string }> {
   return run(() => {
-    const rows = toArray(input, opts)
+    const rows = toJsonArray(input, opts) as Record<string, unknown>[]
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
@@ -69,17 +69,4 @@ export function xlsxToCsv(input: ArrayBuffer): Result<string> {
     const ws = wb.Sheets[first]
     return XLSX.utils.sheet_to_csv(ws)
   })
-}
-
-// ---- Shared helpers ----
-
-function toArray(input: unknown, opts: { lenient?: boolean } = {}): Record<string, unknown>[] {
-  let data = input
-  if (typeof data === 'string') {
-    data = parseJson(data, opts)
-  }
-  if (data == null) throw new Error('Input is empty.')
-  if (Array.isArray(data)) return data as Record<string, unknown>[]
-  if (typeof data === 'object') return [data as Record<string, unknown>]
-  throw new Error('JSON must be an array or an object, not a primitive value.')
 }

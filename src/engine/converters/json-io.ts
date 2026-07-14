@@ -37,6 +37,20 @@ export function toJsonArray(input: unknown, opts: JsonOpts = {}): unknown[] {
 }
 
 /**
+ * Check raw JSON text for integers that exceed Number.MAX_SAFE_INTEGER (9,007,199,254,740,991).
+ * JS double precision silently rounds these — warn the user to use string wrapping.
+ */
+function checkUnsafeIntegers(text: string): void {
+  const m = text.match(/(?:^|[:\s\[,])\s*(\d{16,})(?:\s*[,\s\]\}]|$)/)
+  if (m) {
+    throw new Error(
+      `Number ${m[1]} exceeds JavaScript's safe integer range (${Number.MAX_SAFE_INTEGER.toLocaleString()}). ` +
+        `Precision will be lost! Wrap in quotes to preserve: "${m[1]}"`,
+    )
+  }
+}
+
+/**
  * Pretty-print a JSON string.
  */
 export function formatJson(input: string, opts: { indent?: number | 'tab'; lenient?: boolean } = {}): Result<string> {
@@ -44,6 +58,7 @@ export function formatJson(input: string, opts: { indent?: number | 'tab'; lenie
     if (typeof input !== 'string' || input.trim() === '') {
       throw new Error('JSON input is empty.')
     }
+    checkUnsafeIntegers(input)
     const indent = opts.indent === 'tab' ? '\t' : opts.indent === 4 ? 4 : 2
     return JSON.stringify(parseJson(input, opts), null, indent)
   })
@@ -57,6 +72,7 @@ export function minifyJson(input: string, opts: { lenient?: boolean } = {}): Res
     if (typeof input !== 'string' || input.trim() === '') {
       throw new Error('JSON input is empty.')
     }
+    checkUnsafeIntegers(input)
     return JSON.stringify(parseJson(input, opts))
   })
 }
@@ -69,6 +85,7 @@ export function validateJson(input: string, opts: { lenient?: boolean } = {}): R
     if (typeof input !== 'string' || input.trim() === '') {
       throw new Error('JSON input is empty.')
     }
+    checkUnsafeIntegers(input)
     parseJson(input, opts)
     return 'Valid JSON ✓'
   })
