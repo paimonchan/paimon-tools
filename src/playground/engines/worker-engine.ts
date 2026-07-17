@@ -30,53 +30,62 @@ export class WorkerEngine implements CodeEngine {
       return { stdout: '', stderr: '', error: 'Already running', result: null, durationMs: 0 }
     }
     this.running = true
-    await this.load()
 
-    return new Promise<RunResult>((resolve) => {
+    try {
+      await this.load()
+
       const worker = this.worker
       if (!worker) {
-        this.running = false
-        resolve({ stdout: '', stderr: '', error: 'Engine disposed', result: null, durationMs: 0 })
-        return
+        return { stdout: '', stderr: '', error: 'Engine disposed', result: null, durationMs: 0 }
       }
 
-      const timeout = setTimeout(() => {
-        worker.terminate()
-        this.worker = null
-        this.trackCrash()
-        resolve({
-          stdout: '',
-          stderr: '',
-          error: 'Execution timed out after 10s',
-          result: null,
-          durationMs: 10000,
-        })
-      }, 10000)
+      return await new Promise<RunResult>((resolve) => {
+        const timeout = setTimeout(() => {
+          worker.terminate()
+          this.worker = null
+          this.trackCrash()
+          resolve({
+            stdout: '',
+            stderr: '',
+            error: 'Execution timed out after 10s',
+            result: null,
+            durationMs: 10000,
+          })
+        }, 10000)
 
-      worker.onmessage = (e: MessageEvent<RunResult>) => {
-        clearTimeout(timeout)
-        this.crashCount = 0 // reset on success
-        resolve(e.data)
+        worker.onmessage = (e: MessageEvent<RunResult>) => {
+          clearTimeout(timeout)
+          this.crashCount = 0 // reset on success
+          resolve(e.data)
+        }
+
+        worker.onerror = () => {
+          clearTimeout(timeout)
+          worker.terminate()
+          this.worker = null
+          this.trackCrash()
+          resolve({
+            stdout: '',
+            stderr: '',
+            error: 'Worker crashed. Please try again.',
+            result: null,
+            durationMs: 0,
+          })
+        }
+
+        worker.postMessage({ code })
+      })
+    } catch (err) {
+      return {
+        stdout: '',
+        stderr: '',
+        error: String(err),
+        result: null,
+        durationMs: 0,
       }
-
-      worker.onerror = () => {
-        clearTimeout(timeout)
-        worker.terminate()
-        this.worker = null
-        this.trackCrash()
-        resolve({
-          stdout: '',
-          stderr: '',
-          error: 'Worker crashed. Please try again.',
-          result: null,
-          durationMs: 0,
-        })
-      }
-
-      worker.postMessage({ code })
-    }).finally(() => {
+    } finally {
       this.running = false
-    })
+    }
   }
 
   dispose(): void {
