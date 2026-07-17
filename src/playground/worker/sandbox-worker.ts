@@ -7,9 +7,11 @@
  *   { type: 'output', stdout, stderr } — incremental async output (every 100ms)
  *   { type: 'done' } — streaming complete, worker will idle
  *
- * After sync execution the worker stays alive for up to 5s to capture
- * callbacks from setTimeout, fetch.then, setInterval, etc.
- * The engine can send { type: 'abort' } to end collection early.
+ * After sync execution the worker stays alive to capture callbacks from
+ * setTimeout, fetch.then, setInterval, etc. Collection ends when:
+ *   1. No new output for 500ms (idle threshold) — adaptive, fast for simple code
+ *   2. 5s hard cap — prevents runaway setInterval
+ *   3. { type: 'abort' } from engine — user clicked Stop
  */
 
 /** Format a value for display — objects/arrays get JSON, primitives get String(). */
@@ -60,27 +62,42 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
     stdout.length = 0
     stderr.length = 0
 
-    // --- Streaming collection phase ---
-    // Keep worker alive up to 5s to catch async callbacks (setTimeout, fetch.then, etc.)
-    const COLLECT_MS = 5000
+    // --- Adaptive streaming collection phase ---
+    // Finishes when no new output for 500ms (fast, best UX), or hard-cap 5s.
+    const MAX_COLLECT_MS = 5000
+    const IDLE_THRESHOLD_MS = 500
+    const collectionStart = Date.now()
+    let lastOutputTime = Date.now()
+    let finalized = false
+
     const flushTimer = setInterval(() => {
+      // Flush any accumulated async output
       if (stdout.length > 0 || stderr.length > 0) {
         self.postMessage({
           type: 'output',
           stdout: stdout.splice(0).join('\n'),
           stderr: stderr.splice(0).join('\n'),
         })
+        lastOutputTime = Date.now()
+      }
+
+      // Check completion: idle threshold or hard cap
+      const idleMs = Date.now() - lastOutputTime
+      const totalMs = Date.now() - collectionStart
+
+      if (!finalized && (idleMs >= IDLE_THRESHOLD_MS || totalMs >= MAX_COLLECT_MS)) {
+        finalized = true
+        clearInterval(flushTimer)
+        self.postMessage({ type: 'done' })
       }
     }, 100)
-
-    let finalized = false
 
     // Listen for abort signal from engine
     self.onmessage = (msg: MessageEvent) => {
       if (msg.data?.type === 'abort' && !finalized) {
         finalized = true
         clearInterval(flushTimer)
-        // Flush remaining output
+        // Flush remaining output one last time
         if (stdout.length > 0 || stderr.length > 0) {
           self.postMessage({
             type: 'output',
@@ -90,22 +107,6 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
         }
         self.postMessage({ type: 'done' })
       }
-    }
-
-    await new Promise<void>((resolve) => setTimeout(resolve, COLLECT_MS))
-
-    if (!finalized) {
-      finalized = true
-      clearInterval(flushTimer)
-      // Final flush
-      if (stdout.length > 0 || stderr.length > 0) {
-        self.postMessage({
-          type: 'output',
-          stdout: stdout.splice(0).join('\n'),
-          stderr: stderr.splice(0).join('\n'),
-        })
-      }
-      self.postMessage({ type: 'done' })
     }
   } catch (err) {
     const durationMs = performance.now() - start
