@@ -9,7 +9,7 @@
  * - Download .patch
  */
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Download, GitCompare, Copy } from 'lucide-react'
 
 import {
@@ -20,18 +20,13 @@ import {
   type DiffView,
   type DiffLineType,
 } from '../engine/converters/diff-engine'
+import { usePersistentState } from '../hooks/usePersistentState'
 import { readFileAsText } from '../lib/files'
 import { useToast } from '../stores/toast-store'
-import { usePersistentState } from '../hooks/usePersistentState'
 
 // ── Types ─────────────────────────────────────────────
 
 type Status = 'idle' | 'ok' | 'error'
-
-interface PaneFile {
-  side: 'old' | 'new'
-  name: string
-}
 
 // ── Color map ─────────────────────────────────────────
 
@@ -162,18 +157,11 @@ export default function DiffTool() {
 
   // ── Render helpers ──────────────────────────────────
 
-  function renderLineGutter(type: DiffLineType, oldLine: number | null, newLine: number | null) {
-    const cls = LINE_GUTTER_COLORS[type]
-    if (type === 'added') return <span className={`${LINE_NUMBERS} ${cls}`}>{'  '}{newLine}</span>
-    if (type === 'removed') return <span className={`${LINE_NUMBERS} ${cls}`}>{oldLine}{'  '}</span>
-    return <span className={`${LINE_NUMBERS} ${cls}`}>{oldLine}{newLine}</span>
-  }
-
-  function renderLine(type: DiffLineType, text: string, showGutter = true) {
+  function renderLine(type: DiffLineType, text: string, showGutter = true, key?: number) {
     const bg = LINE_COLORS[type]
     const txt = LINE_TEXT_COLORS[type]
     return (
-      <div className={`flex min-h-[20px] items-stretch font-mono text-[13px] leading-5 ${bg}`}>
+      <div key={key} className={`flex min-h-[20px] items-stretch font-mono text-[13px] leading-5 ${bg}`}>
         {showGutter && renderGutter(type)}
         <span className={`flex-1 whitespace-pre-wrap break-all px-2 ${txt}`}>{text || '\u00A0'}</span>
       </div>
@@ -199,9 +187,6 @@ export default function DiffTool() {
     const oldLines: { type: DiffLineType; line: number | null; text: string }[] = []
     const newLines: { type: DiffLineType; line: number | null; text: string }[] = []
 
-    let oldIdx = 0
-    let newIdx = 0
-
     for (const line of result.lines) {
       if (line.type === 'unchanged') {
         oldLines.push({ type: 'unchanged', line: line.oldLine, text: line.text })
@@ -225,7 +210,7 @@ export default function DiffTool() {
             <span className="flex-1 px-2">Original</span>
           </div>
           <div className="min-h-full">
-            {oldLines.map((l, i) => renderLine(l.type, l.text, true))}
+            {oldLines.map((l, i) => renderLine(l.type, l.text, true, i))}
           </div>
         </div>
 
@@ -240,7 +225,7 @@ export default function DiffTool() {
             <span className="flex-1 px-2">Changed</span>
           </div>
           <div className="min-h-full">
-            {newLines.map((l, i) => renderLine(l.type, l.text, true))}
+            {newLines.map((l, i) => renderLine(l.type, l.text, true, i))}
           </div>
         </div>
       </div>
@@ -261,7 +246,7 @@ export default function DiffTool() {
           </div>
         </div>
         <div className="min-h-full">
-          {result.lines.map((l, i) => renderLine(l.type, l.text))}
+          {result.lines.map((l, i) => renderLine(l.type, l.text, true, i))}
         </div>
       </div>
     )
@@ -288,7 +273,7 @@ export default function DiffTool() {
               : 'border-dashed border-ink-700 hover:border-honey-500/50'
         }`}
         onDragOver={(e) => { e.preventDefault(); setDragging(side) }}
-        onDragLeave={() => setDragging(null)}
+        onDragLeave={(e) => { e.preventDefault(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null) }}
         onDrop={(e) => { e.preventDefault(); setDragging(null); handleFileDrop(side, e.dataTransfer.files?.[0]) }}
       >
         {/* Label */}

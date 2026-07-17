@@ -8,16 +8,16 @@
 import { createElement, useEffect, useState, lazy, Suspense, type LazyExoticComponent, type ComponentType } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
-import { ThemeEffect, useTheme } from './stores/theme-store'
-import Sidebar from './components/Sidebar'
-import MobileBar from './components/MobileBar'
 import CommandPalette from './components/CommandPalette'
 import ConversionTool from './components/ConversionTool'
-import ToastContainer from './components/ToastContainer'
 import type { ToolActions } from './components/ConversionTool'
+import MobileBar from './components/MobileBar'
+import Sidebar from './components/Sidebar'
+import ToastContainer from './components/ToastContainer'
 import { TOOLS_BY_ID } from './engine/registry'
 import type { ToolId } from './engine/registry'
 import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
+import { ThemeEffect, useTheme } from './stores/theme-store'
 
 // Lazy imports
 const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
@@ -75,9 +75,8 @@ function Shell() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // ---- toolbar action up-lift binding ----------------------------------
-  const [currentActions, setCurrentActions] = useState<ToolActions | null>(null)
-  const registerActions = (actions: ToolActions) => setCurrentActions(actions)
+  // ---- toolbar action up-lift binding (reserved for global shortcuts) ----
+  const registerActions = (_actions: ToolActions) => {}
 
   return (
     <div className="flex h-screen overflow-hidden bg-ink-950 text-ink-100">

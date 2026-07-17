@@ -5,8 +5,8 @@
  */
 
 import Papa from 'papaparse'
-import { toJsonArray } from './json-io'
 import { type Result, run } from '../result'
+import { toJsonArray } from './json-io'
 
 export interface CsvOpts {
   delimiter?: string

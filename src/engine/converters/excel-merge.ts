@@ -10,7 +10,6 @@
  * Phase 1: Append (stack rows from multiple files with matching/union headers)
  */
 
-import { parseCsv } from './csv-io'
 import * as XLSX from 'xlsx'
 import Papa from 'papaparse'
 import { type Result, run } from '../result'
@@ -38,6 +37,7 @@ export interface AppendResult {
   format: 'xlsx' | 'csv'
   rowCount: number
   columns: string[]
+  sampleRows: Record<string, unknown>[]
   sources: { name: string; rows: number; format: FileFormat }[]
 }
 
@@ -70,8 +70,8 @@ function readXlsx(data: ArrayBuffer): Record<string, unknown>[] {
   return XLSX.utils.sheet_to_json(wb.Sheets[first], { defval: '' }) as Record<string, unknown>[]
 }
 
-/** Read a CSV/TSV file and return rows as Record<string, string>[]. */
-function readCsv(data: string, format: 'csv' | 'tsv'): Record<string, string>[] {
+/** Read a CSV/TSV file and return rows as Record<string, unknown>[]. */
+function readCsv(data: string, format: 'csv' | 'tsv'): Record<string, unknown>[] {
   const delimiter = format === 'tsv' ? '\t' : detectDelimiter(data)
   const parsed = Papa.parse<Record<string, string>>(data, {
     header: true,
@@ -83,7 +83,27 @@ function readCsv(data: string, format: 'csv' | 'tsv'): Record<string, string>[] 
     const first = parsed.errors[0]
     throw new Error(`CSV parse error at row ${first.row}: ${first.message}`)
   }
-  return parsed.data
+  return parsed.data as unknown as Record<string, unknown>[]
+}
+
+// ── Output writer ───────────────────────────────────
+
+function writeOutput(
+  allRows: Record<string, unknown>[],
+  columns: string[],
+  outputFormat: 'xlsx' | 'csv',
+  sources: { name: string; rows: number; format: FileFormat }[],
+): AppendResult {
+  if (outputFormat === 'csv') {
+    const csv = Papa.unparse(allRows, { delimiter: ',' })
+    return { data: csv, format: 'csv', rowCount: allRows.length, columns, sampleRows: allRows.slice(0, 5), sources }
+  }
+
+  const ws = XLSX.utils.json_to_sheet(allRows)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Combined')
+  const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+  return { data: out as ArrayBuffer, format: 'xlsx', rowCount: allRows.length, columns, sampleRows: allRows.slice(0, 5), sources }
 }
 
 // ── Public API ──────────────────────────────────────
@@ -129,73 +149,26 @@ export function appendFiles(files: FileSource[], opts: AppendOptions = {}): Resu
       sources.push({ name: file.name, rows: rows.length, format, data: rows })
     }
 
-    // Phase 2: Determine output columns
-    if (unionColumns) {
-      // Union of ALL columns across ALL files
-      const allKeys = new Set<string>()
-      for (const src of sources) {
-        for (const row of src.data) {
-          Object.keys(row).forEach((k) => allKeys.add(k))
+    // Phase 2: Determine output columns & normalize
+    const columns = unionColumns
+      ? [...new Set(sources.flatMap((src) => src.data.flatMap((row) => Object.keys(row))))]
+      : Object.keys(sources[0].data[0] ?? {})
+
+    if (columns.length === 0) throw new Error('No columns found in input files.')
+
+    // Normalize every row to include all columns
+    const allRows: Record<string, unknown>[] = []
+    for (const src of sources) {
+      for (const row of src.data) {
+        const normalized: Record<string, unknown> = {}
+        for (const col of columns) {
+          normalized[col] = row[col] ?? ''
         }
-      }
-      const columns = [...allKeys]
-
-      // Normalize every row to include all columns
-      const allRows: Record<string, unknown>[] = []
-      for (const src of sources) {
-        for (const row of src.data) {
-          const normalized: Record<string, unknown> = {}
-          for (const col of columns) {
-            normalized[col] = row[col] ?? ''
-          }
-          allRows.push(normalized)
-        }
-      }
-
-      const totalRows = allRows.length
-
-      // Phase 3: Write output
-      if (outputFormat === 'csv') {
-        const csv = Papa.unparse(allRows as Record<string, unknown>[], { delimiter: ',' })
-        return { data: csv, format: 'csv' as const, rowCount: totalRows, columns, sources: sources.map((s) => ({ name: s.name, rows: s.rows, format: s.format })) }
-      } else {
-        const ws = XLSX.utils.json_to_sheet(allRows)
-        const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, ws, 'Combined')
-        const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-        return { data: out as ArrayBuffer, format: 'xlsx' as const, rowCount: totalRows, columns, sources: sources.map((s) => ({ name: s.name, rows: s.rows, format: s.format })) }
-      }
-    } else {
-      // Use first file's headers only — filter out extra columns from other files
-      const firstSource = sources[0]
-      if (!firstSource) throw new Error('No files to merge.')
-      const firstRow = firstSource.data[0]
-      if (!firstRow) throw new Error('First file has no data.')
-      const columns = Object.keys(firstRow)
-
-      const allRows: Record<string, unknown>[] = []
-      for (const src of sources) {
-        for (const row of src.data) {
-          const normalized: Record<string, unknown> = {}
-          for (const col of columns) {
-            normalized[col] = row[col] ?? ''
-          }
-          allRows.push(normalized)
-        }
-      }
-
-      const totalRows = allRows.length
-
-      if (outputFormat === 'csv') {
-        const csv = Papa.unparse(allRows as Record<string, unknown>[], { delimiter: ',' })
-        return { data: csv, format: 'csv' as const, rowCount: totalRows, columns, sources: sources.map((s) => ({ name: s.name, rows: s.rows, format: s.format })) }
-      } else {
-        const ws = XLSX.utils.json_to_sheet(allRows)
-        const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, ws, 'Combined')
-        const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-        return { data: out as ArrayBuffer, format: 'xlsx' as const, rowCount: totalRows, columns, sources: sources.map((s) => ({ name: s.name, rows: s.rows, format: s.format })) }
+        allRows.push(normalized)
       }
     }
+
+    // Phase 3: Write output
+    return writeOutput(allRows, columns, outputFormat, sources.map((s) => ({ name: s.name, rows: s.rows, format: s.format })))
   })
 }

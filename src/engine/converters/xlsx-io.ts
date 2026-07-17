@@ -6,9 +6,9 @@
  */
 
 import * as XLSX from 'xlsx'
+import { type Result, run } from '../result'
 import { parseCsv } from './csv-io'
 import { toJsonArray } from './json-io'
-import { type Result, run } from '../result'
 
 /**
  * Convert JSON (array of objects) to an .xlsx workbook (ArrayBuffer).

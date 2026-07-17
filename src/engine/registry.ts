@@ -9,13 +9,13 @@
  * Both share base fields (id, name, category, icon) for sidebar/palette.
  */
 import type { Result } from './result'
+import { encodeBase64, decodeBase64 } from './converters/base64-io'
 import { csvToJson, jsonToCsv } from './converters/csv-io'
+import { generateUuid, generateUuids } from './converters/uuid-gen'
+import { sha256 } from './converters/hash-gen'
 import { formatJson, minifyJson } from './converters/json-io'
 import { jsonToXlsx, xlsxToJson, csvToXlsx, xlsxToCsv } from './converters/xlsx-io'
-import { encodeBase64, decodeBase64 } from './converters/base64-io'
-import { generateUuid, generateUuids } from './converters/uuid-gen'
 import { yamlToJson, jsonToYaml } from './converters/yaml-io'
-import { sha256 } from './converters/hash-gen'
 // ── Types ─────────────────────────────────────────────
 export type ToolId = string
 export interface ToolInput {

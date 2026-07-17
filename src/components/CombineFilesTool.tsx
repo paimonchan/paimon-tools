@@ -13,9 +13,9 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEv
 import { Download, FileUp, Layers, Trash2, Check } from 'lucide-react'
 
 import { appendFiles, type FileSource, type AppendResult } from '../engine/converters/excel-merge'
+import { usePersistentState } from '../hooks/usePersistentState'
 import { readFileAsArrayBuffer, readFileAsText, downloadArrayBuffer, downloadBlob } from '../lib/files'
 import { useToast } from '../stores/toast-store'
-import { usePersistentState } from '../hooks/usePersistentState'
 
 // ── Types ─────────────────────────────────────────────
 
@@ -150,49 +150,76 @@ export default function CombineFilesTool() {
     if (!result) return
     const filename = `combined.${outputFormat}`
     if (outputFormat === 'csv') {
-      downloadBlob({ content: result.data as string, filename, mime: 'text/csv' })
+      if (typeof result.data !== 'string') {
+        toast.push('Unexpected data format for CSV download.', { variant: 'error' })
+        return
+      }
+      downloadBlob({ content: result.data, filename, mime: 'text/csv' })
     } else {
-      downloadArrayBuffer({ arraybuffer: result.data as ArrayBuffer, filename, mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      if (!(result.data instanceof ArrayBuffer)) {
+        toast.push('Unexpected data format for Excel download.', { variant: 'error' })
+        return
+      }
+      downloadArrayBuffer({ arraybuffer: result.data, filename, mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     }
     toast.push(`Downloaded ${filename}`, { variant: 'success' })
   }
 
   // ── Render helpers ─────────────────────────────────
 
-  const previewRows = result?.columns ? result.data : null
-
   function renderPreview() {
-    // We can't easily parse the output back for preview without re-processing.
-    // Instead, show column list + row count from the result metadata.
     if (!result) return null
 
-    // For preview, show column names and first few rows from the original sources
-    const allSampleRows: Record<string, unknown>[] = []
-    const columnsShown = result.columns.slice(0, 8) // max 8 columns in preview
-
-    // Use first few rows from sources for preview
-    for (const src of result.sources) {
-      // We need original data for preview — but we don't store it in AppendResult.
-      // Instead, let's show summary metadata.
-    }
+    const MAX_COLUMNS = 8
+    const columns = result.columns.slice(0, MAX_COLUMNS)
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {/* Column badges */}
         <div className="flex flex-wrap gap-1.5">
-          {result.columns.slice(0, 12).map((col) => (
+          {columns.map((col) => (
             <span key={col} className="rounded bg-ink-700 px-2 py-0.5 text-[11px] font-mono text-ink-200">
               {col}
             </span>
           ))}
-          {result.columns.length > 12 && (
+          {result.columns.length > MAX_COLUMNS && (
             <span className="rounded bg-ink-700 px-2 py-0.5 text-[11px] text-ink-400">
-              +{result.columns.length - 12} more
+              +{result.columns.length - MAX_COLUMNS} more
             </span>
           )}
         </div>
+
+        {/* Sample data table */}
+        {result.sampleRows.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-ink-700">
+            <table className="w-full text-[11px] font-mono">
+              <thead>
+                <tr className="border-b border-ink-700 bg-ink-800/50">
+                  {columns.map((col) => (
+                    <th key={col} className="px-2 py-1 text-left text-ink-400 font-500 whitespace-nowrap">
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {result.sampleRows.map((row, i) => (
+                  <tr key={i} className="border-b border-ink-800/50 last:border-0">
+                    {columns.map((col) => (
+                      <td key={col} className="px-2 py-1 text-ink-200 truncate max-w-[200px]" title={String(row[col] ?? '')}>
+                        {String(row[col] ?? '')}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         <div className="text-[11px] text-ink-400">
           {result.columns.length} column{result.columns.length !== 1 ? 's' : ''} · {result.rowCount.toLocaleString()} rows total
+          {result.rowCount > 5 && <span className="text-ink-500"> · showing first 5</span>}
         </div>
       </div>
     )

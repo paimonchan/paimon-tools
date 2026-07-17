@@ -13,7 +13,7 @@
  * The component stays dumb about WHAT it converts; that lives in the registry.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Download, Eraser, Sparkles } from 'lucide-react'
 
 import CopyButton from './CopyButton'
@@ -23,16 +23,16 @@ import ErrorState from './ErrorState'
 import FileDropzone from './FileDropzone'
 import IndentPicker from './IndentPicker'
 import LenientToggle from './LenientToggle'
-import SuccessFileState from './SuccessFileState'
-import StatusBar from './StatusBar'
-import ToolHeader from './ToolHeader'
 import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
-import { useToast } from '../stores/toast-store'
-import { usePersistentState } from '../hooks/usePersistentState'
+import StatusBar from './StatusBar'
+import SuccessFileState from './SuccessFileState'
+import ToolHeader from './ToolHeader'
 import { TOOLS_BY_ID, type ConverterTool, type ToolId } from '../engine/registry'
+import type { Result } from '../engine/result'
+import { usePersistentState } from '../hooks/usePersistentState'
 import { downloadArrayBuffer, downloadBlob } from '../lib/files'
 import { makeFilename } from '../lib/makeFilename'
-import type { Result } from '../engine/result'
+import { useToast } from '../stores/toast-store'
 
 // ── Types ─────────────────────────────────────────────
 
@@ -117,7 +117,6 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
   const [fileValue, setFileValue] = useState<FileValue | null>(null)
   const [result, setResult] = useState<Result<unknown> | null>(null)
   const [durationMs, setDurationMs] = useState<number | null>(null)
-  const outputRef = useRef<HTMLDivElement | null>(null)
 
   const isFileInput = tool.input.type === 'file'
   const isFileOutput = tool.output.type === 'file'
