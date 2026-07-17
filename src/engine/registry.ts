@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'hash' | 'minimize-2' | 'play'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'hash' | 'layers' | 'minimize-2' | 'play'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -289,6 +289,16 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['code', 'run', 'javascript', 'python', 'html', 'editor', 'script', 'playground'],
     description:
       'Write and run JavaScript, Python & HTML in your browser. JS via sandboxed Worker, Python via Pyodide WASM (fetched from CDN, cached locally), HTML with live iframe preview — 100% client-side, no sign-up.',
+  },
+  {
+    id: 'combine-files',
+    name: 'Combine Files',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'layers',
+    keywords: ['merge', 'combine', 'excel', 'csv', 'xlsx', 'append', 'concat', 'gabung', 'join', 'multiple files'],
+    description:
+      'Merge multiple CSV and Excel files into one. Append rows from 2+ files, auto-detect format, union columns — 100% client-side, no uploads, no sign-up.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

@@ -40,6 +40,7 @@ export const HOME_SEO = {
   <li><a href="yaml-to-json/">YAML to JSON</a> — convert YAML to JSON</li>
   <li><a href="json-to-yaml/">JSON to YAML</a> — convert JSON to YAML</li>
   <li><a href="hash-generator/">SHA-256 Hash</a> — generate SHA-256 checksum</li>
+  <li><a href="combine-files/">Combine Files</a> — merge multiple CSV &amp; Excel files into one
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
 }
@@ -251,6 +252,20 @@ export const TOOL_SEO = {
 <p>Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation — your data never leaves your device. No uploads, no sign-up, fully private.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
+  'combine-files': {
+    title: 'Free Online File Combiner — Merge CSV & Excel Files | Paimon Tools',
+    description:
+      'Combine multiple CSV and Excel files into one, free. Append rows from 2+ files, auto-detect format, union columns — 100% in your browser, no uploads, no sign-up.',
+    keywords: 'merge csv, combine csv, merge excel, combine excel files, gabung file csv, csv merger online, excel csv combiner, concat csv',
+    path: 'combine-files',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'Combine CSV & Excel Files',
+    breadcrumb: 'Tools / Combine Files',
+    bodyHtml: `<h1>Combine CSV &amp; Excel Files</h1>
+<p>Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns — no uploads, no sign-up, fully private. Supports mixed formats.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
   playground: {
     title: 'Online Code Playground — Free In-Browser Code Editor | Paimon Tools',
     description:
@@ -443,6 +458,7 @@ export function noscriptBodyFor(toolId) {
         <li><a href="${SITE_URL}/yaml-to-json/">YAML to JSON converter</a></li>
         <li><a href="${SITE_URL}/json-to-yaml/">JSON to YAML converter</a></li>
         <li><a href="${SITE_URL}/hash-generator/">SHA-256 hash generator</a></li>
+        <li><a href="${SITE_URL}/combine-files/">Combine Files</a> — merge multiple CSV &amp; Excel files</li>
         <li><a href="${SITE_URL}/code/">Code Playground</a> — run JavaScript, Python &amp; HTML</li>
       </ul>
       <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`

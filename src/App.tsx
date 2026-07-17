@@ -19,8 +19,9 @@ import { TOOLS_BY_ID } from './engine/registry'
 import type { ToolId } from './engine/registry'
 import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 
-// Lazy import: PlaygroundTool only loads when user navigates to /code/
+// Lazy imports
 const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
+const CombineFilesTool = lazy(() => import('./components/CombineFilesTool'))
 
 function Shell() {
   const { theme, toggleTheme } = useTheme()
@@ -106,7 +107,7 @@ function Shell() {
 
         {/* Workspace */}
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
-          {activeId.startsWith('playground-') || TOOLS_BY_ID[activeId]?.type === 'ref' ? (
+          {activeId.startsWith('playground-') ? (
             <Suspense
               fallback={
                 <div className="flex flex-1 items-center justify-center">
@@ -121,6 +122,16 @@ function Shell() {
                     : undefined
                 }
               />
+            </Suspense>
+          ) : activeId === 'combine-files' ? (
+            <Suspense
+              fallback={
+                <div className="flex flex-1 items-center justify-center">
+                  <div className="text-sm text-ink-400">Loading…</div>
+                </div>
+              }
+            >
+              <CombineFilesTool />
             </Suspense>
           ) : TOOLS_BY_ID[activeId]?.type === 'converter' ? (
             <ConversionTool tool={TOOLS_BY_ID[activeId]} onSwap={selectTool} registerActions={registerActions} />
