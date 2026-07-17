@@ -29,4 +29,8 @@ export class HtmlEngine implements CodeEngine {
   dispose(): void {
     // Nothing to clean up
   }
+
+  abort(): void {
+    // HTML execution is synchronous — nothing to abort
+  }
 }

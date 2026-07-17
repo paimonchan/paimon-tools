@@ -1,13 +1,19 @@
 /**
  * WorkerEngine — executes JavaScript in a Web Worker sandbox.
  *
+ * Streaming protocol:
+ *   1. Worker posts { type: 'sync', stdout, stderr, result, error, durationMs }
+ *   2. Worker posts { type: 'output', stdout, stderr } for incremental async output
+ *   3. Worker posts { type: 'done' } when collection phase ends (5s or abort)
+ *   The engine accumulates all output and calls onOutput() for immediate UI updates.
+ *
  * Creates a fresh Worker per run to guarantee zero state leakage.
- * Timeout: 10s hard cap via AbortController + worker.terminate().
+ * Timeout: 10s hard cap via worker.terminate().
  * Crash circuit breaker: after 3 crashes in 60s, engine permanently
- * refuses execution until a run succeeds or page reloads.
+ * refuses execution until page reload.
  */
 
-import type { CodeEngine, RunResult } from './types'
+import type { CodeEngine, RunOptions, RunResult } from './types'
 
 export class WorkerEngine implements CodeEngine {
   readonly name = 'JavaScript'
@@ -16,6 +22,7 @@ export class WorkerEngine implements CodeEngine {
   private firstCrashTime = 0
   private running = false
   private pendingResolve: ((result: RunResult) => void) | null = null
+  private aborted = false
 
   get ready(): boolean {
     return true
@@ -25,7 +32,7 @@ export class WorkerEngine implements CodeEngine {
     // no-op: workers are created per-run now
   }
 
-  async run(code: string): Promise<RunResult> {
+  async run(code: string, options?: RunOptions): Promise<RunResult> {
     if (this.crashed) {
       return {
         stdout: '',
@@ -40,6 +47,7 @@ export class WorkerEngine implements CodeEngine {
       return { stdout: '', stderr: '', error: 'Already running', result: null, durationMs: 0 }
     }
     this.running = true
+    this.aborted = false
 
     // Fresh Worker per run — zero state leakage
     const worker = new Worker(new URL('../worker/sandbox-worker.ts', import.meta.url), { type: 'module' })
@@ -48,41 +56,114 @@ export class WorkerEngine implements CodeEngine {
       let settled = false
       this.pendingResolve = resolve
 
-      const timeout = setTimeout(() => {
-        if (settled) return
-        settled = true
-        worker.terminate()
-        this.trackCrash()
-        resolve({
-          stdout: '',
-          stderr: '',
-          error: 'Execution timed out after 10s',
-          result: null,
-          durationMs: 10000,
-        })
-      }, 10000)
+      // Accumulated result across streaming messages
+      let finalResult: RunResult = {
+        stdout: '',
+        stderr: '',
+        error: null,
+        result: null,
+        durationMs: 0,
+      }
 
-      worker.onmessage = (e: MessageEvent<RunResult>) => {
+      const done = (result: RunResult) => {
         if (settled) return
         settled = true
         clearTimeout(timeout)
         this.pendingResolve = null
-        // Successful run resets the circuit breaker
         this.crashed = false
         this.crashCount = 0
-        resolve(e.data)
+        resolve(result)
+      }
+
+      const timeout = setTimeout(() => {
+        if (this.aborted) return
+        done({
+          stdout: finalResult.stdout,
+          stderr: finalResult.stderr,
+          error: 'Execution timed out after 10s',
+          result: null,
+          durationMs: 10000,
+        })
+        // Track crash only after resolving to avoid double-resolve
+        worker.terminate()
+        this.trackCrash()
+      }, 10000)
+
+      worker.onmessage = (e: MessageEvent) => {
+        const msg = e.data
+
+        // Legacy single-message format (backward compat, no streaming)
+        if (!msg.type) {
+          done({
+            stdout: msg.stdout || '',
+            stderr: msg.stderr || '',
+            error: msg.error || null,
+            result: msg.result || null,
+            durationMs: msg.durationMs || 0,
+          })
+          worker.terminate()
+          return
+        }
+
+        switch (msg.type) {
+          case 'sync': {
+            // Initial result from sync execution
+            finalResult = {
+              stdout: msg.stdout || '',
+              stderr: msg.stderr || '',
+              error: msg.error || null,
+              result: msg.result || null,
+              durationMs: msg.durationMs || 0,
+            }
+            // Show sync output immediately
+            options?.onOutput?.(msg.stdout || '', msg.stderr || '')
+            break
+          }
+
+          case 'output': {
+            // Incremental async output — append to accumulator
+            if (msg.stdout) {
+              finalResult.stdout += (finalResult.stdout ? '\n' : '') + msg.stdout
+            }
+            if (msg.stderr) {
+              finalResult.stderr += (finalResult.stderr ? '\n' : '') + msg.stderr
+            }
+            options?.onOutput?.(msg.stdout || '', msg.stderr || '')
+            break
+          }
+
+          case 'done': {
+            // Streaming complete — resolve with accumulated result
+            done(finalResult)
+            worker.terminate()
+            break
+          }
+        }
       }
 
       worker.onerror = () => {
-        if (settled) return
-        settled = true
+        if (settled || this.aborted) return
         clearTimeout(timeout)
         worker.terminate()
         this.trackCrash()
         resolve({
-          stdout: '',
-          stderr: '',
+          stdout: finalResult.stdout,
+          stderr: finalResult.stderr,
           error: 'Worker crashed. Please try again.',
+          result: null,
+          durationMs: 0,
+        })
+      }
+
+      worker.onmessageerror = () => {
+        if (settled || this.aborted) return
+        clearTimeout(timeout)
+        worker.terminate()
+        this.trackCrash()
+        resolve({
+          stdout: finalResult.stdout,
+          stderr: finalResult.stderr,
+          error: 'Worker message format error. Please try again.',
           result: null,
           durationMs: 0,
         })
@@ -90,15 +171,14 @@ export class WorkerEngine implements CodeEngine {
 
       worker.postMessage({ code })
     }).finally(() => {
-      // Ensure worker is always cleaned up
       worker.terminate()
       this.running = false
       this.pendingResolve = null
     })
   }
 
-  dispose(): void {
-    this.crashed = true
+  abort(): void {
+    this.aborted = true
     if (this.pendingResolve) {
       this.pendingResolve({
         stdout: '',
@@ -109,6 +189,11 @@ export class WorkerEngine implements CodeEngine {
       })
       this.pendingResolve = null
     }
+  }
+
+  dispose(): void {
+    this.crashed = true
+    this.abort()
   }
 
   private trackCrash(): void {

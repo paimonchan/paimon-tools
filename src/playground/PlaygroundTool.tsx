@@ -12,7 +12,7 @@ import { useToastStore } from '../stores/toast-store'
 import { WorkerEngine } from './engines/worker-engine'
 import { HtmlEngine } from './engines/html-engine'
 import { PyodideEngine } from './engines/pyodide-engine'
-import type { CodeEngine, RunResult } from './engines/types'
+import type { CodeEngine, RunResult, RunOptions } from './engines/types'
 import LangTabs from './LangTabs'
 import ActionBar from './ActionBar'
 import OutputPane from './OutputPane'
@@ -70,6 +70,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   const statusRef = useRef<string>('idle')
   const [mobileView, setMobileView] = useState<'code' | 'output'>('code')
   const outputFromRun = useRef(false)
+  const currentAbortRef = useRef<(() => void) | null>(null)
 
   // On mobile: auto-switch to Output when run completes, back to Code when tab changes.
   // Skip for JSON auto-validation (fires on every keystroke, would hide the editor).
@@ -119,6 +120,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   // cleanup all engines on unmount so we don't leak workers/wasm
   useEffect(() => {
     return () => {
+      currentAbortRef.current = null
       enginesRef.current.forEach((engine) => engine.dispose())
       enginesRef.current.clear()
     }
@@ -174,11 +176,20 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   const inputCode = getCode(language)
   const setInputCode = useCallback((v: string) => setCode(language, v), [language, setCode])
 
+  // --- Abort current execution ---------------------------------------
+
+  const handleStop = useCallback(() => {
+    currentAbortRef.current?.()
+    currentAbortRef.current = null
+  }, [])
+
   // --- Switch language -----------------------------------------------
 
   const handleLanguageChange = useCallback(
     (lang: Language) => {
       if (lang === language) return
+      // Auto-abort any running execution when switching languages
+      handleStop()
       setLanguage(lang)
       setOutput(null)
       statusRef.current = 'idle'
@@ -186,7 +197,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       const langToolId = `playground-${lang}`
       replaceTool(langToolId)
     },
-    [language]
+    [language, handleStop]
   )
 
   // --- Auto-validate JSON on change ----------------------------------
@@ -267,10 +278,41 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
     setIsRunning(true)
     statusRef.current = 'running'
+    setOutput(null)
 
     try {
       const engine = getEngine(language)
-      const result = await engine.run(inputCode)
+      let hasInitialOutput = false
+
+      const options: RunOptions = {
+        onOutput: (stdout, stderr) => {
+          if (!hasInitialOutput) {
+            hasInitialOutput = true
+            setOutput({
+              stdout,
+              stderr,
+              error: null,
+              result: null,
+              durationMs: 0,
+            })
+          } else {
+            setOutput((prev) => {
+              if (!prev) return { stdout, stderr, error: null, result: null, durationMs: 0 }
+              return {
+                ...prev,
+                stdout: stdout ? (prev.stdout ? prev.stdout + '\n' + stdout : stdout) : prev.stdout,
+                stderr: stderr ? (prev.stderr ? prev.stderr + '\n' + stderr : stderr) : prev.stderr,
+              }
+            })
+          }
+        },
+      }
+
+      currentAbortRef.current = () => engine.abort()
+
+      const result = await engine.run(inputCode, options)
+
+      currentAbortRef.current = null
       outputFromRun.current = true
       setOutput(result)
     } catch (err) {
@@ -285,7 +327,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       setIsRunning(false)
       statusRef.current = 'idle'
     }
-  }, [isRunning, language, inputCode, toastPush])
+  }, [isRunning, language, inputCode, toastPush, getEngine])
 
   // --- Keyboard shortcut ⌘⏎ ------------------------------------------
 
@@ -294,12 +336,16 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       const mod = e.metaKey || e.ctrlKey
       if (mod && e.key === 'Enter') {
         e.preventDefault()
-        handleRun()
+        if (isRunning) {
+          handleStop()
+        } else {
+          handleRun()
+        }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [handleRun])
+  }, [handleRun, handleStop, isRunning])
 
   // --- Clear ---------------------------------------------------------
 
@@ -439,6 +485,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       {/* Action bar */}
       <ActionBar
         onRun={handleRun}
+        onStop={handleStop}
         onClear={handleClear}
         onCopy={handleCopy}
         onShare={handleShare}

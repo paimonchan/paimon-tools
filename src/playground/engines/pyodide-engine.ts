@@ -7,7 +7,7 @@
  *   Warm start: ~1s (WASM cached)
  */
 
-import type { CodeEngine, RunResult } from './types'
+import type { CodeEngine, RunOptions, RunResult } from './types'
 
 /** Execution timeout — same as WorkerEngine's 10s cap. */
 const RUN_TIMEOUT_MS = 10_000
@@ -75,7 +75,7 @@ export class PyodideEngine implements CodeEngine {
     this._ready = true
   }
 
-  async run(code: string): Promise<RunResult> {
+  async run(code: string, _options?: RunOptions): Promise<RunResult> {
     await this.load()
     if (!this.pyodide) {
       return {
@@ -144,5 +144,11 @@ export class PyodideEngine implements CodeEngine {
     this._ready = false
     this._loading = false
     this._loadPromise = null
+  }
+
+  abort(): void {
+    // Pyodide execution is synchronous (WASM runs on main thread).
+    // The interrupt buffer signals KeyboardInterrupt, but stop is
+    // effectively handled via the existing RUN_TIMEOUT_MS mechanism.
   }
 }
