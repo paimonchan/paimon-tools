@@ -24,6 +24,7 @@ interface CodeMirrorWrapperProps {
 
 const langExt: Record<Language, ReturnType<typeof javascript>> = {
   javascript: javascript(),
+  typescript: javascript({ typescript: true }),
   json: json(),
   html: html(),
   python: python(),

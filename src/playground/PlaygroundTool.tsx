@@ -13,6 +13,7 @@ import { WorkerEngine } from './engines/worker-engine'
 import { HtmlEngine } from './engines/html-engine'
 import { PyodideEngine } from './engines/pyodide-engine'
 import type { CodeEngine, RunResult, RunOptions } from './engines/types'
+import { BundlerEngine, needsBundling } from './engines/bundler-engine'
 import LangTabs from './LangTabs'
 import ActionBar from './ActionBar'
 import OutputPane from './OutputPane'
@@ -26,6 +27,7 @@ import { replaceTool } from '../lib/router'
 
 const TEMPLATES: Record<Language, string> = {
   javascript: '// Write some JavaScript\nconsole.log("Hello, Paimon!");\n',
+  typescript: '// Write some TypeScript\nconst greeting: string = "Hello, Paimon!"\nconsole.log(greeting)\n',
   json: '{\n  "name": "Paimon",\n  "role": "Guide"\n}',
   html: "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: system-ui;\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      min-height: 100vh;\n      margin: 0;\n      background: #1a1a2e;\n      color: #eee;\n    }\n    h1 { color: #e94560; }\n  </style>\n</head>\n<body>\n  <h1>Hello, Paimon! 🎨</h1>\n  <p>Edit me and click Run</p>\n  <script>\n    document.querySelector('h1').addEventListener('click', () => {\n      alert('Hello from Paimon Tools!');\n    });\n  </script>\n</body>\n</html>",
   python:
@@ -37,6 +39,7 @@ const TEMPLATES: Record<Language, string> = {
 function createEngine(language: Language): CodeEngine {
   switch (language) {
     case 'javascript':
+    case 'typescript':
       return new WorkerEngine()
     case 'html':
       return new HtmlEngine()
@@ -61,6 +64,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
   // each language keeps its own code, survives tab switches
   const [jsCode, setJsCode] = usePersistentState('playground.js', TEMPLATES.javascript)
+  const [tsCode, setTsCode] = usePersistentState('playground.ts', TEMPLATES.typescript)
   const [jsonCode, setJsonCode] = usePersistentState('playground.json', TEMPLATES.json)
   const [htmlCode, setHtmlCode] = usePersistentState('playground.html', TEMPLATES.html)
   const [pythonCode, setPythonCode] = usePersistentState('playground.python', TEMPLATES.python)
@@ -71,6 +75,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   const [mobileView, setMobileView] = useState<'code' | 'output'>('code')
   const outputFromRun = useRef(false)
   const currentAbortRef = useRef<(() => void) | null>(null)
+  const bundlerRef = useRef<BundlerEngine | null>(null)
 
   // On mobile: auto-switch to Output when run completes, back to Code when tab changes.
   // Skip for JSON auto-validation (fires on every keystroke, would hide the editor).
@@ -121,6 +126,8 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   useEffect(() => {
     return () => {
       currentAbortRef.current = null
+      bundlerRef.current?.dispose()
+      bundlerRef.current = null
       enginesRef.current.forEach((engine) => engine.dispose())
       enginesRef.current.clear()
     }
@@ -142,6 +149,8 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       switch (lang) {
         case 'javascript':
           return jsCode
+        case 'typescript':
+          return tsCode
         case 'json':
           return jsonCode
         case 'html':
@@ -150,7 +159,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
           return pythonCode
       }
     },
-    [jsCode, jsonCode, htmlCode, pythonCode]
+    [jsCode, tsCode, jsonCode, htmlCode, pythonCode]
   )
 
   const setCode = useCallback(
@@ -158,6 +167,9 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       switch (lang) {
         case 'javascript':
           setJsCode(value)
+          break
+        case 'typescript':
+          setTsCode(value)
           break
         case 'json':
           setJsonCode(value)
@@ -310,7 +322,38 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
       currentAbortRef.current = () => engine.abort()
 
-      const result = await engine.run(inputCode, options)
+      // --- Bundling step (optional: TypeScript or bare imports) ---
+      let codeToRun = inputCode
+      if (needsBundling(inputCode, language)) {
+        if (!bundlerRef.current) {
+          bundlerRef.current = new BundlerEngine()
+        }
+        // Abort bundling + execution together
+        currentAbortRef.current = () => {
+          bundlerRef.current?.abort()
+          engine.abort()
+        }
+        const bundleResult = await bundlerRef.current.bundle(inputCode, language)
+        if (bundleResult.error) {
+          setOutput({
+            stdout: '',
+            stderr: '',
+            error: bundleResult.error,
+            result: null,
+            durationMs: 0,
+          })
+          outputFromRun.current = true
+          return // don't try to execute broken code
+        }
+        if (!bundleResult.skipped) {
+          codeToRun = bundleResult.code
+        }
+      }
+
+      // Reset abort to just engine (bundling done)
+      currentAbortRef.current = () => engine.abort()
+
+      const result = await engine.run(codeToRun, options)
 
       currentAbortRef.current = null
       outputFromRun.current = true
@@ -442,11 +485,13 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
             <div className="text-[11px] font-500 text-ink-400">
               {language === 'javascript'
                 ? 'JavaScript'
-                : language === 'json'
-                  ? 'JSON'
-                  : language === 'html'
-                    ? 'HTML'
-                    : 'Python'}
+                : language === 'typescript'
+                  ? 'TypeScript'
+                  : language === 'json'
+                    ? 'JSON'
+                    : language === 'html'
+                      ? 'HTML'
+                      : 'Python'}
             </div>
             {language === 'json' && (
               <button

@@ -23,6 +23,7 @@
     "@uiw/react-codemirror": "^4.25.11",
     "codemirror": "^6.0.2",
     "diff": "^9.0.0",
+    "esbuild-wasm": "^0.28.1",
     "js-yaml": "^5.2.1",
     "json5": "^2.2.3",
     "lucide-react": "^1.0.0",

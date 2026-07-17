@@ -9,7 +9,7 @@
 
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
 
-export type DetectedLanguage = 'javascript' | 'json' | 'html' | 'python'
+export type DetectedLanguage = 'javascript' | 'typescript' | 'json' | 'html' | 'python'
 
 const HASH_KEY = 'code'
 const LANG_KEY = 'lang'
@@ -36,7 +36,7 @@ export function readShareHash(): { code: string; language?: DetectedLanguage } |
     if (!decompressed) return null
     const rawLang = params.get(LANG_KEY)
     const language: DetectedLanguage | null =
-      rawLang && (['javascript', 'json', 'html', 'python'] as DetectedLanguage[]).includes(rawLang as DetectedLanguage)
+      rawLang && (['javascript', 'typescript', 'json', 'html', 'python'] as DetectedLanguage[]).includes(rawLang as DetectedLanguage)
         ? (rawLang as DetectedLanguage)
         : null
     return { code: decompressed, language: language ?? undefined }

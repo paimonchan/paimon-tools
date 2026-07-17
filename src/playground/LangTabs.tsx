@@ -2,7 +2,7 @@
  * LangTabs — language selector for the playground.
  */
 
-export type Language = 'javascript' | 'json' | 'html' | 'python'
+export type Language = 'javascript' | 'typescript' | 'json' | 'html' | 'python'
 
 interface LangTabsProps {
   value: Language
@@ -11,6 +11,7 @@ interface LangTabsProps {
 
 const TABS: { id: Language; label: string; desc: string }[] = [
   { id: 'javascript', label: 'JavaScript', desc: 'Run code via Web Worker' },
+  { id: 'typescript', label: 'TypeScript', desc: 'Transpile & run via esbuild' },
   { id: 'json', label: 'JSON', desc: 'Format & validate' },
   { id: 'html', label: 'HTML', desc: 'Live preview in iframe' },
   { id: 'python', label: 'Python', desc: 'Pyodide WASM (~12 MB)' },

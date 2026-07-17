@@ -296,6 +296,7 @@ export const TOOL_SEO = {
 <p><strong>Try a specific language:</strong></p>
 <ul>
   <li><a href="code/javascript/">JavaScript Playground</a> — sandboxed JS execution</li>
+  <li><a href="code/typescript/">TypeScript Playground</a> — transpile & run via esbuild</li>
   <li><a href="code/python/">Python Playground</a> — Pyodide WASM Python</li>
   <li><a href="code/html/">HTML Playground</a> — live iframe preview</li>
   <li><a href="code/json/">JSON Playground</a> — format &amp; validate</li>
@@ -316,7 +317,23 @@ export const TOOL_SEO = {
     breadcrumb: 'Playground / JavaScript',
     bodyHtml: `<h1>JavaScript Online Playground</h1>
 <p>Write and run JavaScript code in your browser. Sandboxed execution (Web Worker) with full console output, CodeMirror syntax highlighting, and instant results — no uploads, no sign-up, fully private.</p>
-<p>Try <a href="../html/">HTML Playground</a> · <a href="../python/">Python Playground</a> · <a href="../json/">JSON Playground</a></p>
+<p>Try <a href="../typescript/">TypeScript Playground</a> · <a href="../html/">HTML Playground</a> · <a href="../python/">Python Playground</a> · <a href="../json/">JSON Playground</a></p>
+<p><a href="../../">← Back to all Paimon Tools</a></p>`,
+  },
+
+  'playground-typescript': {
+    title: 'TypeScript Online — Run TS Code in Browser | Paimon Tools',
+    description:
+      'Write and run TypeScript online, free. Transpiled via esbuild-wasm with npm import support, sandboxed execution, console output, and syntax highlighting — 100% in your browser, no sign-up.',
+    keywords: 'typescript online, run typescript online, ts playground, typescript compiler online, free typescript editor, esbuild wasm',
+    path: 'code/typescript',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'TypeScript Online Playground — transpile and run TS code in your browser, free',
+    h1: 'TypeScript Online Playground',
+    breadcrumb: 'Playground / TypeScript',
+    bodyHtml: `<h1>TypeScript Online Playground</h1>
+<p>Write and run TypeScript code in your browser. Powered by <strong>esbuild-wasm</strong> for fast transpilation with npm import support via esm.sh CDN. Sandboxed execution, full console output, and CodeMirror syntax highlighting — no uploads, no sign-up, fully private.</p>
+<p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../html/">HTML Playground</a> · <a href="../python/">Python Playground</a> · <a href="../json/">JSON Playground</a></p>
 <p><a href="../../">← Back to all Paimon Tools</a></p>`,
   },
 
@@ -332,7 +349,7 @@ export const TOOL_SEO = {
     breadcrumb: 'Playground / Python',
     bodyHtml: `<h1>Python Online Playground</h1>
 <p>Write and run Python code in your browser, powered by <strong>Pyodide WASM</strong> (fetched from CDN, cached locally). Full Python with syntax highlighting and stdout output — no server, no setup, fully private.</p>
-<p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../html/">HTML Playground</a> · <a href="../json/">JSON Playground</a></p>
+<p>Try <a href="../javascript/">JavaScript Playground</a> · <a href="../typescript/">TypeScript Playground</a> · <a href="../html/">HTML Playground</a> · <a href="../json/">JSON Playground</a></p>
 <p><a href="../../">← Back to all Paimon Tools</a></p>`,
   },
 
