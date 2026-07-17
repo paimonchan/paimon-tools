@@ -126,7 +126,7 @@ export default function OutputPane({ output }: OutputPaneProps) {
 
         {output.stderr && <pre className="text-orange-400">{output.stderr}</pre>}
 
-        {output.result !== null && !output.stdout && !output.stderr && (
+        {output.result !== null && (
           <pre className="text-honey-300">⇒ {output.result}</pre>
         )}
 

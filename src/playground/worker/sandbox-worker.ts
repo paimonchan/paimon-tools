@@ -3,7 +3,8 @@
  * environment with no DOM access.
  *
  * Captures console.log/error/warn output and returns it with the result.
- * Runs in a separate thread — does not block the UI.
+ * Wraps code in an async IIFE so top-level await, setTimeout, fetch, etc.
+ * all produce usable output. Runs in a separate thread — does not block the UI.
  */
 
 /** Format a value for display — objects/arrays get JSON, primitives get String(). */
@@ -35,10 +36,9 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
   self.console.warn = (...args: unknown[]) => stderr.push(args.map(stringify).join(' '))
 
   try {
-    // eslint-disable-next-line no-new-func
-    const raw = new Function(code)()
-    // Await in case the user code returns a Promise (async IIFE, top-level await polyfill, etc.)
-    const result = raw instanceof Promise ? await raw : raw
+    // Wrap in async IIFE: enables top-level await, captures promise chains,
+    // and scopes `var` declarations so they don't leak to the global worker scope.
+    const result = await new Function(`return (async () => { ${code} })()`)()
     const durationMs = performance.now() - start
     self.postMessage({
       stdout: stdout.join('\n'),
@@ -52,7 +52,8 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
     self.postMessage({
       stdout: stdout.join('\n'),
       stderr: stderr.join('\n'),
-      error: String(err),
+      // Preserve full stack trace — String(err) only gives the message
+      error: err instanceof Error ? err.stack || err.message : String(err),
       result: null,
       durationMs,
     })
