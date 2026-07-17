@@ -34,7 +34,11 @@ export function readShareHash(): { code: string; language?: DetectedLanguage } |
   try {
     const decompressed = decompressFromEncodedURIComponent(compressed)
     if (!decompressed) return null
-    const language = params.get(LANG_KEY) as DetectedLanguage | null
+    const rawLang = params.get(LANG_KEY)
+    const language: DetectedLanguage | null =
+      rawLang && (['javascript', 'json', 'html', 'python'] as DetectedLanguage[]).includes(rawLang as DetectedLanguage)
+        ? (rawLang as DetectedLanguage)
+        : null
     return { code: decompressed, language: language ?? undefined }
   } catch {
     return null
@@ -42,8 +46,8 @@ export function readShareHash(): { code: string; language?: DetectedLanguage } |
 }
 
 /** Update the URL hash without triggering navigation. */
-export function pushShareHash(code: string): void {
-  const hash = buildShareHash(code)
+export function pushShareHash(code: string, language?: DetectedLanguage): void {
+  const hash = buildShareHash(code, language)
   window.history.replaceState(null, '', hash)
 }
 

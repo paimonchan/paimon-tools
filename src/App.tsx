@@ -141,7 +141,7 @@ function Shell() {
               {createElement(REF_TOOLS[activeId])}
             </Suspense>
           ) : TOOLS_BY_ID[activeId]?.type === 'converter' ? (
-            <ConversionTool tool={TOOLS_BY_ID[activeId]} onSwap={selectTool} registerActions={registerActions} />
+            <ConversionTool key={activeId} tool={TOOLS_BY_ID[activeId]} onSwap={selectTool} registerActions={registerActions} />
           ) : null}
         </main>
       </div>

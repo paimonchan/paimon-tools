@@ -122,6 +122,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }: Co
                 {tools.map((tool) => {
                   const idx = results.indexOf(tool)
                   const Icon = ICON_MAP[tool.icon]
+                  if (!Icon) return null
                   const isSelected = idx === active
                   const isActiveTool = tool.id === activeId
                   return (

@@ -67,6 +67,7 @@ export default function DiffTool() {
   const [dragging, setDragging] = useState<'old' | 'new' | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingFileSide, setPendingFileSide] = useState<'old' | 'new' | null>(null)
+  const patchUrlRef = useRef<string | null>(null)
 
   // ── Diff computation ────────────────────────────────
 
@@ -75,6 +76,16 @@ export default function DiffTool() {
       setResult(null)
       setStatus('idle')
       setDurationMs(null)
+      return
+    }
+
+    // Guard against very large inputs that would freeze the UI
+    const totalChars = oldText.length + newText.length
+    if (totalChars > 200_000) {
+      setResult(null)
+      setStatus('error')
+      setDurationMs(null)
+      toast.push('Input too large — diff supports up to ~200K chars', { variant: 'error' })
       return
     }
 
@@ -144,14 +155,17 @@ export default function DiffTool() {
       return
     }
     const blob = new Blob([res.value], { type: 'text/plain' })
+    // Revoke previous blob URL if any
+    if (patchUrlRef.current) URL.revokeObjectURL(patchUrlRef.current)
     const url = URL.createObjectURL(blob)
+    patchUrlRef.current = url
     const a = document.createElement('a')
     a.href = url
     a.download = 'diff.patch'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 0)
+    setTimeout(() => { URL.revokeObjectURL(url); patchUrlRef.current = null }, 0)
     toast.push('Downloaded diff.patch', { variant: 'success' })
   }
 

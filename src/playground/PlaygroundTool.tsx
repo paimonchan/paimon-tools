@@ -8,7 +8,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { usePersistentState } from '../hooks/usePersistentState'
-import { useToast } from '../stores/toast-store'
+import { useToastStore } from '../stores/toast-store'
 import { WorkerEngine } from './engines/worker-engine'
 import { HtmlEngine } from './engines/html-engine'
 import { PyodideEngine } from './engines/pyodide-engine'
@@ -54,7 +54,7 @@ interface PlaygroundToolProps {
 }
 
 export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps) {
-  const toast = useToast()
+  const toastPush = useToastStore((s) => s.push)
   const enginesRef = useRef<Map<Language, CodeEngine>>(new Map())
   const [language, setLanguage] = useState<Language>(() => initialLanguage || 'javascript')
   const [isPythonLoading, setIsPythonLoading] = useState(false)
@@ -112,7 +112,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       }
       setLanguage(lang)
       clearShareHash()
-      toast.push('Shared code loaded from URL', { variant: 'info' })
+      toastPush('Shared code loaded from URL', { variant: 'info' })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -247,7 +247,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       const engine = getEngine(language) as unknown as PyodideEngine
       if (!engine.ready && !engine.loading) {
         setIsPythonLoading(true)
-        toast.push('Loading Python engine (~12 MB, first time only)', { variant: 'info' })
+        toastPush('Loading Python engine (~12 MB, first time only)', { variant: 'info' })
         try {
           await engine.load()
         } catch (err) {
@@ -285,7 +285,7 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
       setIsRunning(false)
       statusRef.current = 'idle'
     }
-  }, [isRunning, language, inputCode, toast])
+  }, [isRunning, language, inputCode, toastPush])
 
   // --- Keyboard shortcut ⌘⏎ ------------------------------------------
 
@@ -305,7 +305,8 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
   function handleClear() {
     setOutput(null)
-    toast.push('Output cleared', { variant: 'info' })
+    outputFromRun.current = false
+    toastPush('Output cleared', { variant: 'info' })
   }
 
   // --- Copy ----------------------------------------------------------
@@ -317,9 +318,9 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
     if (output?.result) parts.push(`⇒ ${output.result}`)
     const text = parts.join('\n')
     if (text) {
-      navigator.clipboard.writeText(text).then(() => {
-        toast.push('Copied to clipboard', { variant: 'success' })
-      })
+      navigator.clipboard.writeText(text)
+        .then(() => toastPush('Copied to clipboard', { variant: 'success' }))
+        .catch(() => toastPush('Could not copy to clipboard', { variant: 'error' }))
     }
   }
 
@@ -331,13 +332,13 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
     navigator.clipboard
       .writeText(url)
       .then(() => {
-        pushShareHash(inputCode)
-        toast.push('Share link copied to clipboard!', { variant: 'success' })
+        pushShareHash(inputCode, language)
+        toastPush('Share link copied to clipboard!', { variant: 'success' })
       })
       .catch(() => {
         // Fallback: just update URL
-        pushShareHash(inputCode)
-        toast.push('URL updated in address bar', { variant: 'info' })
+        pushShareHash(inputCode, language)
+        toastPush('URL updated in address bar', { variant: 'info' })
       })
   }
 
@@ -348,9 +349,9 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
     try {
       const parsed = JSON.parse(inputCode)
       setInputCode(JSON.stringify(parsed, null, 2))
-      toast.push('Formatted JSON', { variant: 'success' })
+      toastPush('Formatted JSON', { variant: 'success' })
     } catch {
-      toast.push('Cannot format — invalid JSON', { variant: 'error' })
+      toastPush('Cannot format — invalid JSON', { variant: 'error' })
     }
   }
 

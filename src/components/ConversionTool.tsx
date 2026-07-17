@@ -157,7 +157,7 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
 
   const ok = result?.ok
   const error = ok === false ? (result as { ok: false; error: string }).error : null
-  const outputText = ok && !isFileOutput ? String(result.value) : ''
+  const outputText = ok && !isFileOutput ? (typeof result.value === 'string' ? result.value : '') : ''
   const outputBlob: FileOutputValue | null =
     ok && isFileOutput && result.value && typeof result.value === 'object' && 'arraybuffer' in result.value
       ? (result.value as FileOutputValue)
@@ -241,7 +241,7 @@ export default function ConversionTool({ tool, onSwap, registerActions }: Conver
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  })
+  }, [])
 
   // Expose actions upward so the app-level header buttons can trigger them.
   useEffect(() => {

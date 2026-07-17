@@ -115,19 +115,25 @@ export default function CombineFilesTool() {
     if (rawFiles.length < 2) return
 
     setStatus('loading')
-    const t0 = performance.now()
-    const res = appendFiles(rawFiles, { unionColumns, outputFormat })
-    setDurationMs(performance.now() - t0)
+    let cancelled = false
+    setTimeout(() => {
+      if (cancelled) return
+      const t0 = performance.now()
+      const res = appendFiles(rawFiles, { unionColumns, outputFormat })
+      if (cancelled) return
+      setDurationMs(performance.now() - t0)
 
-    if (res.ok) {
-      setResult(res.value)
-      setError(null)
-      setStatus('ok')
-    } else {
-      setResult(null)
-      setError(res.error)
-      setStatus('error')
-    }
+      if (res.ok) {
+        setResult(res.value)
+        setError(null)
+        setStatus('ok')
+      } else {
+        setResult(null)
+        setError(res.error)
+        setStatus('error')
+      }
+    }, 0)
+    return () => { cancelled = true }
   }, [rawFiles, unionColumns, outputFormat])
 
   // ── Actions ────────────────────────────────────────

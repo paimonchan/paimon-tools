@@ -59,8 +59,8 @@ export class PyodideEngine implements CodeEngine {
       await new Promise<void>((resolve, reject) => {
         const script = document.createElement('script')
         script.src = `${PYODIDE_CDN}pyodide.js`
-        script.onload = () => resolve()
-        script.onerror = () => reject(new Error('Failed to load Pyodide script from CDN'))
+        script.onload = () => { document.head.removeChild(script); resolve() }
+        script.onerror = () => { document.head.removeChild(script); reject(new Error('Failed to load Pyodide script from CDN')) }
         document.head.appendChild(script)
       })
     }
@@ -142,5 +142,7 @@ export class PyodideEngine implements CodeEngine {
     this.pyodide?.setInterruptBuffer(null)
     this.pyodide = null
     this._ready = false
+    this._loading = false
+    this._loadPromise = null
   }
 }

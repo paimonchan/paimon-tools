@@ -13,6 +13,7 @@ export class WorkerEngine implements CodeEngine {
   private worker: Worker | null = null
   private crashCount = 0
   private firstCrashTime = 0
+  private running = false
 
   get ready(): boolean {
     return true
@@ -25,10 +26,22 @@ export class WorkerEngine implements CodeEngine {
   }
 
   async run(code: string): Promise<RunResult> {
+    if (this.running) {
+      return { stdout: '', stderr: '', error: 'Already running', result: null, durationMs: 0 }
+    }
+    this.running = true
     await this.load()
+
     return new Promise<RunResult>((resolve) => {
+      const worker = this.worker
+      if (!worker) {
+        this.running = false
+        resolve({ stdout: '', stderr: '', error: 'Engine disposed', result: null, durationMs: 0 })
+        return
+      }
+
       const timeout = setTimeout(() => {
-        this.worker?.terminate()
+        worker.terminate()
         this.worker = null
         this.trackCrash()
         resolve({
@@ -40,15 +53,15 @@ export class WorkerEngine implements CodeEngine {
         })
       }, 10000)
 
-      this.worker!.onmessage = (e: MessageEvent<RunResult>) => {
+      worker.onmessage = (e: MessageEvent<RunResult>) => {
         clearTimeout(timeout)
         this.crashCount = 0 // reset on success
         resolve(e.data)
       }
 
-      this.worker!.onerror = () => {
+      worker.onerror = () => {
         clearTimeout(timeout)
-        this.worker?.terminate()
+        worker.terminate()
         this.worker = null
         this.trackCrash()
         resolve({
@@ -60,13 +73,16 @@ export class WorkerEngine implements CodeEngine {
         })
       }
 
-      this.worker!.postMessage({ code })
+      worker.postMessage({ code })
+    }).finally(() => {
+      this.running = false
     })
   }
 
   dispose(): void {
-    this.worker?.terminate()
+    const w = this.worker
     this.worker = null
+    w?.terminate()
   }
 
   private trackCrash(): void {
