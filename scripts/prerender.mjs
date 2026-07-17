@@ -102,6 +102,12 @@ ${urls.map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${today}</last
 </urlset>`
   await writeFile(join(DIST, 'sitemap.xml'), sitemap, 'utf8')
   console.log(`[prerender] ✓ sitemap.xml (${urls.length} URLs, lastmod: ${today})`)
+
+  // --- .nojekyll (disable GitHub Pages Jekyll processing) ---
+  // Without this file, GitHub Pages runs Jekyll on the dist/ directory, which can
+  // cause 404 errors for some pages due to Jekyll's file processing rules.
+  await writeFile(join(DIST, '.nojekyll'), '', 'utf8')
+  console.log(`[prerender] ✓ .nojekyll`)
 }
 
 /** Replace the %%SEO%% tokens with per-page values. */
