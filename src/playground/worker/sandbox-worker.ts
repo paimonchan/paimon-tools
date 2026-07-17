@@ -6,7 +6,21 @@
  * Runs in a separate thread — does not block the UI.
  */
 
-self.onmessage = (e: MessageEvent<{ code: string }>) => {
+/** Format a value for display — objects/arrays get JSON, primitives get String(). */
+function stringify(arg: unknown): string {
+  if (arg === null) return 'null'
+  if (arg === undefined) return 'undefined'
+  if (typeof arg === 'object' || typeof arg === 'function') {
+    try {
+      return JSON.stringify(arg, null, 2)
+    } catch {
+      return String(arg)
+    }
+  }
+  return String(arg)
+}
+
+self.onmessage = async (e: MessageEvent<{ code: string }>) => {
   const { code } = e.data
   const stdout: string[] = []
   const stderr: string[] = []
@@ -16,19 +30,21 @@ self.onmessage = (e: MessageEvent<{ code: string }>) => {
   const origLog = self.console.log
   const origError = self.console.error
   const origWarn = self.console.warn
-  self.console.log = (...args: unknown[]) => stdout.push(args.map(String).join(' '))
-  self.console.error = (...args: unknown[]) => stderr.push(args.map(String).join(' '))
-  self.console.warn = (...args: unknown[]) => stderr.push(args.map(String).join(' '))
+  self.console.log = (...args: unknown[]) => stdout.push(args.map(stringify).join(' '))
+  self.console.error = (...args: unknown[]) => stderr.push(args.map(stringify).join(' '))
+  self.console.warn = (...args: unknown[]) => stderr.push(args.map(stringify).join(' '))
 
   try {
     // eslint-disable-next-line no-new-func
-    const result = new Function(code)()
+    const raw = new Function(code)()
+    // Await in case the user code returns a Promise (async IIFE, top-level await polyfill, etc.)
+    const result = raw instanceof Promise ? await raw : raw
     const durationMs = performance.now() - start
     self.postMessage({
       stdout: stdout.join('\n'),
       stderr: stderr.join('\n'),
       error: null,
-      result: result === undefined ? null : String(result),
+      result: result === undefined ? null : stringify(result),
       durationMs,
     })
   } catch (err) {
