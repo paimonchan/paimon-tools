@@ -5,7 +5,7 @@
  * <html>, and ToastContainer renders toast notifications from the Zustand store.
  */
 
-import { useEffect, useState, lazy, Suspense } from 'react'
+import { createElement, useEffect, useState, lazy, Suspense, type LazyExoticComponent, type ComponentType } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
 import { ThemeEffect, useTheme } from './stores/theme-store'
@@ -23,6 +23,13 @@ import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
 const CombineFilesTool = lazy(() => import('./components/CombineFilesTool'))
 const DiffTool = lazy(() => import('./components/DiffTool'))
+
+// Registry pattern for ref tools — add new tools here, routing auto-works
+const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
+  'combine-files': CombineFilesTool,
+  'diff-tool': DiffTool,
+  'playground': PlaygroundTool,
+}
 
 function Shell() {
   const { theme, toggleTheme } = useTheme()
@@ -124,7 +131,7 @@ function Shell() {
                 }
               />
             </Suspense>
-          ) : activeId === 'combine-files' ? (
+          ) : REF_TOOLS[activeId] ? (
             <Suspense
               fallback={
                 <div className="flex flex-1 items-center justify-center">
@@ -132,17 +139,7 @@ function Shell() {
                 </div>
               }
             >
-              <CombineFilesTool />
-            </Suspense>
-          ) : activeId === 'diff-tool' ? (
-            <Suspense
-              fallback={
-                <div className="flex flex-1 items-center justify-center">
-                  <div className="text-sm text-ink-400">Loading…</div>
-                </div>
-              }
-            >
-              <DiffTool />
+              {createElement(REF_TOOLS[activeId])}
             </Suspense>
           ) : TOOLS_BY_ID[activeId]?.type === 'converter' ? (
             <ConversionTool tool={TOOLS_BY_ID[activeId]} onSwap={selectTool} registerActions={registerActions} />
