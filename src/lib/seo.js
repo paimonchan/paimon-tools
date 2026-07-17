@@ -41,6 +41,7 @@ export const HOME_SEO = {
   <li><a href="json-to-yaml/">JSON to YAML</a> — convert JSON to YAML</li>
   <li><a href="hash-generator/">SHA-256 Hash</a> — generate SHA-256 checksum</li>
   <li><a href="combine-files/">Combine Files</a> — merge multiple CSV &amp; Excel files into one
+  <li><a href="diff-tool/">Diff Tool</a> — compare two texts side by side
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
 }
@@ -266,6 +267,20 @@ export const TOOL_SEO = {
 <p>Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns — no uploads, no sign-up, fully private. Supports mixed formats.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
+  'diff-tool': {
+    title: 'Free Online Diff Tool — Compare Text Files Side by Side | Paimon Tools',
+    description:
+      'Compare two texts or files online free. Side-by-side diff viewer with color-coded lines. Paste text or drop files — 100% in your browser, no uploads, no limits, no sign-up.',
+    keywords: 'diff tool, text compare, side by side diff, compare files online, diff checker, code compare, file comparison tool, online diff, unified diff',
+    path: 'diff-tool',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: DEFAULT_OG_ALT,
+    h1: 'Diff Tool — Compare Text Side by Side',
+    breadcrumb: 'Tools / Diff Tool',
+    bodyHtml: `<h1>Diff Tool — Compare Text Side by Side</h1>
+<p>Compare two texts or files entirely in your browser. Side-by-side or unified diff view with color-coded added/removed lines. Paste text or drop files — no uploads, no sign-up, fully private. Unlimited size.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
   playground: {
     title: 'Online Code Playground — Free In-Browser Code Editor | Paimon Tools',
     description:
@@ -459,6 +474,7 @@ export function noscriptBodyFor(toolId) {
         <li><a href="${SITE_URL}/json-to-yaml/">JSON to YAML converter</a></li>
         <li><a href="${SITE_URL}/hash-generator/">SHA-256 hash generator</a></li>
         <li><a href="${SITE_URL}/combine-files/">Combine Files</a> — merge multiple CSV &amp; Excel files</li>
+        <li><a href="${SITE_URL}/diff-tool/">Diff Tool</a> — compare two texts side by side</li>
         <li><a href="${SITE_URL}/code/">Code Playground</a> — run JavaScript, Python &amp; HTML</li>
       </ul>
       <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`

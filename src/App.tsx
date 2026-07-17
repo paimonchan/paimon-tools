@@ -22,6 +22,7 @@ import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 // Lazy imports
 const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
 const CombineFilesTool = lazy(() => import('./components/CombineFilesTool'))
+const DiffTool = lazy(() => import('./components/DiffTool'))
 
 function Shell() {
   const { theme, toggleTheme } = useTheme()
@@ -132,6 +133,16 @@ function Shell() {
               }
             >
               <CombineFilesTool />
+            </Suspense>
+          ) : activeId === 'diff-tool' ? (
+            <Suspense
+              fallback={
+                <div className="flex flex-1 items-center justify-center">
+                  <div className="text-sm text-ink-400">Loading…</div>
+                </div>
+              }
+            >
+              <DiffTool />
             </Suspense>
           ) : TOOLS_BY_ID[activeId]?.type === 'converter' ? (
             <ConversionTool tool={TOOLS_BY_ID[activeId]} onSwap={selectTool} registerActions={registerActions} />

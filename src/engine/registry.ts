@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'hash' | 'layers' | 'minimize-2' | 'play'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -299,6 +299,16 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['merge', 'combine', 'excel', 'csv', 'xlsx', 'append', 'concat', 'gabung', 'join', 'multiple files'],
     description:
       'Merge multiple CSV and Excel files into one. Append rows from 2+ files, auto-detect format, union columns — 100% client-side, no uploads, no sign-up.',
+  },
+  {
+    id: 'diff-tool',
+    name: 'Diff Tool',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'git-compare',
+    keywords: ['diff', 'compare', 'text compare', 'side by side', 'file comparison', 'patch', 'unified diff', 'code compare'],
+    description:
+      'Compare two texts side by side. Paste text or drop files, see line-by-line differences with color-coded added/removed lines — 100% client-side, no uploads, no sign-up.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────
