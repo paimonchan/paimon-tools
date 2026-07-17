@@ -108,6 +108,18 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
         self.postMessage({ type: 'done' })
       }
     }
+
+    // Keep function alive until collection ends.
+    // Without this await the function exits the try block, finally restores
+    // console to original, and setTimeout callbacks lose their capture.
+    await new Promise<void>((resolve) => {
+      const id = setInterval(() => {
+        if (finalized) {
+          clearInterval(id)
+          resolve()
+        }
+      }, 50)
+    })
   } catch (err) {
     const durationMs = performance.now() - start
     self.postMessage({
