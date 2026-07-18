@@ -6,13 +6,10 @@
 
 ### Private, in-browser tools for data & code — nothing ever leaves your device.
 
-[**▶ Open the app →**](https://paimonchan.github.io/paimon-tools/)
-&nbsp;&nbsp;·&nbsp;&nbsp;
-[**💻 Code Playground →**](https://paimonchan.github.io/paimon-tools/code/)
-&nbsp;&nbsp;·&nbsp;&nbsp;
-[Tools](#tools)&nbsp;&nbsp;·&nbsp;&nbsp;[Features](#features)&nbsp;&nbsp;·&nbsp;&nbsp;[Self-host](#deploy-it-yourself)
+<a href="https://paimonchan.github.io/paimon-tools/"><img src="docs/readme/btn-open.svg" alt="Open the App" height="50"></a>
+<a href="https://paimonchan.github.io/paimon-tools/code/"><img src="docs/readme/btn-playground.svg" alt="Code Playground" height="50"></a>
+<a href="https://github.com/paimonchan/paimon-tools"><img src="docs/readme/btn-github.svg" alt="Star on GitHub" height="50"></a>
 
-[![Live site](https://img.shields.io/badge/live-paimonchan.github.io%2Fpaimon--tools-d9911e?style=flat-square&logo=github&logoColor=white)](https://paimonchan.github.io/paimon-tools/)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/paimonchan/paimon-tools/deploy.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=deploy)](https://github.com/paimonchan/paimon-tools/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-423d35?style=flat-square)](LICENSE)
 

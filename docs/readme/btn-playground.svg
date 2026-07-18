@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50" fill="none">
+  <defs>
+    <linearGradient id="sheen2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <!-- charcoal base -->
+  <rect width="200" height="50" rx="12" fill="#1d1a16"/>
+  <rect width="200" height="50" rx="12" fill="url(#sheen2)"/>
+  <!-- honey border -->
+  <rect x="0.75" y="0.75" width="198.5" height="48.5" rx="11.25" fill="none" stroke="#eec35a" stroke-width="1.5"/>
+  <!-- code brackets icon </> -->
+  <g stroke="#eec35a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M24 19 L18 25 L24 31"/>
+    <path d="M36 19 L42 25 L36 31"/>
+    <path d="M32 17 L28 33"/>
+  </g>
+  <!-- label -->
+  <text x="118" y="32" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#eec35a" text-anchor="middle">Code Playground</text>
+</svg>
