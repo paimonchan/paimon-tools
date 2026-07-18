@@ -9,9 +9,15 @@
  *
  * After sync execution the worker stays alive to capture callbacks from
  * setTimeout, fetch.then, setInterval, etc. Collection ends when:
- *   1. No new output for 500ms (idle threshold) — adaptive, fast for simple code
- *   2. 5s hard cap — prevents runaway setInterval
+ *   1. All pending async operations (timers, fetches) have settled, AND
+ *      no new output for 500ms (idle threshold)
+ *   2. 5s hard cap — prevents runaway code
  *   3. { type: 'abort' } from engine — user clicked Stop
+ *
+ * Instead of guessing a timeout for async callbacks, we instrument the
+ * scheduling APIs (setTimeout, fetch, setInterval) to track pending
+ * operations in a Set. The collection phase only checks idle when the
+ * pending set is empty — no arbitrary wait times needed.
  */
 
 /** Format a value for display — objects/arrays get JSON, primitives get String(). */
@@ -28,6 +34,78 @@ function stringify(arg: unknown): string {
   return String(arg)
 }
 
+/**
+ * Install tracking wrappers on self.setTimeout, self.setInterval, self.fetch
+ * so we know when all user-code async operations have settled.
+ *
+ * Returns a restore function that puts back the originals.
+ */
+function installAsyncTracker(): { pendingOps: Set<number | symbol>; restore: () => void } {
+  const pendingOps = new Set<number | symbol>()
+
+  const origSetTimeout = self.setTimeout.bind(self)
+  const origClearTimeout = self.clearTimeout.bind(self)
+  const origSetInterval = self.setInterval.bind(self)
+  const origClearInterval = self.clearInterval.bind(self)
+  const origFetch = self.fetch.bind(self)
+
+  // --- setTimeout: track timer handle, remove on fire or cancel ---
+  self.setTimeout = ((fn: (...args: unknown[]) => unknown, ms: number = 0, ...args: unknown[]) => {
+    const handle = origSetTimeout(() => {
+      pendingOps.delete(handle)
+      fn(...args)
+    }, ms, ...args)
+    pendingOps.add(handle)
+    return handle
+  }) as typeof self.setTimeout
+
+  self.clearTimeout = ((handle: number | undefined) => {
+    pendingOps.delete(handle as number)
+    origClearTimeout(handle)
+  }) as typeof self.clearTimeout
+
+  // --- setInterval: track handle, only remove on clearInterval ---
+  self.setInterval = ((fn: (...args: unknown[]) => unknown, ms: number = 0, ...args: unknown[]) => {
+    const handle = origSetInterval(() => {
+      fn(...args)
+      // NOT removed — intervals persist until explicitly cleared
+    }, ms, ...args)
+    pendingOps.add(handle)
+    return handle
+  }) as typeof self.setInterval
+
+  self.clearInterval = ((handle: number | undefined) => {
+    pendingOps.delete(handle as number)
+    origClearInterval(handle)
+  }) as typeof self.clearInterval
+
+  // --- fetch: track promise, remove on settle (resolve or reject) ---
+  self.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+    const opId = Symbol('fetch')
+    pendingOps.add(opId)
+    try {
+      const promise = origFetch(input, init)
+      promise.finally(() => pendingOps.delete(opId))
+      return promise
+    } catch (err) {
+      // Synchronous throw (e.g. invalid URL) — clean up immediately
+      pendingOps.delete(opId)
+      throw err
+    }
+  }) as typeof self.fetch
+
+  return {
+    pendingOps,
+    restore() {
+      self.setTimeout = origSetTimeout
+      self.clearTimeout = origClearTimeout
+      self.setInterval = origSetInterval
+      self.clearInterval = origClearInterval
+      self.fetch = origFetch
+    },
+  }
+}
+
 self.onmessage = async (e: MessageEvent<{ code: string }>) => {
   const { code } = e.data
   const stdout: string[] = []
@@ -41,6 +119,17 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
   self.console.log = (...args: unknown[]) => { stdout.push(args.map(stringify).join(' ')) }
   self.console.error = (...args: unknown[]) => { stderr.push(args.map(stringify).join(' ')) }
   self.console.warn = (...args: unknown[]) => { stderr.push(args.map(stringify).join(' ')) }
+
+  // --- Save originals BEFORE installing tracker ---
+  // These are used internally by the collection phase (flushTimer, keepalive).
+  // Separating them from the tracker avoids esbuild/minifier ambiguity with
+  // destructuring property-name = variable-name patterns.
+  const nativeSetInterval = self.setInterval.bind(self)
+  const nativeClearInterval = self.clearInterval.bind(self)
+
+  // Install async operation tracker — wraps setTimeout/fetch etc. to track
+  // pending operations. User code runs through these instrumented APIs.
+  const { pendingOps, restore: restoreAsyncTracker } = installAsyncTracker()
 
   try {
     // Wrap in async IIFE: enables top-level await, captures promise chains,
@@ -63,14 +152,24 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
     stderr.length = 0
 
     // --- Adaptive streaming collection phase ---
-    // Finishes when no new output for 500ms (fast, best UX), or hard-cap 5s.
+    // Finishes when all pending async ops have settled AND no new output
+    // for 500ms, or 5s hard cap.
     const MAX_COLLECT_MS = 5000
     const IDLE_THRESHOLD_MS = 500
+    const MIN_COLLECT_MS = 200
     const collectionStart = Date.now()
-    let lastOutputTime = Date.now()
+    let lastOutputTime: number | null = null
     let finalized = false
 
-    const flushTimer = setInterval(() => {
+    // IMPORTANT: use NATIVE setInterval for internal timers.
+    // If we used self.setInterval here (which is the instrumented version),
+    // this internal timer handle would be added to pendingOps, preventing
+    // the collection phase from ever ending (pendingOps would never be empty
+    // while the flushTimer keeps running).
+    const flushTimer = nativeSetInterval(() => {
+      const now = Date.now()
+      const totalMs = now - collectionStart
+
       // Flush any accumulated async output
       if (stdout.length > 0 || stderr.length > 0) {
         self.postMessage({
@@ -78,25 +177,48 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
           stdout: stdout.splice(0).join('\n'),
           stderr: stderr.splice(0).join('\n'),
         })
-        lastOutputTime = Date.now()
+        lastOutputTime = now
       }
 
-      // Check completion: idle threshold or hard cap
-      const idleMs = Date.now() - lastOutputTime
-      const totalMs = Date.now() - collectionStart
+      if (finalized) return
 
-      if (!finalized && (idleMs >= IDLE_THRESHOLD_MS || totalMs >= MAX_COLLECT_MS)) {
+      // Hard cap — always applies, prevents runaway code
+      if (totalMs >= MAX_COLLECT_MS) {
         finalized = true
-        clearInterval(flushTimer)
+        nativeClearInterval(flushTimer)
         self.postMessage({ type: 'done' })
+        return
       }
+
+      // Only check idle when all user-code async ops have settled.
+      // If pendingOps is non-empty, there are outstanding timers or fetches
+      // that may produce output — keep waiting.
+      if (pendingOps.size === 0) {
+        if (lastOutputTime !== null) {
+          // Had at least one async output — use fast idle (500ms)
+          if (now - lastOutputTime >= IDLE_THRESHOLD_MS) {
+            finalized = true
+            nativeClearInterval(flushTimer)
+            self.postMessage({ type: 'done' })
+          }
+        } else {
+          // No output at all (pure sync code, no async ops) — minimum wait
+          if (totalMs >= MIN_COLLECT_MS) {
+            finalized = true
+            nativeClearInterval(flushTimer)
+            self.postMessage({ type: 'done' })
+          }
+        }
+      }
+      // If pendingOps.size > 0, stay alive — callbacks may fire and produce output.
+      // The 5s hard cap above will eventually catch runaway code.
     }, 100)
 
     // Listen for abort signal from engine
     self.onmessage = (msg: MessageEvent) => {
       if (msg.data?.type === 'abort' && !finalized) {
         finalized = true
-        clearInterval(flushTimer)
+        nativeClearInterval(flushTimer)
         // Flush remaining output one last time
         if (stdout.length > 0 || stderr.length > 0) {
           self.postMessage({
@@ -113,9 +235,9 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
     // Without this await the function exits the try block, finally restores
     // console to original, and setTimeout callbacks lose their capture.
     await new Promise<void>((resolve) => {
-      const id = setInterval(() => {
+      const id = nativeSetInterval(() => {
         if (finalized) {
-          clearInterval(id)
+          nativeClearInterval(id)
           resolve()
         }
       }, 50)
@@ -136,5 +258,8 @@ self.onmessage = async (e: MessageEvent<{ code: string }>) => {
     self.console.log = origLog
     self.console.error = origError
     self.console.warn = origWarn
+    // Restore original async APIs — important for correctness on subsequent runs
+    // (the worker stays alive and may process another onmessage)
+    restoreAsyncTracker()
   }
 }

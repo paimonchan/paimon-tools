@@ -193,7 +193,11 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
   const handleStop = useCallback(() => {
     currentAbortRef.current?.()
     currentAbortRef.current = null
-  }, [])
+    // Also abort engine directly — after sync result, currentAbortRef is null
+    // but streaming may still be active (e.g. setTimeout callbacks pending).
+    const engine = enginesRef.current.get(language)
+    engine?.abort()
+  }, [language])
 
   // --- Switch language -----------------------------------------------
 
@@ -294,6 +298,11 @@ export default function PlaygroundTool({ initialLanguage }: PlaygroundToolProps)
 
     try {
       const engine = getEngine(language)
+      // Abort any previous streaming session before starting fresh.
+      // With async tracking, streaming can outlive isRunning significantly
+      // (e.g. setTimeout(fn, 3000) streams for ~3.5s). Without this abort,
+      // clicking Run during streaming returns "Already running" — confusing.
+      engine.abort()
       let hasInitialOutput = false
 
       const options: RunOptions = {
