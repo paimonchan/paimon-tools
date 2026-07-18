@@ -171,7 +171,8 @@ ${sitemapUrls.map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <lastmod>${today
  * Returns them as an array of full `<link>` strings.
  */
 function extractModulepreloads(html) {
-  const regex = /<link rel="modulepreload"[^>]*\/>/g
+  // Vite 6 outputs <link> without self-closing /> — match both styles.
+  const regex = /<link rel="modulepreload"[^>]*\/?>/g
   const matches = []
   let match
   while ((match = regex.exec(html)) !== null) {

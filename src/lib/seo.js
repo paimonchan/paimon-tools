@@ -17,8 +17,6 @@ export const HOME_SEO = {
   title: 'Paimon Tools — Free JSON, CSV & Excel Converter',
   description:
     'Free, private, in-browser data converter: JSON to CSV, CSV to Excel, Excel to JSON, JSON formatter and minifier. No sign-up, no uploads — your data never leaves your device. Open source.',
-  keywords:
-    'json to csv, csv to json, json to excel, excel to json, csv to excel, json formatter, json minifier, json beautifier, convert json, data converter, online json tools, privacy-first tools',
   path: '',
   ogImage: DEFAULT_OG_IMAGE,
   ogImageAlt: DEFAULT_OG_ALT,
@@ -626,7 +624,7 @@ export function jsonLdFor(toolId) {
   }
 
   if (!toolId || !TOOL_SEO[toolId]) {
-    // Home page
+    // Home page (no toolId)
     return {
       ...base,
       description: HOME_SEO.description,
@@ -634,8 +632,20 @@ export function jsonLdFor(toolId) {
       }
   }
 
+  // 404 page — not a WebApplication, just a generic WebPage
+  if (toolId === '404') {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: '404 — Page Not Found',
+      description: TOOL_SEO['404'].description,
+      url: `${SITE_URL}/404/`,
+      isPartOf: { '@type': 'WebApplication', name: 'Paimon Tools', url: `${SITE_URL}/` },
+    }
+  }
+
   const seo = TOOL_SEO[toolId]
-  return {
+  const result = {
     ...base,
     name: seo.h1,
     url: `${SITE_URL}/${seo.path}/`,
