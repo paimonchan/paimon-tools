@@ -1,35 +1,42 @@
 /**
- * DiffTool — compare two texts side-by-side or unified.
+ * DiffTool — compare two texts side-by-side or unified using CodeMirror 6.
  *
- * Lazy-loaded ref tool. Supports:
- * - Paste text in left/right panes
+ * Lazy-loaded ref tool. Uses @codemirror/merge for inline diff rendering:
+ * input and output are the same view — no separate output area.
+ *
+ * Supports:
+ * - Editable side-by-side panes with real-time diff highlighting
  * - Drag & drop files to auto-fill panes
- * - Side-by-side and unified diff views
- * - Word-level change detection
- * - Download .patch
- * - Keyboard shortcuts, sample data, input size guards
+ * - Unified diff view mode
+ * - Word-level change detection (via the diff library)
+ * - Download .patch, copy diff, swap, clear, sample
+ * - Keyboard shortcuts, input size guards
  */
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
-import { Copy, Download, Eraser, GitCompare, Sparkles } from 'lucide-react'
-
 import {
-  textDiff,
-  markChangedPairs,
-  createPatch,
-  type DiffResult,
-  type DiffView,
-  type DiffLineType,
-} from '../engine/converters/diff-engine'
-import { usePersistentState } from '../hooks/usePersistentState'
+  Copy,
+  Download,
+  GitCompare,
+  Sparkles,
+} from 'lucide-react'
+
+// CodeMirror 6
+import { EditorView, keymap, placeholder } from '@codemirror/view'
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
+import { MergeView, getChunks } from '@codemirror/merge'
+
+import { createPatch } from '../engine/converters/diff-engine'
 import { readFileAsText } from '../lib/files'
 import { useToast } from '../stores/toast-store'
 import EmptyState from './EmptyState'
-import ErrorState from './ErrorState'
 import StatusBar from './StatusBar'
-import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
 
 // ── Constants ─────────────────────────────────────────
+
+const LS_KEY_OLD = 'diff-old'
+const LS_KEY_NEW = 'diff-new'
 
 const DEFAULT_OLD = `Hello World
 This is a test
@@ -45,112 +52,182 @@ Line five`
 const FILE_ACCEPT =
   '.txt,.csv,.json,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.html,.css,.md,.xml,.log,.env,.ini,.cfg'
 
+const INPUT_LIMIT = 200_000
+
+// ── Persistent storage helpers ────────────────────────
+
+function loadPersisted(key: string, fallback = ''): string {
+  try {
+    const raw = localStorage.getItem(`paimon.${key}`)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+function savePersisted(key: string, value: string) {
+  try {
+    localStorage.setItem(`paimon.${key}`, JSON.stringify(value))
+  } catch { /* quota exceeded — silently ignore */ }
+}
+
+// ── Editor extensions ─────────────────────────────────
+
+function baseExtensions(editable = true) {
+  return [
+    history(),
+    keymap.of([...defaultKeymap, ...historyKeymap]),
+    EditorView.editable.of(editable),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    EditorView.theme({
+      '&': { backgroundColor: 'transparent !important', height: '100%' },
+      '.cm-scroller': { fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '13px' },
+      '.cm-content': { padding: '8px 4px', caretColor: '#e7ac34' },
+      '.cm-gutters': { backgroundColor: 'transparent', borderRight: '1px solid #2e2a24', color: '#5f574d' },
+      '.cm-activeLineGutter': { backgroundColor: 'transparent' },
+      '.cm-activeLine': { backgroundColor: 'transparent' },
+      '.cm-lineNumbers': { minWidth: '3ch', fontSize: '11px' },
+      '.cm-merge-gap': { borderLeft: '1px solid #2e2a24', borderRight: '1px solid #2e2a24' },
+      '.cm-merge-gutter': { backgroundColor: 'transparent' },
+      '.cm-merge-gutter .cm-merge-gutter-marker': { width: '100%' },
+      '.cm-merge-chunk': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+      '.cm-merge-chunk-start': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+      '.cm-merge-chunk-end': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+      '.cm-merge-chunk-b': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
+      '.cm-merge-chunk-b-start': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
+      '.cm-merge-chunk-b-end': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
+    }),
+  ]
+}
+
 // ── Types ─────────────────────────────────────────────
 
 type Status = 'idle' | 'ok' | 'error' | 'processing'
-
-// ── Color map ─────────────────────────────────────────
-
-const LINE_COLORS: Record<DiffLineType, string> = {
-  unchanged: '',
-  added: 'bg-emerald-950/40 border-l-2 border-emerald-500',
-  removed: 'bg-red-950/40 border-l-2 border-red-500',
-}
-
-const LINE_GUTTER_COLORS: Record<DiffLineType, string> = {
-  unchanged: 'text-ink-500',
-  added: 'text-emerald-400',
-  removed: 'text-red-400',
-}
-
-const LINE_TEXT_COLORS: Record<DiffLineType, string> = {
-  unchanged: 'text-ink-200',
-  added: 'text-emerald-200',
-  removed: 'text-red-200',
-}
-
-const LINE_NUMBERS = 'w-[3.5ch] shrink-0 text-right text-[11px] leading-5 font-mono'
 
 // ── Component ─────────────────────────────────────────
 
 export default function DiffTool() {
   const toast = useToast()
 
-  // Persisted state
-  const [oldText, setOldText] = usePersistentState('diff-old', '')
-  const [newText, setNewText] = usePersistentState('diff-new', '')
-  const [diffView, setDiffView] = usePersistentState<DiffView>('diff-view', 'side-by-side')
+  // Refs for CodeMirror instance
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mergeViewRef = useRef<ReturnType<typeof MergeView> | null>(null)
 
   // Transient state
-  const [result, setResult] = useState<DiffResult | null>(null)
+  const [stats, setStats] = useState({ additions: 0, deletions: 0, unchanged: 0 })
   const [status, setStatus] = useState<Status>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-  const [durationMs, setDurationMs] = useState<number | null>(null)
+  const [errorMessage] = useState('')
+  const [durationMs] = useState<number | null>(null)
   const [dragging, setDragging] = useState<'old' | 'new' | null>(null)
+  const [diffView, setDiffView] = useState<'side-by-side' | 'unified'>('side-by-side')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingFileSide, setPendingFileSide] = useState<'old' | 'new' | null>(null)
   const patchUrlRef = useRef<string | null>(null)
 
-  const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(0.5)
+  // ── Initialize / rebuild CodeMirror ─────────────────
 
-  // Debounced versions of inputs — diff only runs once they settle
-  const [debouncedOld, setDebouncedOld] = useState('')
-  const [debouncedNew, setDebouncedNew] = useState('')
+  function updateStats() {
+    const mv = mergeViewRef.current
+    if (!mv) return
+    try {
+      const chunks = getChunks(mv)
+      let additions = 0
+      let deletions = 0
+      let unchanged = 0
+      for (const c of chunks) {
+        if (c.type === 'equal') {
+          unchanged += c.toB - c.fromB
+        } else {
+          deletions += c.toA - c.fromA
+          additions += c.toB - c.fromB
+        }
+      }
+      setStats({ additions, deletions, unchanged })
+      if (additions > 0 || deletions > 0) {
+        setStatus('ok')
+      } else {
+        const aLen = mv.a.state.doc.length
+        const bLen = mv.b.state.doc.length
+        setStatus(aLen > 0 || bLen > 0 ? 'ok' : 'idle')
+      }
+    } catch {
+      // chunks not ready yet
+    }
+  }
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    // Cleanup previous instance
+    mergeViewRef.current?.destroy()
+    containerRef.current.innerHTML = ''
+
+    const oldDoc = loadPersisted(LS_KEY_OLD)
+    const newDoc = loadPersisted(LS_KEY_NEW)
+
+    const readFrom = (side: 'a' | 'b') =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          savePersisted(side === 'a' ? LS_KEY_OLD : LS_KEY_NEW, update.state.doc.toString())
+          updateStats()
+        }
+      })
+
+    const shared = baseExtensions(true)
+    const aExts = [...shared, readFrom('a'), placeholder('Paste original text or drop a file')]
+    const bExts = [...shared, readFrom('b'), placeholder('Paste changed text or drop a file')]
+
+    const mv = new MergeView({
+      a: { doc: oldDoc, extensions: aExts },
+      b: { doc: newDoc, extensions: bExts },
+      parent: containerRef.current,
+      gutter: true,
+      highlightChanges: true,
+      collapseUnchanged: { margin: 3, minSize: 4 },
+    })
+
+    mergeViewRef.current = mv
+    setTimeout(updateStats, 50)
+
+    return () => {
+      mv.destroy()
+      mergeViewRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Get current text from editors ───────────────────
+
+  function getOldText(): string {
+    return mergeViewRef.current?.a.state.doc.toString() ?? ''
+  }
+  function getNewText(): string {
+    return mergeViewRef.current?.b.state.doc.toString() ?? ''
+  }
+
+  function setBothTexts(oldDoc: string, newDoc: string) {
+    const mv = mergeViewRef.current
+    if (!mv) return
+    mv.a.dispatch({ changes: { from: 0, to: mv.a.state.doc.length, insert: oldDoc } })
+    mv.b.dispatch({ changes: { from: 0, to: mv.b.state.doc.length, insert: newDoc } })
+    savePersisted(LS_KEY_OLD, oldDoc)
+    savePersisted(LS_KEY_NEW, newDoc)
+    setTimeout(updateStats, 50)
+  }
 
   // ── Input guard ─────────────────────────────────────
 
-  const handleOldChange = useCallback(
-    (value: string) => {
-      setOldText(value)
-      setStatus('processing')
+  const guardInputSize = useCallback(
+    (text: string, existing: string): boolean => {
+      if ((text.length + existing.length) > INPUT_LIMIT) {
+        toast.push(`Input size limit is ${INPUT_LIMIT.toLocaleString()} characters`, {
+          variant: 'error',
+        })
+        return false
+      }
+      return true
     },
-    [setOldText],
+    [toast],
   )
-
-  const handleNewChange = useCallback(
-    (value: string) => {
-      setNewText(value)
-      setStatus('processing')
-    },
-    [setNewText],
-  )
-
-  // ── Debounce ────────────────────────────────────────
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedOld(oldText)
-      setDebouncedNew(newText)
-    }, 200)
-    return () => clearTimeout(t)
-  }, [oldText, newText])
-
-  // ── Diff computation ────────────────────────────────
-
-  useEffect(() => {
-    if (!debouncedOld.trim() && !debouncedNew.trim()) {
-      setResult(null)
-      setStatus('idle')
-      setErrorMessage('')
-      setDurationMs(null)
-      return
-    }
-
-    const t0 = performance.now()
-    const res = textDiff(debouncedOld, debouncedNew)
-    setDurationMs(performance.now() - t0)
-
-    if (res.ok) {
-      const marked = markChangedPairs(res.value)
-      setResult(marked)
-      setStatus('ok')
-      setErrorMessage('')
-    } else {
-      setResult(null)
-      setStatus('error')
-      setErrorMessage(res.error)
-    }
-  }, [debouncedOld, debouncedNew])
 
   // ── File handling ───────────────────────────────────
 
@@ -159,67 +236,33 @@ export default function DiffTool() {
       if (!file) return
       readFileAsText(file)
         .then((text) => {
+          const current = side === 'old' ? getOldText() : getNewText()
+          if (!guardInputSize(text, current)) return
           if (side === 'old') {
-            handleOldChange(text)
+            setBothTexts(text, getNewText())
           } else {
-            handleNewChange(text)
+            setBothTexts(getOldText(), text)
           }
           toast.push(`Loaded ${file.name}`, { variant: 'success' })
         })
         .catch(() => toast.push(`Failed to read ${file.name}`, { variant: 'error' }))
     },
-    [handleOldChange, handleNewChange, toast],
+    [toast, guardInputSize],
   )
-
-  // ── Keyboard shortcuts ──────────────────────────────
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      const isMeta = e.metaKey || e.ctrlKey
-
-      if (isMeta && e.shiftKey && e.key === 'c') {
-        e.preventDefault()
-        handleCopyDiff()
-        return
-      }
-      if (isMeta && e.key === 's') {
-        e.preventDefault()
-        handleDownloadPatch()
-        return
-      }
-      if (isMeta && e.shiftKey && e.key === 'w') {
-        e.preventDefault()
-        handleSwap()
-        return
-      }
-      if (e.key === 'Escape' && (oldText || newText)) {
-        e.preventDefault()
-        handleClear()
-        return
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oldText, newText, result])
 
   // ── Actions ─────────────────────────────────────────
 
   function handleSwap() {
-    const temp = oldText
-    setOldText(newText)
-    setNewText(temp)
+    const old = getOldText()
+    const cur = getNewText()
+    setBothTexts(cur, old)
     toast.push('Swapped inputs', { variant: 'info' })
   }
 
   function handleClear() {
-    setOldText('')
-    setNewText('')
-    setResult(null)
+    setBothTexts('', '')
+    setStats({ additions: 0, deletions: 0, unchanged: 0 })
     setStatus('idle')
-    setErrorMessage('')
-    setDurationMs(null)
     if (patchUrlRef.current) {
       URL.revokeObjectURL(patchUrlRef.current)
       patchUrlRef.current = null
@@ -228,19 +271,28 @@ export default function DiffTool() {
   }
 
   function handleLoadSample() {
-    setOldText(DEFAULT_OLD)
-    setNewText(DEFAULT_NEW)
+    setBothTexts(DEFAULT_OLD, DEFAULT_NEW)
     toast.push('Loaded sample', { variant: 'success' })
   }
 
   async function handleCopyDiff() {
-    if (!result) return
-    const text = result.lines
-      .map((l) => {
-        const prefix = l.type === 'added' ? '+' : l.type === 'removed' ? '-' : ' '
-        return `${prefix} ${l.text}`
+    const old = getOldText()
+    const cur = getNewText()
+    if (!old && !cur) return
+
+    const { diffLines } = await import('diff')
+    const changes = diffLines(old, cur)
+    const text = changes
+      .map((c: { added?: boolean; removed?: boolean; count?: number; value: string }) => {
+        const prefix = c.added ? '+' : c.removed ? '-' : ' '
+        return c.value
+          .split('\n')
+          .filter(Boolean)
+          .map((line: string) => `${prefix} ${line}`)
+          .join('\n')
       })
       .join('\n')
+
     try {
       await navigator.clipboard.writeText(text)
       toast.push('Diff copied to clipboard', { variant: 'success' })
@@ -250,7 +302,9 @@ export default function DiffTool() {
   }
 
   async function handleDownloadPatch() {
-    const res = createPatch(oldText, newText)
+    const old = getOldText()
+    const cur = getNewText()
+    const res = createPatch(old, cur)
     if (!res.ok) {
       toast.push(`Failed to generate patch: ${res.error}`, { variant: 'error' })
       return
@@ -272,138 +326,25 @@ export default function DiffTool() {
     toast.push('Downloaded diff.patch', { variant: 'success' })
   }
 
-  // ── Render helpers ──────────────────────────────────
+  // ── Keyboard shortcuts ──────────────────────────────
 
-  function renderGutter(type: DiffLineType) {
-    const cls = LINE_GUTTER_COLORS[type]
-    const indicator = type === 'added' ? '+' : type === 'removed' ? '-' : ' '
-    return (
-      <span className={`w-[2ch] shrink-0 text-center text-[11px] font-mono leading-5 ${cls}`}>
-        {indicator}
-      </span>
-    )
-  }
-
-  function renderLine(type: DiffLineType, text: string, showGutter = true, key?: number) {
-    const bg = LINE_COLORS[type]
-    const txt = LINE_TEXT_COLORS[type]
-    return (
-      <div key={key} className={`flex min-h-[20px] items-stretch font-mono text-[13px] leading-5 ${bg}`}>
-        {showGutter && renderGutter(type)}
-        <span className={`flex-1 whitespace-pre-wrap break-all px-2 ${txt}`}>{text || '\u00A0'}</span>
-      </div>
-    )
-  }
-
-  // ── Side-by-side render ─────────────────────────────
-
-  function renderSideBySide() {
-    if (!result) return null
-
-    const oldLines: { type: DiffLineType; line: number | null; text: string }[] = []
-    const newLines: { type: DiffLineType; line: number | null; text: string }[] = []
-
-    for (const line of result.lines) {
-      if (line.type === 'unchanged') {
-        oldLines.push({ type: 'unchanged', line: line.oldLine, text: line.text })
-        newLines.push({ type: 'unchanged', line: line.newLine, text: line.text })
-      } else if (line.type === 'removed') {
-        oldLines.push({ type: 'removed', line: line.oldLine, text: line.text })
-        newLines.push({ type: 'unchanged', line: null, text: '' })
-      } else if (line.type === 'added') {
-        oldLines.push({ type: 'unchanged', line: null, text: '' })
-        newLines.push({ type: 'added', line: line.newLine, text: line.text })
-      }
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const m = e.metaKey || e.ctrlKey
+      if (m && e.shiftKey && e.key === 'c') { e.preventDefault(); handleCopyDiff(); return }
+      if (m && e.key === 's') { e.preventDefault(); handleDownloadPatch(); return }
+      if (m && e.shiftKey && e.key === 'w') { e.preventDefault(); handleSwap(); return }
+      if (e.key === 'Escape' && (getOldText() || getNewText())) { e.preventDefault(); handleClear(); return }
     }
-
-    return (
-      <div className="flex flex-1 overflow-hidden rounded-lg border border-ink-700">
-        <div className="flex-1 overflow-auto">
-          <div className="sticky top-0 z-10 flex border-b border-ink-700 bg-ink-900 px-2 py-1 text-[11px] font-500 text-ink-400">
-            <span className="w-[2ch]" />
-            <span className={`${LINE_NUMBERS} text-ink-500`}>Old</span>
-            <span className="flex-1 px-2">Original</span>
-          </div>
-          <div className="min-h-full">
-            {oldLines.map((l, i) => renderLine(l.type, l.text, true, i))}
-          </div>
-        </div>
-
-        <div className="w-px bg-ink-700" />
-
-        <div className="flex-1 overflow-auto">
-          <div className="sticky top-0 z-10 flex border-b border-ink-700 bg-ink-900 px-2 py-1 text-[11px] font-500 text-ink-400">
-            <span className="w-[2ch]" />
-            <span className={`${LINE_NUMBERS} text-ink-500`}>New</span>
-            <span className="flex-1 px-2">Changed</span>
-          </div>
-          <div className="min-h-full">
-            {newLines.map((l, i) => renderLine(l.type, l.text, true, i))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Unified render ──────────────────────────────────
-
-  function renderUnified() {
-    if (!result) return null
-    return (
-      <div className="flex-1 overflow-auto rounded-lg border border-ink-700">
-        <div className="sticky top-0 z-10 flex border-b border-ink-700 bg-ink-900 px-2 py-1 text-[11px] font-500 text-ink-400">
-          <div className="flex gap-3">
-            <span className="w-[3.5ch]" />
-            <span className="w-[3.5ch]" />
-            <span>Unified diff</span>
-          </div>
-        </div>
-        <div className="min-h-full">
-          {result.lines.map((l, i) => renderLine(l.type, l.text, true, i))}
-        </div>
-      </div>
-    )
-  }
-
-  // ── Drag-drop wrapper ───────────────────────────────
-
-  function renderDropContent(side: 'old' | 'new', value: string, onChange: (v: string) => void) {
-    const isDragging = dragging === side
-
-    return (
-      <div
-        className={`flex h-full flex-col transition-all ${
-          isDragging ? 'bg-honey-400/5' : ''
-        }`}
-        onDragOver={(e) => {
-          e.preventDefault()
-          setDragging(side)
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault()
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
-        }}
-        onDrop={(e) => {
-          e.preventDefault()
-          setDragging(null)
-          handleFileDrop(side, e.dataTransfer.files?.[0])
-        }}
-      >
-        <textarea
-          value={value}
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-          placeholder={side === 'old' ? 'Paste original text or drop a file' : 'Paste changed text or drop a file'}
-          spellCheck={false}
-          className="min-h-[150px] flex-1 resize-none bg-transparent px-3 py-2 font-mono text-[13px] leading-5 text-ink-100 outline-none placeholder:text-ink-600"
-        />
-      </div>
-    )
-  }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ── Status bar mapping ──────────────────────────────
 
   const statusBarStatus: 'idle' | 'ok' | 'error' | 'empty' | 'processing' =
-    status === 'idle' && !oldText && !newText ? 'empty' : status
+    status === 'idle' && !getOldText() && !getNewText() ? 'empty' : status
 
   // ── Render ──────────────────────────────────────────
 
@@ -468,110 +409,44 @@ export default function DiffTool() {
           >
             ⇄ Swap
           </button>
-          {result && (
-            <>
-              <button
-                onClick={handleCopyDiff}
-                className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
-              >
-                <Copy className="h-3 w-3" /> Copy diff
-              </button>
-              <button
-                onClick={handleDownloadPatch}
-                className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
-              >
-                <Download className="h-3 w-3" /> .patch
-              </button>
-              <button
-                onClick={handleClear}
-                className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-red-400 transition-colors"
-              >
-                Clear
-              </button>
-            </>
-          )}
+          <button
+            onClick={handleCopyDiff}
+            className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+          >
+            <Copy className="h-3 w-3" /> Copy diff
+          </button>
+          <button
+            onClick={handleDownloadPatch}
+            className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+          >
+            <Download className="h-3 w-3" /> .patch
+          </button>
+          <button
+            onClick={handleClear}
+            className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-red-400 transition-colors"
+          >
+            Clear
+          </button>
         </div>
       </div>
 
-      {/* Input panes — resizable split */}
-      <div
-        ref={containerRef}
-        className="flex min-h-0 flex-1 flex-col gap-0 px-3 pt-3 md:flex-row md:gap-0"
-      >
-        <Pane
-          ratio={ratio}
-          label="Original"
-          actions={
-            <>
-              {oldText && (
-                <PaneAction onClick={() => setOldText('')} icon={Eraser} label="Clear" />
-              )}
-              {!oldText && (
-                <button
-                  onClick={() => {
-                    setPendingFileSide('old')
-                    fileInputRef.current?.click()
-                  }}
-                  className="rounded-md px-2 py-1 text-[10px] text-ink-500 hover:text-honey-300 transition-colors"
-                >
-                  Browse
-                </button>
-              )}
-            </>
-          }
-        >
-          {renderDropContent('old', oldText, handleOldChange)}
-        </Pane>
-
-        <div className="hidden md:flex">
-          <ResizeHandle onDragStart={onDragStart} onDoubleClick={() => setRatio(0.5)} />
-        </div>
-
-        <Pane
-          ratio={1 - ratio}
-          label="Changed"
-          actions={
-            <>
-              {newText && (
-                <PaneAction onClick={() => setNewText('')} icon={Eraser} label="Clear" />
-              )}
-              {!newText && (
-                <button
-                  onClick={() => {
-                    setPendingFileSide('new')
-                    fileInputRef.current?.click()
-                  }}
-                  className="rounded-md px-2 py-1 text-[10px] text-ink-500 hover:text-honey-300 transition-colors"
-                >
-                  Browse
-                </button>
-              )}
-            </>
-          }
-        >
-          {renderDropContent('new', newText, handleNewChange)}
-        </Pane>
-      </div>
-
-      {/* Diff output area */}
-      <div className="flex flex-1 flex-col px-3 pt-3 pb-3 min-h-[200px]">
-        {status === 'error' ? (
-          <ErrorState message={errorMessage} />
-        ) : status === 'idle' && !result ? (
-          <EmptyState isFileInput={false} />
-        ) : result ? (
-          diffView === 'side-by-side' ? (
-            renderSideBySide()
-          ) : (
-            renderUnified()
-          )
-        ) : null}
+      {/* CodeMirror merge view */}
+      <div className="flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3">
+        {status === 'idle' && !getOldText() && !getNewText() && (
+          <div className="flex flex-1 items-center justify-center rounded-lg border border-ink-700">
+            <EmptyState isFileInput={false} />
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-hidden rounded-lg border border-ink-700 [&_.cm-editor]:h-full"
+        />
       </div>
 
       {/* Status bar */}
       <StatusBar
-        inputChars={oldText.length + newText.length}
-        outputChars={result ? result.lines.length : 0}
+        inputChars={getOldText().length + getNewText().length}
+        outputChars={stats.additions + stats.deletions}
         status={statusBarStatus}
         error={status === 'error' ? errorMessage : null}
         durationMs={durationMs}
