@@ -436,6 +436,14 @@ export default function DiffTool() {
             <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono">Esc</kbd> clear
           </span>
 
+          {/* Load sample */}
+          <button
+            onClick={handleLoadSample}
+            className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+          >
+            <Sparkles className="h-3 w-3" /> Sample
+          </button>
+
           {/* View toggle */}
           <div className="flex rounded-md border border-ink-700 overflow-hidden">
             {(['side-by-side', 'unified'] as const).map((v) => (
@@ -495,7 +503,6 @@ export default function DiffTool() {
           label="Original"
           actions={
             <>
-              <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />
               {oldText && (
                 <PaneAction onClick={() => setOldText('')} icon={Eraser} label="Clear" />
               )}
@@ -525,7 +532,6 @@ export default function DiffTool() {
           label="Changed"
           actions={
             <>
-              <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />
               {newText && (
                 <PaneAction onClick={() => setNewText('')} icon={Eraser} label="Clear" />
               )}
@@ -548,7 +554,7 @@ export default function DiffTool() {
       </div>
 
       {/* Diff output area */}
-      <div className="flex flex-[2] flex-col px-3 pt-3 pb-3 min-h-[200px]">
+      <div className="flex flex-1 flex-col px-3 pt-3 pb-3 min-h-[200px]">
         {status === 'error' ? (
           <ErrorState message={errorMessage} />
         ) : status === 'idle' && !result ? (
