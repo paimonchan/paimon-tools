@@ -194,7 +194,7 @@ export default function DiffTool() {
         a: { doc: oldDoc, extensions: [...shared, makeReadFrom('a'), placeholder('Paste original text or drop a file')] },
         b: { doc: newDoc, extensions: [...shared, makeReadFrom('b'), placeholder('Paste changed text or drop a file')] },
         parent: containerRef.current,
-        gutter: true,
+        gutter: false,
         highlightChanges: true,
         collapseUnchanged: { margin: 3, minSize: 4 },
       })
