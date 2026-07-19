@@ -461,38 +461,56 @@ export default function DiffTool() {
       </div>
 
       {/* Drop zone wrapping the code mirror container */}
-      <div
-        className={`flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3 ${
-          dragging ? '' : ''
-        }`}
-      >
-        {/* Old text drop zone */}
+      <div className="flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3">
+        {/* Editor wrapper with border + bg + drag highlight */}
         <div
-          className="flex-1 flex"
-          onDragOver={handleDragOver}
-          onDragEnter={() => setDragging('old')}
-          onDragLeave={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
-          }}
-          onDrop={handleDrop('old')}
+          className={`flex flex-1 flex-col overflow-hidden rounded-lg border ${
+            dragging
+              ? 'border-honey-500/60 bg-honey-500/5'
+              : 'border-ink-800 bg-ink-900/40'
+          }`}
         >
-          {/* CodeMirror container — fills available space */}
+          {/* Label header — shows which side is which */}
+          <div className="flex border-b border-ink-800 bg-ink-900/60">
+            {diffView === 'side-by-side' ? (
+              <>
+                <div className="flex-1 px-3 py-1.5 text-[10px] font-600 uppercase tracking-[0.14em] text-ink-400">
+                  Original
+                </div>
+                <div className="w-px bg-ink-800" />
+                <div className="flex-1 px-3 py-1.5 text-[10px] font-600 uppercase tracking-[0.14em] text-ink-400">
+                  Changed
+                </div>
+              </>
+            ) : (
+              <div className="px-3 py-1.5 text-[10px] font-600 uppercase tracking-[0.14em] text-ink-400">
+                Changed
+              </div>
+            )}
+          </div>
+
+          {/* Old text drop zone */}
           <div
-            ref={containerRef}
-            className={`flex-1 overflow-hidden rounded-lg border bg-ink-900/40 flex flex-col ${
-              dragging === 'old'
-                ? 'border-honey-500/60 bg-honey-500/5'
-                : dragging === 'new'
-                  ? 'border-honey-500/60 bg-honey-500/5'
-                  : 'border-ink-700'
-            } [&_.cm-mergeView]:flex-1 [&_.cm-mergeView]:min-h-0 [&_.cm-mergeView]:flex [&_.cm-mergeView]:flex-col [&_.cm-mergeViewEditors]:flex-1 [&_.cm-mergeViewEditors]:min-h-0 [&_.cm-mergeViewEditor]:flex [&_.cm-mergeViewEditor]:flex-col [&_.cm-editor]:flex-1`}
+            className="flex flex-1"
             onDragOver={handleDragOver}
-            onDragEnter={() => setDragging(diffView === 'side-by-side' ? 'old' : 'new')}
+            onDragEnter={() => setDragging('old')}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
             }}
-            onDrop={handleDrop(diffView === 'side-by-side' ? 'old' : 'new')}
-          />
+            onDrop={handleDrop('old')}
+          >
+            {/* CodeMirror container — fills available space */}
+            <div
+              ref={containerRef}
+              className="flex flex-1 flex-col overflow-hidden [&_.cm-mergeView]:flex-1 [&_.cm-mergeView]:min-h-0 [&_.cm-mergeView]:flex [&_.cm-mergeView]:flex-col [&_.cm-mergeViewEditors]:flex-1 [&_.cm-mergeViewEditors]:min-h-0 [&_.cm-mergeViewEditor]:flex [&_.cm-mergeViewEditor]:flex-col [&_.cm-editor]:flex-1"
+              onDragOver={handleDragOver}
+              onDragEnter={() => setDragging(diffView === 'side-by-side' ? 'old' : 'new')}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
+              }}
+              onDrop={handleDrop(diffView === 'side-by-side' ? 'old' : 'new')}
+            />
+          </div>
         </div>
       </div>
 
