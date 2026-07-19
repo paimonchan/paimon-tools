@@ -223,9 +223,9 @@ h4 {
   display: flex !important;
   gap: 4px !important;
   padding: 2px 8px !important;
-  position: sticky !important;
-  left: 0 !important;
-  inset-inline-end: auto !important;
+  position: absolute !important;
+  inset-inline-end: 5px !important;
+  top: 2px !important;
 }
 .cm-deletedChunk button {
   border: 1px solid !important;
