@@ -271,6 +271,28 @@ export const TOOL_SEO = {
 <p>Compare two texts or files entirely in your browser. Side-by-side or unified diff view with color-coded added/removed lines. Paste text or drop files — no uploads, no sign-up, fully private. Unlimited size.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
+  'text-delimiter': {
+    title: 'Text Delimiter Tool — Join & Wrap List Items Free | Paimon Tools',
+    description:
+      'Join list items with custom delimiter, quotes, and wrapping. Perfect for SQL IN clauses, HTML lists, and array literals. 100% in your browser, no uploads, free.',
+    path: 'text-delimiter',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Text Delimiter — join list items with custom separator',
+    h1: 'Text Delimiter Tool',
+    breadcrumb: 'Tools / Text Delimiter',
+    bodyHtml: `<h1>Text Delimiter Tool</h1>
+<p>Join list items with custom delimiter, quotes, and wrapping — entirely in your browser. Perfect for SQL IN clauses, HTML lists (with &lt;li&gt; wrapping), and array literals.</p>
+<h2>Common Use Cases</h2>
+<ul>
+  <li>Generate SQL <code>IN ('a', 'b', 'c')</code> from a list</li>
+  <li>Create HTML lists with <code>&lt;li&gt;</code> tags</li>
+  <li>Build JavaScript array literals <code>["a", "b", "c"]</code></li>
+  <li>Convert column data to pipe-separated values</li>
+</ul>
+<h2>How It Works</h2>
+<p>Paste your items (one per line), choose a delimiter and optional quoting/wrapping. The output updates instantly. All processing happens locally — no uploads, fully private.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
   playground: {
     title: 'Online Code Playground — Free In-Browser Code Editor | Paimon Tools',
     description:
