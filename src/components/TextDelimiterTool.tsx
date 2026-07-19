@@ -346,7 +346,7 @@ export default function TextDelimiterTool() {
 
         {/* Output pane */}
         <Pane
-          ratio={ratio}
+          ratio={1 - ratio}
           label="Delimited Output"
           actions={
             output ? (

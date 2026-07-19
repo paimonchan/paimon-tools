@@ -521,7 +521,7 @@ export default function DiffTool() {
         </div>
 
         <Pane
-          ratio={ratio}
+          ratio={1 - ratio}
           label="Changed"
           actions={
             <>
