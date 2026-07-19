@@ -17,6 +17,7 @@ import {
   Copy,
   Download,
   GitCompare,
+  Sparkles,
 } from 'lucide-react'
 
 // CodeMirror 6
@@ -35,6 +36,17 @@ import StatusBar from './StatusBar'
 
 const LS_KEY_OLD = 'diff-old'
 const LS_KEY_NEW = 'diff-new'
+
+const DEFAULT_OLD = `Hello World
+This is a test
+Line three
+Line four`
+
+const DEFAULT_NEW = `Hello World
+This is a modified test
+Line three
+Extra line
+Line five`
 
 const FILE_ACCEPT =
   '.txt,.csv,.json,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.html,.css,.md,.xml,.log,.env,.ini,.cfg'
@@ -307,6 +319,11 @@ export default function DiffTool() {
     toast.push('Cleared', { variant: 'info' })
   }
 
+  function handleLoadSample() {
+    setBothTexts(DEFAULT_OLD, DEFAULT_NEW)
+    toast.push('Loaded sample', { variant: 'success' })
+  }
+
   async function handleCopyDiff() {
     const old = getOldText()
     const cur = getNewText()
@@ -415,6 +432,14 @@ export default function DiffTool() {
           <span className="text-xs font-500 text-ink-300">Diff Tool</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Load sample */}
+          <button
+            onClick={handleLoadSample}
+            className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+          >
+            <Sparkles className="h-3 w-3" /> Sample
+          </button>
+
           {/* View toggle */}
           <div className="flex rounded-md border border-ink-700 overflow-hidden">
             {(['side-by-side', 'unified'] as const).map((v) => (
@@ -435,7 +460,7 @@ export default function DiffTool() {
           {/* Actions */}
           <button
             onClick={handleSwap}
-            className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+            className="hidden rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
           >
             ⇄ Swap
           </button>
