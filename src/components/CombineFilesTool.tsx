@@ -24,7 +24,6 @@ import { TOOLS_BY_ID, type ConverterTool, type ToolDefinition } from '../engine/
 
 // ── Constants ─────────────────────────────────────────
 
-const MAX_TOTAL_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ACCEPT = '.csv,.tsv,.xlsx,.xls'
 
 type Status = 'idle' | 'ok' | 'error' | 'processing'
@@ -91,19 +90,6 @@ export default function CombineFilesTool() {
     if (!fileList || fileList.length === 0) return
     if (fileList.length < 2) {
       toast.push('Drop at least 2 files to merge.', { variant: 'info' })
-      return
-    }
-
-    // Size guard
-    let totalSize = 0
-    for (let i = 0; i < fileList.length; i++) {
-      totalSize += fileList[i]!.size
-    }
-    if (totalSize > MAX_TOTAL_FILE_SIZE) {
-      toast.push(
-        `Total file size exceeds 50MB limit (${formatSize(totalSize)}). Please reduce file sizes.`,
-        { variant: 'error' },
-      )
       return
     }
 

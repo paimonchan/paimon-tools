@@ -31,9 +31,6 @@ import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
 
 // ── Constants ─────────────────────────────────────────
 
-const MAX_INPUT_CHARS = 200_000
-const INPUT_SIZE_WARN = 'Input truncated — max 200K characters allowed'
-
 const DEFAULT_OLD = `Hello World
 This is a test
 Line three
@@ -104,26 +101,18 @@ export default function DiffTool() {
 
   const handleOldChange = useCallback(
     (value: string) => {
-      if (value.length > MAX_INPUT_CHARS) {
-        value = value.slice(0, MAX_INPUT_CHARS)
-        toast.push(INPUT_SIZE_WARN, { variant: 'info' })
-      }
       setOldText(value)
       setStatus('processing')
     },
-    [setOldText, toast],
+    [setOldText],
   )
 
   const handleNewChange = useCallback(
     (value: string) => {
-      if (value.length > MAX_INPUT_CHARS) {
-        value = value.slice(0, MAX_INPUT_CHARS)
-        toast.push(INPUT_SIZE_WARN, { variant: 'info' })
-      }
       setNewText(value)
       setStatus('processing')
     },
-    [setNewText, toast],
+    [setNewText],
   )
 
   // ── Debounce ────────────────────────────────────────
