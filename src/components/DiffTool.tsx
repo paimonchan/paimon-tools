@@ -512,13 +512,13 @@ export default function DiffTool() {
           {/* CodeMirror container — fills available space */}
           <div
             ref={containerRef}
-            className={`flex-1 overflow-hidden rounded-lg border ${
+            className={`flex-1 overflow-hidden rounded-lg border flex flex-col ${
               dragging === 'old'
                 ? 'border-honey-500/60 bg-honey-500/5'
                 : dragging === 'new'
                   ? 'border-honey-500/60 bg-honey-500/5'
                   : 'border-ink-700'
-            } [&_.cm-editor]:h-full`}
+            } [&_.cm-mergeView]:flex-1 [&_.cm-mergeView]:min-h-0 [&_.cm-mergeViewEditors]:flex-1 [&_.cm-mergeViewEditors]:min-h-0 [&_.cm-editor]:h-full`}
             onDragOver={handleDragOver}
             onDragEnter={() => setDragging(diffView === 'side-by-side' ? 'old' : 'new')}
             onDragLeave={(e) => {
