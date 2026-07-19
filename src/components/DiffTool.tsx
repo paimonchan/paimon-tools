@@ -518,7 +518,7 @@ export default function DiffTool() {
                 : dragging === 'new'
                   ? 'border-honey-500/60 bg-honey-500/5'
                   : 'border-ink-700'
-            } [&_.cm-mergeView]:flex-1 [&_.cm-mergeView]:min-h-0 [&_.cm-mergeViewEditors]:flex-1 [&_.cm-mergeViewEditors]:min-h-0 [&_.cm-editor]:h-full`}
+            } [&_.cm-mergeView]:flex-1 [&_.cm-mergeView]:min-h-0 [&_.cm-mergeView]:flex [&_.cm-mergeView]:flex-col [&_.cm-mergeViewEditors]:flex-1 [&_.cm-mergeViewEditors]:min-h-0 [&_.cm-mergeViewEditor]:flex [&_.cm-mergeViewEditor]:flex-col [&_.cm-editor]:flex-1`}
             onDragOver={handleDragOver}
             onDragEnter={() => setDragging(diffView === 'side-by-side' ? 'old' : 'new')}
             onDragLeave={(e) => {
