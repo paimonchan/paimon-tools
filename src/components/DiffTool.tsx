@@ -428,7 +428,7 @@ export default function DiffTool() {
       <div className="flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3">
         <div
           ref={containerRef}
-          className="flex-1 overflow-hidden rounded-lg border border-ink-700 [&_.cm-editor]:h-full"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-ink-700 [&_.cm-mergeView]:flex-1 [&_.cm-editor]:h-full"
         />
       </div>
 
