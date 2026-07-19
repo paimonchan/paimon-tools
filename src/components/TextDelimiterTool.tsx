@@ -12,7 +12,7 @@ import { delimitText, type DelimiterOptions } from '../engine/converters/delimit
 import { usePersistentState } from '../hooks/usePersistentState'
 import { downloadBlob } from '../lib/files'
 import { useToast } from '../stores/toast-store'
-import { Pane, PaneAction } from './Panes'
+import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -133,6 +133,7 @@ export default function TextDelimiterTool() {
   const [status, setStatus] = useState<Status>('idle')
   const [debouncedInput, setDebouncedInput] = useState(DEFAULT_SAMPLE)
   const [durationMs, setDurationMs] = useState<number | null>(null)
+  const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(0.5)
 
   // Compute effective delimiter
   const effectiveDelimiter = delimiter === 'custom' ? customDelimiter || ',' : applyComma(delimiter, commaStyle)
@@ -261,10 +262,10 @@ export default function TextDelimiterTool() {
       </div>
 
       {/* ── Input + Output panes (side by side on desktop) ── */}
-      <div className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-3">
+      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-0">
         {/* Input pane */}
         <Pane
-          ratio={0.5}
+          ratio={ratio}
           label="Column Data"
           actions={
             <>
@@ -282,9 +283,14 @@ export default function TextDelimiterTool() {
           />
         </Pane>
 
+        {/* Resize handle — desktop only */}
+        <div className="hidden md:flex">
+          <ResizeHandle onDragStart={onDragStart} onDoubleClick={() => setRatio(0.5)} />
+        </div>
+
         {/* Output pane */}
         <Pane
-          ratio={0.5}
+          ratio={ratio}
           label="Delimited Output"
           actions={
             output ? (
