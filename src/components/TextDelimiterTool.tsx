@@ -12,6 +12,7 @@ import { delimitText, type DelimiterOptions } from '../engine/converters/delimit
 import { usePersistentState } from '../hooks/usePersistentState'
 import { downloadBlob } from '../lib/files'
 import { useToast } from '../stores/toast-store'
+import { Pane, PaneAction } from './Panes'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -243,72 +244,48 @@ export default function TextDelimiterTool() {
       </div>
 
       {/* ── Input + Output panes (side by side on desktop) ── */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-0 md:flex-row md:gap-3">
         {/* Input pane */}
-        <div className="flex flex-1 flex-col">
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[11px] font-600 uppercase tracking-wider text-ink-400">
-              Column Data
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleLoadSample}
-                className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-honey-200"
-              >
-                <Sparkles className="h-3 w-3" /> Sample
-              </button>
-              {inputText && (
-                <button
-                  onClick={handleClear}
-                  className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-ink-200"
-                >
-                  <Eraser className="h-3 w-3" /> Clear
-                </button>
-              )}
-            </div>
-          </div>
+        <Pane
+          ratio={0.5}
+          label="Column Data"
+          actions={
+            <>
+              <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />
+              {inputText && <PaneAction onClick={handleClear} icon={Eraser} label="Clear" />}
+            </>
+          }
+        >
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Paste items, one per line…"
-            className="w-full flex-1 resize-none rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-2 font-mono text-sm text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+            className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
             spellCheck={false}
           />
-        </div>
+        </Pane>
 
         {/* Output pane */}
-        <div className="flex flex-1 flex-col">
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[11px] font-600 uppercase tracking-wider text-ink-400">
-              Delimited Output
-            </label>
-            <div className="flex items-center gap-2">
-              {output && (
-                <>
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-honey-200"
-                  >
-                    <Copy className="h-3 w-3" /> Copy
-                  </button>
-                  <button
-                    onClick={handleDownload}
-                    className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-honey-200"
-                  >
-                    <Download className="h-3 w-3" /> Download
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+        <Pane
+          ratio={0.5}
+          label="Delimited Output"
+          actions={
+            output ? (
+              <>
+                <PaneAction onClick={handleCopy} icon={Copy} label="Copy" />
+                <PaneAction onClick={handleDownload} icon={Download} label="Download" />
+              </>
+            ) : undefined
+          }
+        >
           <textarea
             value={output}
             readOnly
-            className="w-full flex-1 resize-none rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-2 font-mono text-sm text-ink-100 focus:outline-none"
+            className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
             spellCheck={false}
             placeholder="Delimited output will appear here…"
           />
-        </div>
+        </Pane>
       </div>
 
       {/* ── Collapsible Controls ── */}
