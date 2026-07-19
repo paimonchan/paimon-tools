@@ -31,7 +31,10 @@ export function parseLocation(): { base: string; toolId: string | null } {
     }
   }
 
-  return { base: '', toolId: null }
+  // No tool found — entire path is the base (preserves subpath prefix
+  // e.g. /paimon-tools/ on GitHub Pages project sites).
+  const fullPath = segments.join('/')
+  return { base: fullPath ? '/' + fullPath : '', toolId: null }
 }
 
 /**
