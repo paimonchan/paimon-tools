@@ -61,7 +61,7 @@ function editorTheme() {
   return EditorView.theme({
     '&': { backgroundColor: 'transparent !important', height: '100%' },
     '.cm-scroller': { fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '13px' },
-    '.cm-content': { padding: '8px 4px', caretColor: '#e7ac34' },
+    '.cm-content': { padding: '8px 12px', caretColor: '#e7ac34', color: '#e4e0d6' },
     '.cm-gutters': { backgroundColor: '#1d1a16', borderRight: '1px solid #2e2a24', color: '#5f574d' },
     '.cm-activeLineGutter': { backgroundColor: 'transparent' },
     '.cm-activeLine': { backgroundColor: 'transparent' },
@@ -479,7 +479,7 @@ export default function DiffTool() {
           {/* CodeMirror container — fills available space */}
           <div
             ref={containerRef}
-            className={`flex-1 overflow-hidden rounded-lg border flex flex-col ${
+            className={`flex-1 overflow-hidden rounded-lg border bg-ink-900/40 flex flex-col ${
               dragging === 'old'
                 ? 'border-honey-500/60 bg-honey-500/5'
                 : dragging === 'new'
