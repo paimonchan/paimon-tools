@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { Copy, Download, Eraser, List, Sparkles } from 'lucide-react'
+import { ChevronDown, ChevronRight, Copy, Download, Eraser, List, Sparkles } from 'lucide-react'
 
 import { delimitText, type DelimiterOptions } from '../engine/converters/delimiter-tool'
 import { usePersistentState } from '../hooks/usePersistentState'
@@ -60,7 +60,7 @@ function Card({ label, children }: { label: string; children: React.ReactNode })
   )
 }
 
-/** Reusable active/ inactive chip button. */
+/** Reusable active/inactive chip button. */
 function Chip({
   active,
   onClick,
@@ -122,6 +122,9 @@ export default function TextDelimiterTool() {
   const [trim, setTrim] = usePersistentState('td-trim', true)
   const [skipEmpty, setSkipEmpty] = usePersistentState('td-skip-empty', true)
   const [customDelimiter, setCustomDelimiter] = usePersistentState('td-custom-delim', '')
+
+  // UI state
+  const [controlsOpen, setControlsOpen] = useState(true)
 
   // Transient state
   const [output, setOutput] = useState(DEFAULT_OUTPUT)
@@ -194,6 +197,34 @@ export default function TextDelimiterTool() {
     toast.push('Downloaded delimited.txt', { variant: 'success' })
   }, [output, toast])
 
+  // ── Settings summary ─────────────────────────────
+
+  const summaryParts: string[] = []
+
+  // Delimiter label
+  if (delimiter === 'custom') {
+    summaryParts.push(`✏️ ${customDelimiter || ','}`)
+  } else {
+    const found = DELIMITER_PRESETS.find((d) => d.value === delimiter)
+    summaryParts.push(found?.label ?? delimiter)
+  }
+
+  // Quote
+  if (quote !== 'none') {
+    const q = QUOTE_OPTIONS.find((o) => o.value === quote)
+    summaryParts.push(q?.label ?? quote)
+  }
+
+  // Wrap
+  if (wrapOpen || wrapClose) {
+    summaryParts.push(`wrap ${wrapOpen}…${wrapClose}`)
+  }
+  if (wrapperOpen || wrapperClose) {
+    summaryParts.push(`global ${wrapperOpen}…${wrapperClose}`)
+  }
+
+  const summary = summaryParts.join(' · ') || 'default'
+
   // ── Render ──────────────────────────────────────
 
   return (
@@ -211,146 +242,42 @@ export default function TextDelimiterTool() {
         </div>
       </div>
 
-      {/* ── 2-Column layout (desktop) ── */}
+      {/* ── Input + Output panes (side by side on desktop) ── */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
-        {/* ── Left column: Input + Controls ── */}
-        <div className="flex flex-col gap-3 md:w-3/5">
-          {/* Input area */}
-          <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <label className="text-[11px] font-600 uppercase tracking-wider text-ink-400">
-                Column Data
-              </label>
-              <div className="flex items-center gap-2">
+        {/* Input pane */}
+        <div className="flex flex-1 flex-col">
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-[11px] font-600 uppercase tracking-wider text-ink-400">
+              Column Data
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleLoadSample}
+                className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-honey-200"
+              >
+                <Sparkles className="h-3 w-3" /> Sample
+              </button>
+              {inputText && (
                 <button
-                  onClick={handleLoadSample}
-                  className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-honey-200"
+                  onClick={handleClear}
+                  className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-ink-200"
                 >
-                  <Sparkles className="h-3 w-3" /> Sample
+                  <Eraser className="h-3 w-3" /> Clear
                 </button>
-                {inputText && (
-                  <button
-                    onClick={handleClear}
-                    className="flex items-center gap-1 text-[11px] text-ink-400 transition-colors hover:text-ink-200"
-                  >
-                    <Eraser className="h-3 w-3" /> Clear
-                  </button>
-                )}
-              </div>
+              )}
             </div>
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Paste items, one per line…"
-              className="w-full h-32 md:h-44 rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-2 font-mono text-sm text-ink-100 placeholder-ink-500 resize-y focus:outline-none focus:border-honey-500/50"
-              spellCheck={false}
-            />
           </div>
-
-          {/* Delimiter card */}
-          <Card label="Delimiter">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {DELIMITER_PRESETS.map((d) => (
-                <Chip key={d.value} active={delimiter === d.value} onClick={() => setDelimiter(d.value)}>
-                  {d.label}
-                </Chip>
-              ))}
-              <Chip active={delimiter === 'custom'} onClick={() => setDelimiter('custom')}>
-                ✏️ Custom
-              </Chip>
-            </div>
-            {/* Comma style — only when delimiter is comma */}
-            {delimiter === ',' && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 pt-2 border-t border-ink-700/30">
-                <span className="text-[11px] text-ink-500">Style:</span>
-                {COMMA_STYLES.map((s) => (
-                  <Chip key={s.value} active={commaStyle === s.value} onClick={() => setCommaStyle(s.value)}>
-                    {s.label}
-                  </Chip>
-                ))}
-              </div>
-            )}
-            {/* Custom delimiter input */}
-            {delimiter === 'custom' && (
-              <div className="mt-2 flex items-center gap-2 pt-2 border-t border-ink-700/30">
-                <span className="text-[11px] text-ink-500 shrink-0">Custom:</span>
-                <input
-                  value={customDelimiter}
-                  onChange={(e) => setCustomDelimiter(e.target.value)}
-                  placeholder="Enter delimiter…"
-                  className="flex-1 min-w-0 max-w-32 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
-                />
-              </div>
-            )}
-          </Card>
-
-          {/* Formatting card: Quotes + Wrapping */}
-          <Card label="Formatting">
-            {/* Quotes */}
-            <div className="flex flex-wrap items-center gap-1.5 mb-3">
-              {QUOTE_OPTIONS.map((q) => (
-                <Chip key={q.value} active={quote === q.value} onClick={() => setQuote(q.value)}>
-                  {q.label}
-                </Chip>
-              ))}
-            </div>
-
-            {/* Wrap Each Item */}
-            <div className="mb-2">
-              <span className="text-[11px] text-ink-500 mb-1 block">Wrap each item</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-ink-500">Open</span>
-                <ShortInput value={wrapOpen} onChange={setWrapOpen} placeholder="<li>" />
-                <span className="text-[11px] text-ink-500">Close</span>
-                <ShortInput value={wrapClose} onChange={setWrapClose} placeholder="</li>" />
-              </div>
-            </div>
-
-            {/* Global Wrapper */}
-            <div>
-              <span className="text-[11px] text-ink-500 mb-1 block">Global wrapper</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-ink-500">Open</span>
-                <ShortInput value={wrapperOpen} onChange={setWrapperOpen} placeholder="<ul>" />
-                <span className="text-[11px] text-ink-500">Close</span>
-                <ShortInput value={wrapperClose} onChange={setWrapperClose} placeholder="</ul>" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Options card */}
-          <Card label="Options">
-            <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-1.5 text-[11px] text-ink-300">
-                <input type="checkbox" checked={trim} onChange={(e) => setTrim(e.target.checked)} className="accent-honey-500" />
-                Trim lines
-              </label>
-              <label className="flex items-center gap-1.5 text-[11px] text-ink-300">
-                <input type="checkbox" checked={skipEmpty} onChange={(e) => setSkipEmpty(e.target.checked)} className="accent-honey-500" />
-                Skip empty
-              </label>
-              <label className="flex items-center gap-1.5 text-[11px] text-ink-300">
-                <span>Skip first</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={99}
-                  value={skipLines}
-                  onChange={(e) => setSkipLines(Math.max(0, Math.min(99, parseInt(e.target.value) || 0)))}
-                  className="w-12 rounded border border-ink-700 bg-ink-800/50 px-1.5 py-0.5 text-center text-xs text-ink-100 focus:outline-none focus:border-honey-500/50"
-                />
-                <span>lines (header)</span>
-              </label>
-            </div>
-            {/* Known limitations — subtle note */}
-            <p className="mt-3 pt-3 border-t border-ink-700/30 text-[10px] text-ink-500 italic">
-              Note: values containing the delimiter character are not escaped — same behavior as delim.co.
-            </p>
-          </Card>
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Paste items, one per line…"
+            className="w-full flex-1 resize-none rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-2 font-mono text-sm text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+            spellCheck={false}
+          />
         </div>
 
-        {/* ── Right column: Output ── */}
-        <div className="flex min-h-0 flex-1 flex-col md:w-2/5">
+        {/* Output pane */}
+        <div className="flex flex-1 flex-col">
           <div className="mb-1.5 flex items-center justify-between">
             <label className="text-[11px] font-600 uppercase tracking-wider text-ink-400">
               Delimited Output
@@ -381,6 +308,135 @@ export default function TextDelimiterTool() {
             spellCheck={false}
             placeholder="Delimited output will appear here…"
           />
+        </div>
+      </div>
+
+      {/* ── Collapsible Controls ── */}
+      <div className="mt-3">
+        {/* Toggle header */}
+        <button
+          onClick={() => setControlsOpen((o) => !o)}
+          className="flex w-full items-center gap-2 rounded-lg border border-ink-700/50 bg-ink-800/20 px-3 py-2 text-left text-[11px] text-ink-400 transition-colors hover:bg-ink-800/40 hover:text-ink-200"
+        >
+          {controlsOpen ? (
+            <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+          )}
+          <span className="font-500 uppercase tracking-wider">Controls</span>
+          {!controlsOpen && (
+            <span className="ml-1 truncate text-ink-500">
+              — {summary}
+            </span>
+          )}
+        </button>
+
+        {/* Controls body */}
+        <div
+          className={`overflow-hidden transition-all duration-200 ${
+            controlsOpen ? 'mt-3 max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="flex flex-col gap-3 md:flex-row">
+            {/* Delimiter card */}
+            <div className="flex-1">
+              <Card label="Delimiter">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {DELIMITER_PRESETS.map((d) => (
+                    <Chip key={d.value} active={delimiter === d.value} onClick={() => setDelimiter(d.value)}>
+                      {d.label}
+                    </Chip>
+                  ))}
+                  <Chip active={delimiter === 'custom'} onClick={() => setDelimiter('custom')}>
+                    ✏️ Custom
+                  </Chip>
+                </div>
+                {delimiter === ',' && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 pt-2 border-t border-ink-700/30">
+                    <span className="text-[11px] text-ink-500">Style:</span>
+                    {COMMA_STYLES.map((s) => (
+                      <Chip key={s.value} active={commaStyle === s.value} onClick={() => setCommaStyle(s.value)}>
+                        {s.label}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
+                {delimiter === 'custom' && (
+                  <div className="mt-2 flex items-center gap-2 pt-2 border-t border-ink-700/30">
+                    <span className="text-[11px] text-ink-500 shrink-0">Custom:</span>
+                    <input
+                      value={customDelimiter}
+                      onChange={(e) => setCustomDelimiter(e.target.value)}
+                      placeholder="Enter delimiter…"
+                      className="flex-1 min-w-0 max-w-32 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+                    />
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Formatting card */}
+            <div className="flex-1">
+              <Card label="Formatting">
+                <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                  {QUOTE_OPTIONS.map((q) => (
+                    <Chip key={q.value} active={quote === q.value} onClick={() => setQuote(q.value)}>
+                      {q.label}
+                    </Chip>
+                  ))}
+                </div>
+                <div className="mb-2">
+                  <span className="text-[11px] text-ink-500 mb-1 block">Wrap each item</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-ink-500">Open</span>
+                    <ShortInput value={wrapOpen} onChange={setWrapOpen} placeholder="<li>" />
+                    <span className="text-[11px] text-ink-500">Close</span>
+                    <ShortInput value={wrapClose} onChange={setWrapClose} placeholder="</li>" />
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[11px] text-ink-500 mb-1 block">Global wrapper</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-ink-500">Open</span>
+                    <ShortInput value={wrapperOpen} onChange={setWrapperOpen} placeholder="<ul>" />
+                    <span className="text-[11px] text-ink-500">Close</span>
+                    <ShortInput value={wrapperClose} onChange={setWrapperClose} placeholder="</ul>" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Options card */}
+            <div className="flex-1">
+              <Card label="Options">
+                <div className="flex flex-wrap items-center gap-4">
+                  <label className="flex items-center gap-1.5 text-[11px] text-ink-300">
+                    <input type="checkbox" checked={trim} onChange={(e) => setTrim(e.target.checked)} className="accent-honey-500" />
+                    Trim lines
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-ink-300">
+                    <input type="checkbox" checked={skipEmpty} onChange={(e) => setSkipEmpty(e.target.checked)} className="accent-honey-500" />
+                    Skip empty
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-ink-300">
+                    <span>Skip first</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={99}
+                      value={skipLines}
+                      onChange={(e) => setSkipLines(Math.max(0, Math.min(99, parseInt(e.target.value) || 0)))}
+                      className="w-12 rounded border border-ink-700 bg-ink-800/50 px-1.5 py-0.5 text-center text-xs text-ink-100 focus:outline-none focus:border-honey-500/50"
+                    />
+                    <span>lines (header)</span>
+                  </label>
+                </div>
+                <p className="mt-3 pt-3 border-t border-ink-700/30 text-[10px] text-ink-500 italic">
+                  Note: values containing the delimiter character are not escaped — same behavior as delim.co.
+                </p>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
 
