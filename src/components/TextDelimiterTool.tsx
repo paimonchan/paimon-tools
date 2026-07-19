@@ -5,7 +5,7 @@
  * All settings persist via usePersistentState.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Copy, Download, Eraser, Sparkles } from 'lucide-react'
 
 import { delimitText, type DelimiterOptions } from '../engine/converters/delimiter-tool'
