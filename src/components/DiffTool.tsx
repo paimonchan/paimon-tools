@@ -30,7 +30,6 @@ import { MergeView } from '@codemirror/merge'
 import { createPatch } from '../engine/converters/diff-engine'
 import { readFileAsText } from '../lib/files'
 import { useToast } from '../stores/toast-store'
-import EmptyState from './EmptyState'
 import StatusBar from './StatusBar'
 
 // ── Constants ─────────────────────────────────────────
@@ -427,11 +426,6 @@ export default function DiffTool() {
 
       {/* CodeMirror merge view */}
       <div className="flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3">
-        {status === 'idle' && !getOldText() && !getNewText() && (
-          <div className="flex flex-1 items-center justify-center rounded-lg border border-ink-700">
-            <EmptyState isFileInput={false} />
-          </div>
-        )}
         <div
           ref={containerRef}
           className="flex-1 overflow-hidden rounded-lg border border-ink-700 [&_.cm-editor]:h-full"
