@@ -5,12 +5,11 @@
  * input and output are the same view — no separate output area.
  *
  * Supports:
- * - Editable side-by-side panes with real-time diff highlighting
+ * - Editable side-by-side or unified view with real-time diff highlighting
  * - Drag & drop files to auto-fill panes
- * - Unified diff view mode
  * - Word-level change detection (via the diff library)
  * - Download .patch, copy diff, swap, clear, sample
- * - Keyboard shortcuts, input size guards
+ * - Keyboard shortcuts, persistent localStorage
  */
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
@@ -25,7 +24,8 @@ import {
 import { EditorView, keymap, placeholder } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
-import { MergeView } from '@codemirror/merge'
+import { EditorState } from '@codemirror/state'
+import { MergeView, unifiedMergeView } from '@codemirror/merge'
 
 import { createPatch } from '../engine/converters/diff-engine'
 import { readFileAsText } from '../lib/files'
@@ -51,8 +51,6 @@ Line five`
 const FILE_ACCEPT =
   '.txt,.csv,.json,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.html,.css,.md,.xml,.log,.env,.ini,.cfg'
 
-const INPUT_LIMIT = 200_000
-
 // ── Persistent storage helpers ────────────────────────
 
 function loadPersisted(key: string, fallback = ''): string {
@@ -69,7 +67,28 @@ function savePersisted(key: string, value: string) {
   } catch { /* quota exceeded — silently ignore */ }
 }
 
-// ── Editor extensions ─────────────────────────────────
+// ── Shared theme ───────────────────────────────────────
+
+function editorTheme() {
+  return EditorView.theme({
+    '&': { backgroundColor: 'transparent !important', height: '100%' },
+    '.cm-scroller': { fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '13px' },
+    '.cm-content': { padding: '8px 4px', caretColor: '#e7ac34' },
+    '.cm-gutters': { backgroundColor: 'transparent', borderRight: '1px solid #2e2a24', color: '#5f574d' },
+    '.cm-activeLineGutter': { backgroundColor: 'transparent' },
+    '.cm-activeLine': { backgroundColor: 'transparent' },
+    '.cm-lineNumbers': { minWidth: '3ch', fontSize: '11px' },
+    '.cm-merge-gap': { borderLeft: '1px solid #2e2a24', borderRight: '1px solid #2e2a24' },
+    '.cm-merge-gutter': { backgroundColor: 'transparent' },
+    '.cm-merge-gutter .cm-merge-gutter-marker': { width: '100%' },
+    '.cm-merge-chunk': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+    '.cm-merge-chunk-start': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+    '.cm-merge-chunk-end': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+    '.cm-merge-chunk-b': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
+    '.cm-merge-chunk-b-start': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
+    '.cm-merge-chunk-b-end': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
+  })
+}
 
 function baseExtensions(editable = true) {
   return [
@@ -77,24 +96,7 @@ function baseExtensions(editable = true) {
     keymap.of([...defaultKeymap, ...historyKeymap]),
     EditorView.editable.of(editable),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-    EditorView.theme({
-      '&': { backgroundColor: 'transparent !important', height: '100%' },
-      '.cm-scroller': { fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: '13px' },
-      '.cm-content': { padding: '8px 4px', caretColor: '#e7ac34' },
-      '.cm-gutters': { backgroundColor: 'transparent', borderRight: '1px solid #2e2a24', color: '#5f574d' },
-      '.cm-activeLineGutter': { backgroundColor: 'transparent' },
-      '.cm-activeLine': { backgroundColor: 'transparent' },
-      '.cm-lineNumbers': { minWidth: '3ch', fontSize: '11px' },
-      '.cm-merge-gap': { borderLeft: '1px solid #2e2a24', borderRight: '1px solid #2e2a24' },
-      '.cm-merge-gutter': { backgroundColor: 'transparent' },
-      '.cm-merge-gutter .cm-merge-gutter-marker': { width: '100%' },
-      '.cm-merge-chunk': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
-      '.cm-merge-chunk-start': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
-      '.cm-merge-chunk-end': { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
-      '.cm-merge-chunk-b': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
-      '.cm-merge-chunk-b-start': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
-      '.cm-merge-chunk-b-end': { backgroundColor: 'rgba(34, 197, 94, 0.1)' },
-    }),
+    editorTheme(),
   ]
 }
 
@@ -109,119 +111,174 @@ export default function DiffTool() {
 
   // Refs for CodeMirror instance
   const containerRef = useRef<HTMLDivElement>(null)
-  const mergeViewRef = useRef<MergeView | null>(null)
+  const editorRef = useRef<MergeView | EditorView | null>(null)
+
+  // Persistent text (syncs with CodeMirror via update listeners)
+  const oldTextRef = useRef(loadPersisted(LS_KEY_OLD))
+  const newTextRef = useRef(loadPersisted(LS_KEY_NEW))
 
   // Transient state
-  const [stats, setStats] = useState({ additions: 0, deletions: 0, unchanged: 0 })
+  const [stats, setStats] = useState({ additions: 0, deletions: 0 })
   const [status, setStatus] = useState<Status>('idle')
-  const [errorMessage] = useState('')
-  const [durationMs] = useState<number | null>(null)
-  const [dragging, setDragging] = useState<'old' | 'new' | null>(null)
   const [diffView, setDiffView] = useState<'side-by-side' | 'unified'>('side-by-side')
+  const [dragging, setDragging] = useState<'old' | 'new' | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingFileSide, setPendingFileSide] = useState<'old' | 'new' | null>(null)
   const patchUrlRef = useRef<string | null>(null)
 
-  // ── Initialize / rebuild CodeMirror ─────────────────
+  // ── Stats helper ──────────────────────────────────
 
-  function updateStats() {
-    const mv = mergeViewRef.current
-    if (!mv) return
-    try {
-      const chunks = mv.chunks
-      let additions = 0
-      let deletions = 0
-      for (const c of chunks) {
-        deletions += c.toA - c.fromA
-        additions += c.toB - c.fromB
-      }
-      setStats({ additions, deletions, unchanged: 0 })
-      if (additions > 0 || deletions > 0) {
-        setStatus('ok')
-      } else {
-        const aLen = mv.a.state.doc.length
-        const bLen = mv.b.state.doc.length
-        setStatus(aLen > 0 || bLen > 0 ? 'ok' : 'idle')
-      }
-    } catch {
-      // chunks not ready yet
+  function computeStats() {
+    const oldText = oldTextRef.current
+    const newText = newTextRef.current
+    if (!oldText && !newText) {
+      setStats({ additions: 0, deletions: 0 })
+      setStatus('idle')
+      return
     }
+    // Simple line diff for stats
+    const oldLines = oldText.split('\n')
+    const newLines = newText.split('\n')
+    // Use a simple heuristic: number of lines different
+    const maxLen = Math.max(oldLines.length, newLines.length)
+    let additions = 0
+    let deletions = 0
+    for (let i = 0; i < maxLen; i++) {
+      if (i >= oldLines.length) additions++
+      else if (i >= newLines.length) deletions++
+      else if (oldLines[i] !== newLines[i]) {
+        additions++
+        deletions++
+      }
+    }
+    setStats({ additions, deletions })
+    setStatus(additions > 0 || deletions > 0 ? 'ok' : 'ok')
   }
+
+  // ── Build / rebuild editor ────────────────────────
 
   useEffect(() => {
     if (!containerRef.current) return
 
+    // Store current text before destroying
+    const oldDoc = oldTextRef.current
+    const newDoc = newTextRef.current
+
     // Cleanup previous instance
-    mergeViewRef.current?.destroy()
+    if (editorRef.current) {
+      if ('destroy' in editorRef.current) {
+        editorRef.current.destroy()
+      }
+      editorRef.current = null
+    }
     containerRef.current.innerHTML = ''
 
-    const oldDoc = loadPersisted(LS_KEY_OLD)
-    const newDoc = loadPersisted(LS_KEY_NEW)
-
-    const readFrom = (side: 'a' | 'b') =>
+    const makeReadFrom = (side: 'a' | 'b') =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
-          savePersisted(side === 'a' ? LS_KEY_OLD : LS_KEY_NEW, update.state.doc.toString())
-          updateStats()
+          const text = update.state.doc.toString()
+          if (side === 'a') {
+            oldTextRef.current = text
+            savePersisted(LS_KEY_OLD, text)
+          } else {
+            newTextRef.current = text
+            savePersisted(LS_KEY_NEW, text)
+          }
+          computeStats()
         }
       })
 
-    const shared = baseExtensions(true)
-    const aExts = [...shared, readFrom('a'), placeholder('Paste original text or drop a file')]
-    const bExts = [...shared, readFrom('b'), placeholder('Paste changed text or drop a file')]
+    if (diffView === 'side-by-side') {
+      const shared = baseExtensions(true)
+      const mv = new MergeView({
+        a: { doc: oldDoc, extensions: [...shared, makeReadFrom('a'), placeholder('Paste original text or drop a file')] },
+        b: { doc: newDoc, extensions: [...shared, makeReadFrom('b'), placeholder('Paste changed text or drop a file')] },
+        parent: containerRef.current,
+        gutter: true,
+        highlightChanges: true,
+        collapseUnchanged: { margin: 3, minSize: 4 },
+      })
+      editorRef.current = mv as unknown as EditorView
+    } else {
+      // Unified view — editor shows changed text with original as reference
+      const updateListener = EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          newTextRef.current = update.state.doc.toString()
+          savePersisted(LS_KEY_NEW, newTextRef.current)
+          computeStats()
+        }
+      })
+      const view = new EditorView({
+        doc: newDoc,
+        extensions: [
+          ...baseExtensions(true),
+          updateListener,
+          placeholder('Paste changed text or drop a file'),
+          unifiedMergeView({
+            original: oldDoc,
+          }),
+        ],
+        parent: containerRef.current,
+      })
+      editorRef.current = view
 
-    const mv = new MergeView({
-      a: { doc: oldDoc, extensions: aExts },
-      b: { doc: newDoc, extensions: bExts },
-      parent: containerRef.current,
-      gutter: true,
-      highlightChanges: true,
-      collapseUnchanged: { margin: 3, minSize: 4 },
-    })
+      // For unified mode, we need to keep oldTextRef in sync
+      // old text is read-only in unified mode, set from the last known value
+      oldTextRef.current = oldDoc
+    }
 
-    mergeViewRef.current = mv
-    setTimeout(updateStats, 50)
+    // Give MergeView a tick to compute chunks
+    setTimeout(computeStats, 50)
 
     return () => {
-      mv.destroy()
-      mergeViewRef.current = null
+      if (editorRef.current) {
+        if ('destroy' in editorRef.current) {
+          editorRef.current.destroy()
+        }
+        editorRef.current = null
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [diffView])
 
-  // ── Get current text from editors ───────────────────
+  // ── Get current text helpers ──────────────────────
 
-  function getOldText(): string {
-    return mergeViewRef.current?.a.state.doc.toString() ?? ''
-  }
-  function getNewText(): string {
-    return mergeViewRef.current?.b.state.doc.toString() ?? ''
-  }
+  function getOldText(): string { return oldTextRef.current }
+  function getNewText(): string { return newTextRef.current }
 
   function setBothTexts(oldDoc: string, newDoc: string) {
-    const mv = mergeViewRef.current
-    if (!mv) return
-    mv.a.dispatch({ changes: { from: 0, to: mv.a.state.doc.length, insert: oldDoc } })
-    mv.b.dispatch({ changes: { from: 0, to: mv.b.state.doc.length, insert: newDoc } })
+    oldTextRef.current = oldDoc
+    newTextRef.current = newDoc
     savePersisted(LS_KEY_OLD, oldDoc)
     savePersisted(LS_KEY_NEW, newDoc)
-    setTimeout(updateStats, 50)
-  }
-
-  // ── Input guard ─────────────────────────────────────
-
-  const guardInputSize = useCallback(
-    (text: string, existing: string): boolean => {
-      if ((text.length + existing.length) > INPUT_LIMIT) {
-        toast.push(`Input size limit is ${INPUT_LIMIT.toLocaleString()} characters`, {
-          variant: 'error',
-        })
-        return false
+    // Rebuild editor with new content
+    setDiffView((v) => {
+      // Trigger rebuild by toggling to same view
+      // Actually, we need to force a re-render of the editor
+      // Use a different approach — dispatch changes to existing editors
+      return v
+    })
+    // If we're in side-by-side mode, dispatch directly to editors
+    const mv = editorRef.current as unknown as MergeView | null
+    if (mv && 'a' in mv && 'b' in mv) {
+      try {
+        ;(mv as any).a.dispatch({ changes: { from: 0, to: (mv as any).a.state.doc.length, insert: oldDoc } })
+        ;(mv as any).b.dispatch({ changes: { from: 0, to: (mv as any).b.state.doc.length, insert: newDoc } })
+      } catch {
+        // Editors might be in unified mode or not ready
       }
-      return true
-    },
-    [toast],
-  )
+    } else if (editorRef.current && 'dispatch' in editorRef.current) {
+      // Unified mode — only new text is editable
+      try {
+        ;(editorRef.current as EditorView).dispatch({
+          changes: { from: 0, to: (editorRef.current as EditorView).state.doc.length, insert: newDoc },
+        })
+      } catch {
+        // ignore
+      }
+    }
+    setTimeout(computeStats, 50)
+  }
 
   // ── File handling ───────────────────────────────────
 
@@ -230,8 +287,6 @@ export default function DiffTool() {
       if (!file) return
       readFileAsText(file)
         .then((text) => {
-          const current = side === 'old' ? getOldText() : getNewText()
-          if (!guardInputSize(text, current)) return
           if (side === 'old') {
             setBothTexts(text, getNewText())
           } else {
@@ -241,7 +296,7 @@ export default function DiffTool() {
         })
         .catch(() => toast.push(`Failed to read ${file.name}`, { variant: 'error' }))
     },
-    [toast, guardInputSize],
+    [toast],
   )
 
   // ── Actions ─────────────────────────────────────────
@@ -255,7 +310,7 @@ export default function DiffTool() {
 
   function handleClear() {
     setBothTexts('', '')
-    setStats({ additions: 0, deletions: 0, unchanged: 0 })
+    setStats({ additions: 0, deletions: 0 })
     setStatus('idle')
     if (patchUrlRef.current) {
       URL.revokeObjectURL(patchUrlRef.current)
@@ -332,8 +387,22 @@ export default function DiffTool() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // ── Drop zone handlers ─────────────────────────────
+
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault() }, [])
+
+  const handleDrop = useCallback(
+    (side: 'old' | 'new') =>
+      (e: React.DragEvent) => {
+        e.preventDefault()
+        setDragging(null)
+        handleFileDrop(side, e.dataTransfer.files?.[0])
+      },
+    [handleFileDrop],
+  )
 
   // ── Status bar mapping ──────────────────────────────
 
@@ -424,12 +493,40 @@ export default function DiffTool() {
         </div>
       </div>
 
-      {/* CodeMirror merge view */}
-      <div className="flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3">
+      {/* Drop zone wrapping the code mirror container */}
+      <div
+        className={`flex min-h-0 flex-1 flex-col px-3 pt-3 pb-3 ${
+          dragging ? '' : ''
+        }`}
+      >
+        {/* Old text drop zone */}
         <div
-          ref={containerRef}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-ink-700 [&_.cm-mergeView]:flex-1 [&_.cm-editor]:h-full"
-        />
+          className="flex-1 flex"
+          onDragOver={handleDragOver}
+          onDragEnter={() => setDragging('old')}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
+          }}
+          onDrop={handleDrop('old')}
+        >
+          {/* CodeMirror container — fills available space */}
+          <div
+            ref={containerRef}
+            className={`flex-1 overflow-hidden rounded-lg border ${
+              dragging === 'old'
+                ? 'border-honey-500/60 bg-honey-500/5'
+                : dragging === 'new'
+                  ? 'border-honey-500/60 bg-honey-500/5'
+                  : 'border-ink-700'
+            } [&_.cm-editor]:h-full`}
+            onDragOver={handleDragOver}
+            onDragEnter={() => setDragging(diffView === 'side-by-side' ? 'old' : 'new')}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
+            }}
+            onDrop={handleDrop(diffView === 'side-by-side' ? 'old' : 'new')}
+          />
+        </div>
       </div>
 
       {/* Status bar */}
@@ -437,8 +534,8 @@ export default function DiffTool() {
         inputChars={getOldText().length + getNewText().length}
         outputChars={stats.additions + stats.deletions}
         status={statusBarStatus}
-        error={status === 'error' ? errorMessage : null}
-        durationMs={durationMs}
+        error={null}
+        durationMs={null}
       />
     </div>
   )
