@@ -226,10 +226,26 @@ export default function TextDelimiterTool() {
 
   const summary = summaryParts.join(' · ') || 'default'
 
+  // Active settings count (non-default)
+  const activeCount =
+    (delimiter !== ',' ? 1 : 0) +
+    (quote !== 'none' ? 1 : 0) +
+    (wrapOpen || wrapClose ? 1 : 0) +
+    (wrapperOpen || wrapperClose ? 1 : 0) +
+    (skipLines > 0 ? 1 : 0)
+
   // ── Render ──────────────────────────────────────
 
   return (
-    <div className="flex h-full flex-col">
+    <>
+      <style>{`
+@keyframes badge-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+`}</style>
+      <div className="flex h-full flex-col">
       {/* ── Heading ── */}
       <div className="mb-4 flex items-start gap-3">
         <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-ink-700 bg-ink-800/60">
@@ -306,8 +322,18 @@ export default function TextDelimiterTool() {
               — {summary}
             </span>
           )}
-          <span className="ml-auto shrink-0 rounded-md border border-ink-700/50 bg-ink-800/40 px-2 py-0.5 text-[10px] text-ink-500 transition-colors group-hover:border-honey-500/20 group-hover:text-honey-300">
-            {controlsOpen ? 'Collapse' : 'Configure'}
+          <span className="ml-auto shrink-0 flex items-center gap-2">
+            {!controlsOpen && activeCount > 0 && (
+              <span
+                className="rounded-full bg-honey-400/15 px-1.5 py-0.5 text-[10px] font-600 text-honey-300"
+                style={{ animation: 'badge-pop 0.5s ease-out 1' }}
+              >
+                {activeCount} active
+              </span>
+            )}
+            <span className="rounded-md border border-ink-700/50 bg-ink-800/40 px-2 py-0.5 text-[10px] text-ink-500 transition-colors group-hover:border-honey-500/20 group-hover:text-honey-300">
+              {controlsOpen ? 'Collapse' : 'Configure'}
+            </span>
           </span>
         </button>
 
@@ -433,5 +459,6 @@ export default function TextDelimiterTool() {
         </span>
       </div>
     </div>
+    </>
   )
 }
