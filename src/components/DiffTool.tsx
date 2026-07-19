@@ -21,10 +21,10 @@ import {
 } from 'lucide-react'
 
 // CodeMirror 6
-import { EditorView, keymap, placeholder, Decoration } from '@codemirror/view'
+import { EditorView, keymap, placeholder } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
-import { EditorState, StateEffect, StateField } from '@codemirror/state'
+import { EditorState } from '@codemirror/state'
 import { MergeView, unifiedMergeView } from '@codemirror/merge'
 
 import { createPatch } from '../engine/converters/diff-engine'
@@ -97,33 +97,12 @@ function baseExtensions(editable = true) {
     EditorView.editable.of(editable),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     editorTheme(),
-    wordDecoField,
   ]
 }
-
-// ── Word-level decoration marks ──────────────────────
-
-const wordDecoA = Decoration.mark({ class: 'cm-word-del' })
-const wordDecoB = Decoration.mark({ class: 'cm-word-add' })
 
 // ── Types ─────────────────────────────────────────────
 
 type Status = 'idle' | 'ok' | 'error' | 'processing'
-
-// ── Word-level diff decorations ──────────────────────
-
-const wordDecoEffect = StateEffect.define<ReturnType<typeof Decoration.set>>()
-
-const wordDecoField = StateField.define({
-  create() { return Decoration.none },
-  update(decos, tr) {
-    for (const e of tr.effects) {
-      if (e.is(wordDecoEffect)) return e.value
-    }
-    return decos.map(tr.changes)
-  },
-  provide: f => EditorView.decorations.from(f),
-})
 
 // ── Component ─────────────────────────────────────────
 
@@ -133,8 +112,6 @@ export default function DiffTool() {
   // Refs for CodeMirror instance
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MergeView | EditorView | null>(null)
-  const viewARef = useRef<EditorView | null>(null)
-  const viewBRef = useRef<EditorView | null>(null)
 
   // Persistent text (syncs with CodeMirror via update listeners)
   const oldTextRef = useRef(loadPersisted(LS_KEY_OLD))
@@ -148,53 +125,6 @@ export default function DiffTool() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingFileSide, setPendingFileSide] = useState<'old' | 'new' | null>(null)
   const patchUrlRef = useRef<string | null>(null)
-
-  // ── Word-level diff ──────────────────────────────
-
-  const diffWordsRef = useRef<any>(null)
-
-  async function recomputeWordDeco() {
-    const viewA = viewARef.current
-    const viewB = viewBRef.current
-    if (!viewA || !viewB) return
-    const oldText = oldTextRef.current
-    const newText = newTextRef.current
-    if (!oldText || !newText) return
-
-    if (!diffWordsRef.current) {
-      const mod = await import('diff')
-      diffWordsRef.current = mod.diffWords
-    }
-    const diffWords = diffWordsRef.current
-
-    const changes = diffWords(oldText, newText)
-    let posA = 0, posB = 0
-    const decoA: { from: number; to: number }[] = []
-    const decoB: { from: number; to: number }[] = []
-
-    for (const change of changes) {
-      const len = change.value.length
-      if (change.added && !change.removed) {
-        decoB.push({ from: posB, to: posB + len })
-        posB += len
-      } else if (change.removed && !change.added) {
-        decoA.push({ from: posA, to: posA + len })
-        posA += len
-      } else {
-        posA += len
-        posB += len
-      }
-    }
-
-    try {
-      viewA.dispatch({
-        effects: wordDecoEffect.of(Decoration.set(decoA.map(d => wordDecoA.range(d.from, d.to)))),
-      })
-      viewB.dispatch({
-        effects: wordDecoEffect.of(Decoration.set(decoB.map(d => wordDecoB.range(d.from, d.to)))),
-      })
-    } catch { /* editor might be disposed */ }
-  }
 
   // ── Stats helper ──────────────────────────────────
 
@@ -255,7 +185,6 @@ export default function DiffTool() {
             savePersisted(LS_KEY_NEW, text)
           }
           computeStats()
-          setTimeout(recomputeWordDeco, 0)
         }
       })
 
@@ -269,8 +198,6 @@ export default function DiffTool() {
         highlightChanges: true,
         collapseUnchanged: { margin: 3, minSize: 4 },
       })
-      viewARef.current = mv.a
-      viewBRef.current = mv.b
       editorRef.current = mv as unknown as EditorView
     } else {
       // Unified view — editor shows changed text with original as reference
@@ -302,7 +229,6 @@ export default function DiffTool() {
 
     // Give MergeView a tick to compute chunks
     setTimeout(computeStats, 50)
-    setTimeout(recomputeWordDeco, 100)
 
     return () => {
       if (editorRef.current) {
@@ -311,8 +237,6 @@ export default function DiffTool() {
         }
         editorRef.current = null
       }
-      viewARef.current = null
-      viewBRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diffView])
