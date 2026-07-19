@@ -170,7 +170,7 @@ export default function TextDelimiterTool() {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Paste items, one per line…"
-            className="w-full h-32 rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-2 font-mono text-sm text-ink-100 placeholder-ink-500 resize-y focus:outline-none focus:border-honey-500/50"
+            className="w-full h-24 md:h-32 rounded-lg border border-ink-700 bg-ink-800/50 px-3 py-2 font-mono text-sm text-ink-100 placeholder-ink-500 resize-y focus:outline-none focus:border-honey-500/50"
             spellCheck={false}
           />
         </div>
@@ -190,8 +190,8 @@ export default function TextDelimiterTool() {
           </div>
           {/* Comma style — only when delimiter is comma */}
           {delimiter === ',' && (
-            <div className="mt-1.5 flex items-center gap-2 pl-1">
-              <span className="text-[11px] text-ink-500">Comma style:</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-1">
+              <span className="text-[11px] text-ink-500">Style:</span>
               {COMMA_STYLES.map((s) => (
                 <button
                   key={s.value}
@@ -205,13 +205,13 @@ export default function TextDelimiterTool() {
           )}
           {/* Custom delimiter input */}
           {delimiter === 'custom' && (
-            <div className="mt-1.5 flex items-center gap-2 pl-1">
-              <span className="text-[11px] text-ink-500">Custom:</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-1">
+              <span className="text-[11px] text-ink-500 shrink-0">Custom:</span>
               <input
                 value={customDelimiter}
                 onChange={(e) => setCustomDelimiter(e.target.value)}
                 placeholder="Enter delimiter…"
-                className="w-24 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+                className="flex-1 min-w-0 max-w-32 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
               />
             </div>
           )}
@@ -230,42 +230,42 @@ export default function TextDelimiterTool() {
         </div>
 
         {/* Wrapping */}
-        <div className="flex flex-wrap gap-4">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="flex-1">
             <label className="mb-1 block text-[11px] font-600 uppercase tracking-wider text-ink-400">Wrap Each Item</label>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-ink-500">Open</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[11px] text-ink-500 shrink-0">Open</span>
               <input
                 value={wrapOpen}
                 onChange={(e) => setWrapOpen(e.target.value)}
                 placeholder="<li>"
-                className="w-24 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+                className="flex-1 min-w-0 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
               />
-              <span className="text-[11px] text-ink-500">Close</span>
+              <span className="text-[11px] text-ink-500 shrink-0">Close</span>
               <input
                 value={wrapClose}
                 onChange={(e) => setWrapClose(e.target.value)}
                 placeholder="</li>"
-                className="w-24 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+                className="flex-1 min-w-0 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
               />
             </div>
           </div>
-          <div>
+          <div className="flex-1">
             <label className="mb-1 block text-[11px] font-600 uppercase tracking-wider text-ink-400">Global Wrapper</label>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-ink-500">Open</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[11px] text-ink-500 shrink-0">Open</span>
               <input
                 value={wrapperOpen}
                 onChange={(e) => setWrapperOpen(e.target.value)}
                 placeholder="<ul>"
-                className="w-24 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+                className="flex-1 min-w-0 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
               />
-              <span className="text-[11px] text-ink-500">Close</span>
+              <span className="text-[11px] text-ink-500 shrink-0">Close</span>
               <input
                 value={wrapperClose}
                 onChange={(e) => setWrapperClose(e.target.value)}
                 placeholder="</ul>"
-                className="w-24 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
+                className="flex-1 min-w-0 rounded border border-ink-700 bg-ink-800/50 px-2 py-1 font-mono text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus:border-honey-500/50"
               />
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function TextDelimiterTool() {
       </div>
 
       {/* ── Status bar ── */}
-      <div className="mt-2 flex items-center justify-between border-t border-ink-800 pt-2 text-[11px] text-ink-500">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-ink-800 pt-2 text-[11px] text-ink-500">
         <span>
           {inputText.split('\n').length} lines input
         </span>
