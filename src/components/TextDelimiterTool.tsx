@@ -28,6 +28,7 @@ const DELIMITER_PRESETS: { label: string; value: string }[] = [
 const COMMA_STYLES: { label: string; value: string }[] = [
   { label: ',  (no space)', value: ',' },
   { label: ',  (with space)', value: ', ' },
+  { label: ',  (with new line)', value: ',\n' },
 ]
 
 const QUOTE_OPTIONS: { label: string; value: DelimiterOptions['quote'] }[] = [
