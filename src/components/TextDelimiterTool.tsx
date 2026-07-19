@@ -13,8 +13,14 @@ import { usePersistentState } from '../hooks/usePersistentState'
 import { downloadBlob } from '../lib/files'
 import { useToast } from '../stores/toast-store'
 import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
+import EmptyState from './EmptyState'
+import ErrorState from './ErrorState'
+import StatusBar from './StatusBar'
 
 // ── Constants ─────────────────────────────────────────
+
+const MAX_INPUT_CHARS = 200_000
+const INPUT_SIZE_WARN = 'Input truncated — max 200K characters allowed'
 
 const DELIMITER_PRESETS: { label: string; value: string }[] = [
   { label: '⏎ New Line', value: '\n' },
@@ -41,7 +47,7 @@ const DEFAULT_SAMPLE = `apple
 banana`
 const DEFAULT_OUTPUT = `apple, banana`
 
-type Status = 'idle' | 'ok' | 'error'
+type Status = 'idle' | 'ok' | 'error' | 'processing'
 
 // ── Helpers ───────────────────────────────────────────
 
@@ -131,12 +137,24 @@ export default function TextDelimiterTool() {
   // Transient state
   const [output, setOutput] = useState(DEFAULT_OUTPUT)
   const [status, setStatus] = useState<Status>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
   const [debouncedInput, setDebouncedInput] = useState(DEFAULT_SAMPLE)
   const [durationMs, setDurationMs] = useState<number | null>(null)
   const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(0.5)
 
   // Compute effective delimiter
   const effectiveDelimiter = delimiter === 'custom' ? customDelimiter || ',' : applyComma(delimiter, commaStyle)
+
+  // ── Input guard ─────────────────────────────────
+
+  const handleInputChange = useCallback((value: string) => {
+    if (value.length > MAX_INPUT_CHARS) {
+      value = value.slice(0, MAX_INPUT_CHARS)
+      toast.push(INPUT_SIZE_WARN, { variant: 'info' })
+    }
+    setInputText(value)
+    setStatus('processing')
+  }, [setInputText, toast])
 
   // ── Processing ────────────────────────────────────
 
@@ -151,6 +169,7 @@ export default function TextDelimiterTool() {
     if (!debouncedInput || debouncedInput.trim() === '') {
       setOutput('')
       setStatus('idle')
+      setErrorMessage('')
       setDurationMs(null)
       return
     }
@@ -169,12 +188,42 @@ export default function TextDelimiterTool() {
       })
       setOutput(result)
       setStatus(result ? 'ok' : 'idle')
-    } catch {
+      setErrorMessage('')
+    } catch (e) {
       setOutput('')
       setStatus('error')
+      setErrorMessage(e instanceof Error ? e.message : 'Unknown error')
     }
     setDurationMs(performance.now() - t0)
   }, [debouncedInput, effectiveDelimiter, quote, skipLines, wrapOpen, wrapClose, wrapperOpen, wrapperClose, trim, skipEmpty])
+
+  // ── Keyboard shortcuts ──────────────────────────
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const isMeta = e.metaKey || e.ctrlKey
+      if (isMeta && e.shiftKey && e.key === 'c') {
+        e.preventDefault()
+        handleCopy()
+      }
+      if (isMeta && e.key === 's') {
+        e.preventDefault()
+        handleDownload()
+      }
+      if (isMeta && e.shiftKey && e.key === 'l') {
+        e.preventDefault()
+        handleLoadSample()
+      }
+      if (e.key === 'Escape' && inputText) {
+        e.preventDefault()
+        handleClear()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // Re-run when inputText changes so Escape knows if there's content
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputText])
 
   // ── Actions ───────────────────────────────────────
 
@@ -258,6 +307,13 @@ export default function TextDelimiterTool() {
           <p className="mt-0.5 max-w-2xl text-[13px] text-ink-400">
             Join list items with custom delimiter, quotes, and wrapping. Perfect for SQL IN clauses, HTML lists, and array literals.
           </p>
+          <p className="mt-0.5 text-[11px] text-ink-500">
+            {/* Show keyboard shortcuts hint */}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono text-[10px]">⌘⇧C</kbd> copy ·{' '}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono text-[10px]">⌘S</kbd> download ·{' '}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono text-[10px]">⌘⇧L</kbd> sample ·{' '}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono text-[10px]">Esc</kbd> clear
+          </p>
         </div>
       </div>
 
@@ -276,7 +332,7 @@ export default function TextDelimiterTool() {
         >
           <textarea
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             placeholder="Paste items, one per line…"
             className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
             spellCheck={false}
@@ -301,13 +357,19 @@ export default function TextDelimiterTool() {
             ) : undefined
           }
         >
-          <textarea
-            value={output}
-            readOnly
-            className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
-            spellCheck={false}
-            placeholder="Delimited output will appear here…"
-          />
+          {status === 'error' ? (
+            <ErrorState message={errorMessage} />
+          ) : status === 'idle' && !output ? (
+            <EmptyState isFileInput={false} />
+          ) : (
+            <textarea
+              value={output}
+              readOnly
+              className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
+              spellCheck={false}
+              placeholder="Delimited output will appear here…"
+            />
+          )}
         </Pane>
       </div>
 
@@ -454,17 +516,13 @@ export default function TextDelimiterTool() {
       </div>
 
       {/* ── Status bar ── */}
-      <div className="mt-3 flex items-center justify-between border-t border-ink-800 pt-2 text-[11px] text-ink-400">
-        <div className="flex items-center gap-4">
-          <span>{inputText.split('\n').length} lines input</span>
-          <span>{output.length.toLocaleString()} chars output</span>
-          <span>{status === 'ok' && durationMs !== null ? `${durationMs.toFixed(0)}ms` : ''}</span>
-        </div>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/60" />
-          100% local
-        </span>
-      </div>
+      <StatusBar
+        inputChars={inputText.length}
+        outputChars={output.length}
+        status={status}
+        error={status === 'error' ? errorMessage : null}
+        durationMs={durationMs}
+      />
     </div>
     </>
   )

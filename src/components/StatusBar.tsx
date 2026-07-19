@@ -3,7 +3,7 @@ import { Cpu, Lock } from 'lucide-react'
 interface StatusBarProps {
   inputChars: number
   outputChars: number
-  status: 'idle' | 'ok' | 'error' | 'empty'
+  status: 'idle' | 'ok' | 'error' | 'empty' | 'processing'
   error: string | null
   durationMs: number | null
 }
@@ -19,6 +19,7 @@ export default function StatusBar({ inputChars, outputChars, status, error, dura
     empty: { label: 'Awaiting input', dot: 'bg-ink-600', text: 'text-ink-500' },
     ok: { label: 'Converted', dot: 'bg-emerald-500', text: 'text-emerald-400' },
     error: { label: 'Error', dot: 'bg-red-500', text: 'text-red-400' },
+    processing: { label: 'Processing…', dot: 'bg-honey-400', text: 'text-honey-300' },
   }[status] || { label: 'Ready', dot: 'bg-ink-500', text: 'text-ink-400' }
 
   return (
