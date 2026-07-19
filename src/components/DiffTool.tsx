@@ -25,7 +25,7 @@ import {
 import { EditorView, keymap, placeholder } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
-import { MergeView, getChunks } from '@codemirror/merge'
+import { MergeView } from '@codemirror/merge'
 
 import { createPatch } from '../engine/converters/diff-engine'
 import { readFileAsText } from '../lib/files'
@@ -110,7 +110,7 @@ export default function DiffTool() {
 
   // Refs for CodeMirror instance
   const containerRef = useRef<HTMLDivElement>(null)
-  const mergeViewRef = useRef<ReturnType<typeof MergeView> | null>(null)
+  const mergeViewRef = useRef<MergeView | null>(null)
 
   // Transient state
   const [stats, setStats] = useState({ additions: 0, deletions: 0, unchanged: 0 })
@@ -129,19 +129,14 @@ export default function DiffTool() {
     const mv = mergeViewRef.current
     if (!mv) return
     try {
-      const chunks = getChunks(mv)
+      const chunks = mv.chunks
       let additions = 0
       let deletions = 0
-      let unchanged = 0
       for (const c of chunks) {
-        if (c.type === 'equal') {
-          unchanged += c.toB - c.fromB
-        } else {
-          deletions += c.toA - c.fromA
-          additions += c.toB - c.fromB
-        }
+        deletions += c.toA - c.fromA
+        additions += c.toB - c.fromB
       }
-      setStats({ additions, deletions, unchanged })
+      setStats({ additions, deletions, unchanged: 0 })
       if (additions > 0 || deletions > 0) {
         setStatus('ok')
       } else {
