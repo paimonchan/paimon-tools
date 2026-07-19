@@ -125,7 +125,7 @@ export default function TextDelimiterTool() {
   const [customDelimiter, setCustomDelimiter] = usePersistentState('td-custom-delim', '')
 
   // UI state
-  const [controlsOpen, setControlsOpen] = useState(true)
+  const [controlsOpen, setControlsOpen] = useState(false)
 
   // Transient state
   const [output, setOutput] = useState(DEFAULT_OUTPUT)
@@ -293,19 +293,22 @@ export default function TextDelimiterTool() {
         {/* Toggle header */}
         <button
           onClick={() => setControlsOpen((o) => !o)}
-          className="flex w-full items-center gap-2 rounded-lg border border-ink-700/50 bg-ink-800/20 px-3 py-2 text-left text-[11px] text-ink-400 transition-colors hover:bg-ink-800/40 hover:text-ink-200"
+          className="group flex w-full items-center gap-2.5 rounded-lg border border-ink-700/60 bg-ink-800/30 px-3.5 py-2.5 text-left text-xs text-ink-300 transition-all hover:border-honey-500/30 hover:bg-ink-800/50 hover:text-ink-100"
         >
           {controlsOpen ? (
-            <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-ink-500 transition-colors group-hover:text-honey-400" />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-ink-500 transition-colors group-hover:text-honey-400" />
           )}
-          <span className="font-500 uppercase tracking-wider">Controls</span>
+          <span className="font-600 uppercase tracking-wider">Controls</span>
           {!controlsOpen && (
-            <span className="ml-1 truncate text-ink-500">
+            <span className="ml-0.5 truncate text-ink-500 group-hover:text-ink-400">
               — {summary}
             </span>
           )}
+          <span className="ml-auto shrink-0 rounded-md border border-ink-700/50 bg-ink-800/40 px-2 py-0.5 text-[10px] text-ink-500 transition-colors group-hover:border-honey-500/20 group-hover:text-honey-300">
+            {controlsOpen ? 'Collapse' : 'Configure'}
+          </span>
         </button>
 
         {/* Controls body */}
