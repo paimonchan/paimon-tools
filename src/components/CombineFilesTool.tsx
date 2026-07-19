@@ -9,27 +9,27 @@
  * - Output as .xlsx or .csv
  */
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
-import { Download, FileUp, Layers, Trash2, Check } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { Check, Download, FileUp, Trash2 } from 'lucide-react'
 
-import { appendFiles, type FileSource, type AppendResult } from '../engine/converters/excel-merge'
+import { appendFiles, type AppendResult, type FileSource } from '../engine/converters/excel-merge'
 import { usePersistentState } from '../hooks/usePersistentState'
-import { readFileAsArrayBuffer, readFileAsText, downloadArrayBuffer, downloadBlob } from '../lib/files'
+import { downloadArrayBuffer, downloadBlob, readFileAsArrayBuffer, readFileAsText } from '../lib/files'
 import { useToast } from '../stores/toast-store'
+import EmptyState from './EmptyState'
+import ErrorState from './ErrorState'
+import StatusBar from './StatusBar'
+import ToolHeader from './ToolHeader'
+import { TOOLS_BY_ID, type ConverterTool, type ToolDefinition } from '../engine/registry'
 
-// ── Types ─────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────
 
-interface LoadedFile {
-  name: string
-  size: number
-  format: string
-}
+const MAX_TOTAL_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+const ACCEPT = '.csv,.tsv,.xlsx,.xls'
 
-type Status = 'idle' | 'loading' | 'ok' | 'error'
+type Status = 'idle' | 'ok' | 'error' | 'processing'
 
 // ── Format helpers ────────────────────────────────────
-
-const ACCEPT = '.csv,.tsv,.xlsx,.xls'
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`
@@ -39,11 +39,23 @@ function formatSize(bytes: number): string {
 
 function extLabel(ext: string): string {
   switch (ext) {
-    case 'xlsx': return 'XLSX'
-    case 'xls': return 'XLS'
-    case 'tsv': return 'TSV'
-    default: return 'CSV'
+    case 'xlsx':
+      return 'XLSX'
+    case 'xls':
+      return 'XLS'
+    case 'tsv':
+      return 'TSV'
+    default:
+      return 'CSV'
   }
+}
+
+// ── Types ─────────────────────────────────────────────
+
+interface LoadedFile {
+  name: string
+  size: number
+  format: string
 }
 
 // ── Component ─────────────────────────────────────────
@@ -51,12 +63,13 @@ function extLabel(ext: string): string {
 export default function CombineFilesTool() {
   const toast = useToast()
   const inputRef = useRef<HTMLInputElement>(null)
+  const tool = TOOLS_BY_ID['combine-files'] as ToolDefinition
 
   // State
   const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([])
   const [rawFiles, setRawFiles] = useState<FileSource[]>([])
   const [result, setResult] = useState<AppendResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [dragging, setDragging] = useState(false)
   const [durationMs, setDurationMs] = useState<number | null>(null)
@@ -64,6 +77,13 @@ export default function CombineFilesTool() {
   // Persisted options
   const [unionColumns, setUnionColumns] = usePersistentState('combine-union', true)
   const [outputFormat, setOutputFormat] = usePersistentState<'xlsx' | 'csv'>('combine-format', 'xlsx')
+
+  // Debounced raw files for 200ms debounce on merge computation
+  const [debouncedRawFiles, setDebouncedRawFiles] = useState<FileSource[]>([])
+
+  // ── Derived ─────────────────────────────────────────
+
+  const totalFileSize = loadedFiles.reduce((sum, f) => sum + f.size, 0)
 
   // ── File loading ───────────────────────────────────
 
@@ -74,8 +94,21 @@ export default function CombineFilesTool() {
       return
     }
 
-    setStatus('loading')
-    setError(null)
+    // Size guard
+    let totalSize = 0
+    for (let i = 0; i < fileList.length; i++) {
+      totalSize += fileList[i]!.size
+    }
+    if (totalSize > MAX_TOTAL_FILE_SIZE) {
+      toast.push(
+        `Total file size exceeds 50MB limit (${formatSize(totalSize)}). Please reduce file sizes.`,
+        { variant: 'error' },
+      )
+      return
+    }
+
+    setStatus('processing')
+    setErrorMessage('')
     setResult(null)
 
     const loaded: LoadedFile[] = []
@@ -87,9 +120,10 @@ export default function CombineFilesTool() {
 
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
       try {
-        const data = ext === 'xlsx' || ext === 'xls'
-          ? await readFileAsArrayBuffer(file)
-          : await readFileAsText(file)
+        const data =
+          ext === 'xlsx' || ext === 'xls'
+            ? await readFileAsArrayBuffer(file)
+            : await readFileAsText(file)
 
         loaded.push({ name: file.name, size: file.size, format: ext })
         sources.push({ name: file.name, data })
@@ -109,50 +143,69 @@ export default function CombineFilesTool() {
     }
   }, [toast])
 
-  // ── Merge ──────────────────────────────────────────
+  // ── Debounce raw files (200ms) ─────────────────────
 
   useEffect(() => {
-    if (rawFiles.length < 2) return
+    const t = setTimeout(() => setDebouncedRawFiles(rawFiles), 200)
+    return () => clearTimeout(t)
+  }, [rawFiles])
 
-    setStatus('loading')
+  // ── Merge computation ────────────────────────────
+
+  useEffect(() => {
+    if (debouncedRawFiles.length < 2) return
+
+    setStatus('processing')
     let cancelled = false
+
     setTimeout(() => {
       if (cancelled) return
       const t0 = performance.now()
-      const res = appendFiles(rawFiles, { unionColumns, outputFormat })
+      const res = appendFiles(debouncedRawFiles, { unionColumns, outputFormat })
       if (cancelled) return
       setDurationMs(performance.now() - t0)
 
       if (res.ok) {
         setResult(res.value)
-        setError(null)
+        setErrorMessage('')
         setStatus('ok')
       } else {
         setResult(null)
-        setError(res.error)
+        setErrorMessage(res.error)
         setStatus('error')
       }
     }, 0)
-    return () => { cancelled = true }
-  }, [rawFiles, unionColumns, outputFormat])
+
+    return () => {
+      cancelled = true
+    }
+  }, [debouncedRawFiles, unionColumns, outputFormat])
 
   // ── Actions ────────────────────────────────────────
 
   function handleRemove(index: number) {
-    setLoadedFiles((prev) => prev.filter((_, i) => i !== index))
-    setRawFiles((prev) => prev.filter((_, i) => i !== index))
+    const nextLoaded = loadedFiles.filter((_, i) => i !== index)
+    const nextRaw = rawFiles.filter((_, i) => i !== index)
+    setLoadedFiles(nextLoaded)
+    setRawFiles(nextRaw)
+    if (nextLoaded.length === 0) {
+      setResult(null)
+      setErrorMessage('')
+      setStatus('idle')
+      setDurationMs(null)
+    }
   }
 
-  function handleClear() {
+  const handleClear = useCallback(() => {
     setLoadedFiles([])
     setRawFiles([])
     setResult(null)
-    setError(null)
+    setErrorMessage('')
     setStatus('idle')
     setDurationMs(null)
-  }
+  }, [])
 
-  function handleDownload() {
+  const handleDownload = useCallback(() => {
     if (!result) return
     const filename = `combined.${outputFormat}`
     if (outputFormat === 'csv') {
@@ -166,10 +219,37 @@ export default function CombineFilesTool() {
         toast.push('Unexpected data format for Excel download.', { variant: 'error' })
         return
       }
-      downloadArrayBuffer({ arraybuffer: result.data, filename, mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      downloadArrayBuffer({
+        arraybuffer: result.data,
+        filename,
+        mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
     }
     toast.push(`Downloaded ${filename}`, { variant: 'success' })
-  }
+  }, [result, outputFormat, toast])
+
+  // ── Keyboard shortcuts ──────────────────────────
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const isMeta = e.metaKey || e.ctrlKey
+      if (isMeta && e.shiftKey && e.key === 'c') {
+        e.preventDefault()
+        handleClear()
+      }
+      if (isMeta && e.key === 's') {
+        e.preventDefault()
+        handleDownload()
+      }
+      if (e.key === 'Escape' && loadedFiles.length > 0) {
+        e.preventDefault()
+        handleClear()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadedFiles, result])
 
   // ── Render helpers ─────────────────────────────────
 
@@ -184,7 +264,10 @@ export default function CombineFilesTool() {
         {/* Column badges */}
         <div className="flex flex-wrap gap-1.5">
           {columns.map((col) => (
-            <span key={col} className="rounded bg-ink-700 px-2 py-0.5 text-[11px] font-mono text-ink-200">
+            <span
+              key={col}
+              className="rounded bg-ink-700 px-2 py-0.5 text-[11px] font-mono text-ink-200"
+            >
               {col}
             </span>
           ))}
@@ -202,7 +285,10 @@ export default function CombineFilesTool() {
               <thead>
                 <tr className="border-b border-ink-700 bg-ink-800/50">
                   {columns.map((col) => (
-                    <th key={col} className="px-2 py-1 text-left text-ink-400 font-500 whitespace-nowrap">
+                    <th
+                      key={col}
+                      className="px-2 py-1 text-left text-ink-400 font-500 whitespace-nowrap"
+                    >
                       {col}
                     </th>
                   ))}
@@ -212,7 +298,11 @@ export default function CombineFilesTool() {
                 {result.sampleRows.map((row, i) => (
                   <tr key={i} className="border-b border-ink-800/50 last:border-0">
                     {columns.map((col) => (
-                      <td key={col} className="px-2 py-1 text-ink-200 truncate max-w-[200px]" title={String(row[col] ?? '')}>
+                      <td
+                        key={col}
+                        className="max-w-[200px] truncate px-2 py-1 text-ink-200"
+                        title={String(row[col] ?? '')}
+                      >
                         {String(row[col] ?? '')}
                       </td>
                     ))}
@@ -224,35 +314,58 @@ export default function CombineFilesTool() {
         )}
 
         <div className="text-[11px] text-ink-400">
-          {result.columns.length} column{result.columns.length !== 1 ? 's' : ''} · {result.rowCount.toLocaleString()} rows total
+          {result.columns.length} column{result.columns.length !== 1 ? 's' : ''} ·{' '}
+          {result.rowCount.toLocaleString()} rows total
           {result.rowCount > 5 && <span className="text-ink-500"> · showing first 5</span>}
         </div>
       </div>
     )
   }
 
-  const statusMeta = {
-    idle: { label: 'Drop 2+ files to start', dot: 'bg-ink-600', text: 'text-ink-500' },
-    loading: { label: 'Processing…', dot: 'bg-amber-500', text: 'text-amber-400' },
-    ok: { label: 'Ready to download', dot: 'bg-emerald-500', text: 'text-emerald-400' },
-    error: { label: 'Error', dot: 'bg-red-500', text: 'text-red-400' },
-  }[status]
+  // Compute output chars for status bar
+  const outputChars = result
+    ? typeof result.data === 'string'
+      ? result.data.length
+      : result.data instanceof ArrayBuffer
+        ? result.data.byteLength
+        : 0
+    : 0
+
+  // Determine StatusBar status
+  const barStatus = loadedFiles.length === 0 ? 'empty' : status === 'processing' ? 'processing' : status
 
   // ── Render ─────────────────────────────────────────
 
   return (
     <div className="flex h-full flex-col">
+      {/* Tool header */}
+      <div className="mx-3 mt-3">
+        <ToolHeader tool={tool as unknown as ConverterTool} onSwap={() => {}} />
+      </div>
+
       {/* Drop zone */}
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(true)
+        }}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); loadFiles(e.dataTransfer.files) }}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragging(false)
+          loadFiles(e.dataTransfer.files)
+        }}
         onClick={() => inputRef.current?.click()}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputRef.current?.click() } }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            inputRef.current?.click()
+          }
+        }}
         className={[
-          'm-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-center transition-all',
+          'mx-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-center transition-all',
           dragging
             ? 'border-honey-400 bg-honey-400/5 scale-[1.01]'
             : loadedFiles.length > 0
@@ -295,22 +408,31 @@ export default function CombineFilesTool() {
         <div className="mx-3 mb-3 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-500 text-ink-400">
-              {loadedFiles.length} file{loadedFiles.length !== 1 ? 's' : ''}
+              {loadedFiles.length} file{loadedFiles.length !== 1 ? 's' : ''} ({formatSize(totalFileSize)})
             </span>
-            <button onClick={handleClear} className="text-[11px] text-ink-500 hover:text-red-400 transition-colors">
+            <button
+              onClick={handleClear}
+              className="text-[11px] text-ink-500 transition-colors hover:text-red-400"
+            >
               Clear all
             </button>
           </div>
           {loadedFiles.map((f, i) => (
-            <div key={`${f.name}-${i}`} className="flex items-center justify-between rounded-md bg-ink-800/40 px-3 py-1.5 text-xs">
-              <div className="flex items-center gap-2 min-w-0">
+            <div
+              key={`${f.name}-${i}`}
+              className="flex items-center justify-between rounded-md bg-ink-800/40 px-3 py-1.5 text-xs"
+            >
+              <div className="flex min-w-0 items-center gap-2">
                 <span className="shrink-0 rounded bg-ink-700 px-1.5 py-0.5 font-mono text-[10px] text-ink-300">
                   {extLabel(f.format)}
                 </span>
                 <span className="truncate text-ink-200">{f.name}</span>
                 <span className="shrink-0 text-ink-500">({formatSize(f.size)})</span>
               </div>
-              <button onClick={() => handleRemove(i)} className="shrink-0 text-ink-500 hover:text-red-400 transition-colors ml-2">
+              <button
+                onClick={() => handleRemove(i)}
+                className="ml-2 shrink-0 text-ink-500 transition-colors hover:text-red-400"
+              >
                 <Trash2 className="h-3 w-3" />
               </button>
             </div>
@@ -321,7 +443,7 @@ export default function CombineFilesTool() {
       {/* Options */}
       {loadedFiles.length > 0 && (
         <div className="mx-3 mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
               checked={unionColumns}
@@ -333,7 +455,7 @@ export default function CombineFilesTool() {
 
           <div className="flex items-center gap-2">
             <span className="text-ink-400">Output:</span>
-            <div className="flex rounded-md border border-ink-700 overflow-hidden">
+            <div className="flex overflow-hidden rounded-md border border-ink-700">
               {(['xlsx', 'csv'] as const).map((fmt) => (
                 <button
                   key={fmt}
@@ -369,64 +491,21 @@ export default function CombineFilesTool() {
               </button>
             </div>
           </div>
-        ) : status === 'error' && error ? (
-          <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-red-900/50 bg-red-950/20 p-6">
-            <div className="text-sm font-500 text-red-400">Merge failed</div>
-            <div className="mt-2 text-xs text-red-300/80 text-center max-w-md whitespace-pre-wrap">{error}</div>
-          </div>
+        ) : status === 'error' && errorMessage ? (
+          <ErrorState message={errorMessage} />
         ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
-              <Layers className="mx-auto h-8 w-8 text-ink-600" />
-              <div className="mt-2 text-xs text-ink-500">
-                {loadedFiles.length === 0
-                  ? 'Drop files above to begin'
-                  : status === 'loading'
-                    ? 'Processing files…'
-                    : loadedFiles.length < 2
-                      ? 'Add at least 2 files'
-                      : 'Ready to merge'}
-              </div>
-            </div>
-          </div>
+          <EmptyState isFileInput={true} />
         )}
       </div>
 
       {/* Status bar */}
-      <footer className="flex items-center justify-between gap-4 border-t border-ink-800 bg-ink-900/60 px-4 py-1.5 text-[11px] text-ink-400">
-        <div className="flex items-center gap-3">
-          <span className={`flex items-center gap-1.5 ${statusMeta.text}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
-            {statusMeta.label}
-          </span>
-          {status === 'error' && error && (
-            <span className="hidden truncate text-red-400/80 sm:inline" title={error}>
-              {error}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3 font-mono">
-          {status === 'ok' && durationMs != null && (
-            <span className="hidden text-ink-500 sm:inline">{durationMs.toFixed(1)}ms</span>
-          )}
-          {result && (
-            <>
-              <span>
-                <span className="text-ink-200">{result.rowCount.toLocaleString()}</span>
-                <span className="text-ink-500"> rows</span>
-              </span>
-              <span className="text-ink-600">·</span>
-              <span>
-                <span className="text-ink-200">{result.sources.length}</span>
-                <span className="text-ink-500"> files</span>
-              </span>
-            </>
-          )}
-          <span className="hidden items-center gap-1 text-emerald-500/70 sm:flex">
-            on-device
-          </span>
-        </div>
-      </footer>
+      <StatusBar
+        inputChars={totalFileSize}
+        outputChars={outputChars}
+        status={barStatus as 'idle' | 'ok' | 'error' | 'empty' | 'processing'}
+        error={status === 'error' ? errorMessage : null}
+        durationMs={durationMs}
+      />
     </div>
   )
 }

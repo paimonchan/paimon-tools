@@ -7,10 +7,11 @@
  * - Side-by-side and unified diff views
  * - Word-level change detection
  * - Download .patch
+ * - Keyboard shortcuts, sample data, input size guards
  */
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
-import { Download, GitCompare, Copy } from 'lucide-react'
+import { Copy, Download, Eraser, GitCompare, Sparkles } from 'lucide-react'
 
 import {
   textDiff,
@@ -23,10 +24,33 @@ import {
 import { usePersistentState } from '../hooks/usePersistentState'
 import { readFileAsText } from '../lib/files'
 import { useToast } from '../stores/toast-store'
+import EmptyState from './EmptyState'
+import ErrorState from './ErrorState'
+import StatusBar from './StatusBar'
+import { useResizableSplit, Pane, PaneAction, ResizeHandle } from './Panes'
+
+// ── Constants ─────────────────────────────────────────
+
+const MAX_INPUT_CHARS = 200_000
+const INPUT_SIZE_WARN = 'Input truncated — max 200K characters allowed'
+
+const DEFAULT_OLD = `Hello World
+This is a test
+Line three
+Line four`
+
+const DEFAULT_NEW = `Hello World
+This is a modified test
+Line three
+Extra line
+Line five`
+
+const FILE_ACCEPT =
+  '.txt,.csv,.json,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.html,.css,.md,.xml,.log,.env,.ini,.cfg'
 
 // ── Types ─────────────────────────────────────────────
 
-type Status = 'idle' | 'ok' | 'error'
+type Status = 'idle' | 'ok' | 'error' | 'processing'
 
 // ── Color map ─────────────────────────────────────────
 
@@ -63,45 +87,81 @@ export default function DiffTool() {
   // Transient state
   const [result, setResult] = useState<DiffResult | null>(null)
   const [status, setStatus] = useState<Status>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
   const [durationMs, setDurationMs] = useState<number | null>(null)
   const [dragging, setDragging] = useState<'old' | 'new' | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingFileSide, setPendingFileSide] = useState<'old' | 'new' | null>(null)
   const patchUrlRef = useRef<string | null>(null)
 
+  const { ratio, setRatio, onDragStart, containerRef } = useResizableSplit(0.5)
+
+  // Debounced versions of inputs — diff only runs once they settle
+  const [debouncedOld, setDebouncedOld] = useState('')
+  const [debouncedNew, setDebouncedNew] = useState('')
+
+  // ── Input guard ─────────────────────────────────────
+
+  const handleOldChange = useCallback(
+    (value: string) => {
+      if (value.length > MAX_INPUT_CHARS) {
+        value = value.slice(0, MAX_INPUT_CHARS)
+        toast.push(INPUT_SIZE_WARN, { variant: 'info' })
+      }
+      setOldText(value)
+      setStatus('processing')
+    },
+    [setOldText, toast],
+  )
+
+  const handleNewChange = useCallback(
+    (value: string) => {
+      if (value.length > MAX_INPUT_CHARS) {
+        value = value.slice(0, MAX_INPUT_CHARS)
+        toast.push(INPUT_SIZE_WARN, { variant: 'info' })
+      }
+      setNewText(value)
+      setStatus('processing')
+    },
+    [setNewText, toast],
+  )
+
+  // ── Debounce ────────────────────────────────────────
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedOld(oldText)
+      setDebouncedNew(newText)
+    }, 200)
+    return () => clearTimeout(t)
+  }, [oldText, newText])
+
   // ── Diff computation ────────────────────────────────
 
   useEffect(() => {
-    if (!oldText.trim() && !newText.trim()) {
+    if (!debouncedOld.trim() && !debouncedNew.trim()) {
       setResult(null)
       setStatus('idle')
+      setErrorMessage('')
       setDurationMs(null)
-      return
-    }
-
-    // Guard against very large inputs that would freeze the UI
-    const totalChars = oldText.length + newText.length
-    if (totalChars > 200_000) {
-      setResult(null)
-      setStatus('error')
-      setDurationMs(null)
-      toast.push('Input too large — diff supports up to ~200K chars', { variant: 'error' })
       return
     }
 
     const t0 = performance.now()
-    const res = textDiff(oldText, newText)
+    const res = textDiff(debouncedOld, debouncedNew)
     setDurationMs(performance.now() - t0)
 
     if (res.ok) {
       const marked = markChangedPairs(res.value)
       setResult(marked)
       setStatus('ok')
+      setErrorMessage('')
     } else {
       setResult(null)
       setStatus('error')
+      setErrorMessage(res.error)
     }
-  }, [oldText, newText])
+  }, [debouncedOld, debouncedNew])
 
   // ── File handling ───────────────────────────────────
 
@@ -110,14 +170,50 @@ export default function DiffTool() {
       if (!file) return
       readFileAsText(file)
         .then((text) => {
-          if (side === 'old') setOldText(text)
-          else setNewText(text)
+          if (side === 'old') {
+            handleOldChange(text)
+          } else {
+            handleNewChange(text)
+          }
           toast.push(`Loaded ${file.name}`, { variant: 'success' })
         })
-        .catch((e) => toast.push(`Failed to read ${file.name}`, { variant: 'error' }))
+        .catch(() => toast.push(`Failed to read ${file.name}`, { variant: 'error' }))
     },
-    [setOldText, setNewText, toast],
+    [handleOldChange, handleNewChange, toast],
   )
+
+  // ── Keyboard shortcuts ──────────────────────────────
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const isMeta = e.metaKey || e.ctrlKey
+
+      if (isMeta && e.shiftKey && e.key === 'c') {
+        e.preventDefault()
+        handleCopyDiff()
+        return
+      }
+      if (isMeta && e.key === 's') {
+        e.preventDefault()
+        handleDownloadPatch()
+        return
+      }
+      if (isMeta && e.shiftKey && e.key === 'w') {
+        e.preventDefault()
+        handleSwap()
+        return
+      }
+      if (e.key === 'Escape' && (oldText || newText)) {
+        e.preventDefault()
+        handleClear()
+        return
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oldText, newText, result])
 
   // ── Actions ─────────────────────────────────────────
 
@@ -125,11 +221,27 @@ export default function DiffTool() {
     const temp = oldText
     setOldText(newText)
     setNewText(temp)
+    toast.push('Swapped inputs', { variant: 'info' })
   }
 
   function handleClear() {
     setOldText('')
     setNewText('')
+    setResult(null)
+    setStatus('idle')
+    setErrorMessage('')
+    setDurationMs(null)
+    if (patchUrlRef.current) {
+      URL.revokeObjectURL(patchUrlRef.current)
+      patchUrlRef.current = null
+    }
+    toast.push('Cleared', { variant: 'info' })
+  }
+
+  function handleLoadSample() {
+    setOldText(DEFAULT_OLD)
+    setNewText(DEFAULT_NEW)
+    toast.push('Loaded sample', { variant: 'success' })
   }
 
   async function handleCopyDiff() {
@@ -155,7 +267,6 @@ export default function DiffTool() {
       return
     }
     const blob = new Blob([res.value], { type: 'text/plain' })
-    // Revoke previous blob URL if any
     if (patchUrlRef.current) URL.revokeObjectURL(patchUrlRef.current)
     const url = URL.createObjectURL(blob)
     patchUrlRef.current = url
@@ -165,11 +276,24 @@ export default function DiffTool() {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    setTimeout(() => { URL.revokeObjectURL(url); patchUrlRef.current = null }, 0)
+    setTimeout(() => {
+      URL.revokeObjectURL(url)
+      if (patchUrlRef.current === url) patchUrlRef.current = null
+    }, 0)
     toast.push('Downloaded diff.patch', { variant: 'success' })
   }
 
   // ── Render helpers ──────────────────────────────────
+
+  function renderGutter(type: DiffLineType) {
+    const cls = LINE_GUTTER_COLORS[type]
+    const indicator = type === 'added' ? '+' : type === 'removed' ? '-' : ' '
+    return (
+      <span className={`w-[2ch] shrink-0 text-center text-[11px] font-mono leading-5 ${cls}`}>
+        {indicator}
+      </span>
+    )
+  }
 
   function renderLine(type: DiffLineType, text: string, showGutter = true, key?: number) {
     const bg = LINE_COLORS[type]
@@ -182,22 +306,11 @@ export default function DiffTool() {
     )
   }
 
-  function renderGutter(type: DiffLineType) {
-    const cls = LINE_GUTTER_COLORS[type]
-    const indicator = type === 'added' ? '+' : type === 'removed' ? '-' : ' '
-    return (
-      <span className={`w-[2ch] shrink-0 text-center text-[11px] font-mono leading-5 ${cls}`}>
-        {indicator}
-      </span>
-    )
-  }
-
   // ── Side-by-side render ─────────────────────────────
 
   function renderSideBySide() {
     if (!result) return null
 
-    // Split lines into old (unchanged+removed) and new (unchanged+added) sequences
     const oldLines: { type: DiffLineType; line: number | null; text: string }[] = []
     const newLines: { type: DiffLineType; line: number | null; text: string }[] = []
 
@@ -207,16 +320,15 @@ export default function DiffTool() {
         newLines.push({ type: 'unchanged', line: line.newLine, text: line.text })
       } else if (line.type === 'removed') {
         oldLines.push({ type: 'removed', line: line.oldLine, text: line.text })
-        newLines.push({ type: 'unchanged', line: null, text: '' }) // blank placeholder
+        newLines.push({ type: 'unchanged', line: null, text: '' })
       } else if (line.type === 'added') {
-        oldLines.push({ type: 'unchanged', line: null, text: '' }) // blank placeholder
+        oldLines.push({ type: 'unchanged', line: null, text: '' })
         newLines.push({ type: 'added', line: line.newLine, text: line.text })
       }
     }
 
     return (
       <div className="flex flex-1 overflow-hidden rounded-lg border border-ink-700">
-        {/* Left column — original */}
         <div className="flex-1 overflow-auto">
           <div className="sticky top-0 z-10 flex border-b border-ink-700 bg-ink-900 px-2 py-1 text-[11px] font-500 text-ink-400">
             <span className="w-[2ch]" />
@@ -228,10 +340,8 @@ export default function DiffTool() {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="w-px bg-ink-700" />
 
-        {/* Right column — changed */}
         <div className="flex-1 overflow-auto">
           <div className="sticky top-0 z-10 flex border-b border-ink-700 bg-ink-900 px-2 py-1 text-[11px] font-500 text-ink-400">
             <span className="w-[2ch]" />
@@ -266,72 +376,45 @@ export default function DiffTool() {
     )
   }
 
-  // ── Drop zone render ────────────────────────────────
+  // ── Drag-drop wrapper ───────────────────────────────
 
-  function renderDropZone(
-    side: 'old' | 'new',
-    value: string,
-    onChange: (v: string) => void,
-    placeholder: string,
-    label: string,
-  ) {
+  function renderDropContent(side: 'old' | 'new', value: string, onChange: (v: string) => void) {
     const isDragging = dragging === side
 
     return (
       <div
-        className={`relative flex flex-1 flex-col rounded-lg border transition-all ${
-          isDragging
-            ? 'border-honey-400 bg-honey-400/5'
-            : value
-              ? 'border-ink-700'
-              : 'border-dashed border-ink-700 hover:border-honey-500/50'
+        className={`flex h-full flex-col transition-all ${
+          isDragging ? 'bg-honey-400/5' : ''
         }`}
-        onDragOver={(e) => { e.preventDefault(); setDragging(side) }}
-        onDragLeave={(e) => { e.preventDefault(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null) }}
-        onDrop={(e) => { e.preventDefault(); setDragging(null); handleFileDrop(side, e.dataTransfer.files?.[0]) }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(side)
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault()
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(null)
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragging(null)
+          handleFileDrop(side, e.dataTransfer.files?.[0])
+        }}
       >
-        {/* Label */}
-        <div className="flex items-center justify-between border-b border-ink-800 px-3 py-1.5">
-          <span className="text-[11px] font-500 text-ink-400">{label}</span>
-          {!value && (
-            <button
-              onClick={() => { setPendingFileSide(side); fileInputRef.current?.click() }}
-              className="text-[10px] text-ink-500 hover:text-honey-300 transition-colors"
-            >
-              Drop file or browse
-            </button>
-          )}
-        </div>
-
-        {/* Textarea */}
         <textarea
           value={value}
           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={side === 'old' ? 'Paste original text or drop a file' : 'Paste changed text or drop a file'}
           spellCheck={false}
           className="min-h-[150px] flex-1 resize-none bg-transparent px-3 py-2 font-mono text-[13px] leading-5 text-ink-100 outline-none placeholder:text-ink-600"
         />
-
-        {/* Clear button */}
-        {value && (
-          <button
-            onClick={() => onChange('')}
-            className="absolute right-2 top-8 rounded px-1.5 py-0.5 text-[10px] text-ink-500 hover:text-red-400 transition-colors"
-          >
-            Clear
-          </button>
-        )}
       </div>
     )
   }
 
-  // ── Status bar ──────────────────────────────────────
+  // ── Status bar mapping ──────────────────────────────
 
-  const statusMeta = {
-    idle: { label: 'Enter text in both panes', dot: 'bg-ink-600', text: 'text-ink-500' },
-    ok: { label: 'Diff ready', dot: 'bg-emerald-500', text: 'text-emerald-400' },
-    error: { label: 'Error', dot: 'bg-red-500', text: 'text-red-400' },
-  }[status]
+  const statusBarStatus: 'idle' | 'ok' | 'error' | 'empty' | 'processing' =
+    status === 'idle' && !oldText && !newText ? 'empty' : status
 
   // ── Render ──────────────────────────────────────────
 
@@ -341,7 +424,7 @@ export default function DiffTool() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".txt,.csv,.json,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.html,.css,.md,.xml,.log,.env,.ini,.cfg"
+        accept={FILE_ACCEPT}
         className="hidden"
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
           if (pendingFileSide) handleFileDrop(pendingFileSide, e.target.files?.[0])
@@ -356,6 +439,14 @@ export default function DiffTool() {
           <span className="text-xs font-500 text-ink-300">Diff Tool</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Keyboard shortcuts hint */}
+          <span className="hidden text-[10px] text-ink-500 xl:inline">
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono">⌘⇧C</kbd> copy{' '}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono">⌘S</kbd> dl{' '}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono">⌘⇧W</kbd> swap{' '}
+            <kbd className="rounded border border-ink-700 bg-ink-800/60 px-1 py-0.5 font-mono">Esc</kbd> clear
+          </span>
+
           {/* View toggle */}
           <div className="flex rounded-md border border-ink-700 overflow-hidden">
             {(['side-by-side', 'unified'] as const).map((v) => (
@@ -374,18 +465,30 @@ export default function DiffTool() {
           </div>
 
           {/* Actions */}
+          <button
+            onClick={handleSwap}
+            className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+          >
+            ⇄ Swap
+          </button>
           {result && (
             <>
-              <button onClick={handleSwap} className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors">
-                ⇄ Swap
-              </button>
-              <button onClick={handleCopyDiff} className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors">
+              <button
+                onClick={handleCopyDiff}
+                className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+              >
                 <Copy className="h-3 w-3" /> Copy diff
               </button>
-              <button onClick={handleDownloadPatch} className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors">
+              <button
+                onClick={handleDownloadPatch}
+                className="flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-honey-300 transition-colors"
+              >
                 <Download className="h-3 w-3" /> .patch
               </button>
-              <button onClick={handleClear} className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-red-400 transition-colors">
+              <button
+                onClick={handleClear}
+                className="rounded-md border border-ink-700 px-2 py-1 text-[11px] text-ink-400 hover:text-red-400 transition-colors"
+              >
                 Clear
               </button>
             </>
@@ -393,61 +496,91 @@ export default function DiffTool() {
         </div>
       </div>
 
-      {/* Input panes */}
-      <div className="flex flex-1 gap-3 px-3 pt-3 min-h-0">
-        {renderDropZone('old', oldText, setOldText, 'Paste original text or drop a file', 'Original')}
-        {renderDropZone('new', newText, setNewText, 'Paste changed text or drop a file', 'Changed')}
+      {/* Input panes — resizable split */}
+      <div
+        ref={containerRef}
+        className="flex min-h-0 flex-1 flex-col gap-0 px-3 pt-3 md:flex-row md:gap-0"
+      >
+        <Pane
+          ratio={ratio}
+          label="Original"
+          actions={
+            <>
+              <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />
+              {oldText && (
+                <PaneAction onClick={() => setOldText('')} icon={Eraser} label="Clear" />
+              )}
+              {!oldText && (
+                <button
+                  onClick={() => {
+                    setPendingFileSide('old')
+                    fileInputRef.current?.click()
+                  }}
+                  className="rounded-md px-2 py-1 text-[10px] text-ink-500 hover:text-honey-300 transition-colors"
+                >
+                  Browse
+                </button>
+              )}
+            </>
+          }
+        >
+          {renderDropContent('old', oldText, handleOldChange)}
+        </Pane>
+
+        <div className="hidden md:flex">
+          <ResizeHandle onDragStart={onDragStart} onDoubleClick={() => setRatio(0.5)} />
+        </div>
+
+        <Pane
+          ratio={ratio}
+          label="Changed"
+          actions={
+            <>
+              <PaneAction onClick={handleLoadSample} icon={Sparkles} label="Sample" />
+              {newText && (
+                <PaneAction onClick={() => setNewText('')} icon={Eraser} label="Clear" />
+              )}
+              {!newText && (
+                <button
+                  onClick={() => {
+                    setPendingFileSide('new')
+                    fileInputRef.current?.click()
+                  }}
+                  className="rounded-md px-2 py-1 text-[10px] text-ink-500 hover:text-honey-300 transition-colors"
+                >
+                  Browse
+                </button>
+              )}
+            </>
+          }
+        >
+          {renderDropContent('new', newText, handleNewChange)}
+        </Pane>
       </div>
 
-      {/* Diff result */}
-      {(oldText || newText) && (
-        <div className="flex flex-[2] flex-col gap-2 px-3 pt-3 pb-3 min-h-0">
-          {status === 'ok' && result && (
-            <>
-              {/* Column headers for side-by-side */}
-              {diffView === 'side-by-side' ? renderSideBySide() : renderUnified()}
-            </>
-          )}
-          {status === 'error' && (
-            <div className="flex flex-1 items-center justify-center rounded-lg border border-red-900/50 bg-red-950/20">
-              <span className="text-sm text-red-400">Diff failed — check your input</span>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Diff output area */}
+      <div className="flex flex-[2] flex-col px-3 pt-3 pb-3 min-h-[200px]">
+        {status === 'error' ? (
+          <ErrorState message={errorMessage} />
+        ) : status === 'idle' && !result ? (
+          <EmptyState isFileInput={false} />
+        ) : result ? (
+          diffView === 'side-by-side' ? (
+            renderSideBySide()
+          ) : (
+            renderUnified()
+          )
+        ) : null}
+      </div>
 
       {/* Status bar */}
-      <footer className="flex items-center justify-between gap-4 border-t border-ink-800 bg-ink-900/60 px-4 py-1.5 text-[11px] text-ink-400">
-        <div className="flex items-center gap-3">
-          <span className={`flex items-center gap-1.5 ${statusMeta.text}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
-            {statusMeta.label}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 font-mono">
-          {status === 'ok' && durationMs != null && (
-            <span className="hidden text-ink-500 sm:inline">{durationMs.toFixed(1)}ms</span>
-          )}
-          {result && (
-            <>
-              <span className="text-ink-500">
-                <span className="text-emerald-400">+{result.stats.additions}</span>
-                {' '}
-                <span className="text-red-400">-{result.stats.deletions}</span>
-                {' · '}
-                <span className="text-ink-200">{result.stats.unchanged}</span> unchanged
-              </span>
-              <span className="text-ink-600">·</span>
-              <span className="text-ink-500">
-                {result.oldLineCount} → {result.newLineCount} lines
-              </span>
-            </>
-          )}
-          <span className="hidden items-center gap-1 text-emerald-500/70 sm:flex">
-            on-device
-          </span>
-        </div>
-      </footer>
+      <StatusBar
+        inputChars={oldText.length + newText.length}
+        outputChars={result ? result.lines.length : 0}
+        status={statusBarStatus}
+        error={status === 'error' ? errorMessage : null}
+        durationMs={durationMs}
+      />
     </div>
   )
 }
