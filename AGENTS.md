@@ -57,6 +57,34 @@ These are strict — don't import across layers.
 2. Create lazy-loaded component with `React.lazy()`
 3. Route it in `App.tsx` — switch on `tool.type === 'ref'`
 
+### ⚠️ Prerequisite: Scan existing patterns BEFORE coding
+**Do NOT start coding a new tool until you've audited what already exists.** The TextDelimiterTool was built from scratch despite shared components being available — don't repeat this mistake.
+
+**Step 1 — Check shared components** in `src/components/` before building custom UI:
+| Component | What it does | Use for |
+|-----------|-------------|---------|
+| `Pane` + `PaneAction` | Titled container with toolbar | Input/output panels |
+| `useResizableSplit` + `ResizeHandle` | Draggable split between panes | Any split-pane layout |
+| `StatusBar` | Footer with status, stats, privacy indicator | Every tool |
+| `EmptyState` | "Paste or type to begin" placeholder | Output pane when idle |
+| `ErrorState` | Red error box with icon + message | Output pane on errors |
+| `ToolHeader` | Icon + name + description + optional swap | Tool heading |
+
+**Step 2 — Study a reference tool** before writing code:
+- `ConversionTool.tsx` — best reference: uses ALL shared components, has keyboard shortcuts, input guards, proper error/empty/status handling
+- `DiffTool.tsx` — simpler non-converter ref tool
+
+**Step 3 — Mandatory checklist** for every new tool (tick all before PR):
+- [ ] Uses shared `<StatusBar>` (not hand-rolled)
+- [ ] Uses `<EmptyState>` when output area has no content
+- [ ] Uses `<ErrorState>` or inline error display when processing fails
+- [ ] Uses `useResizableSplit` + `<ResizeHandle>` for split-pane layout (if input+output panes)
+- [ ] Has keyboard shortcuts (`⌘⇧C` copy, `⌘S` download, `Esc` clear, etc.)
+- [ ] Has input size guard (200K char limit with toast)
+- [ ] Handles `'processing'` status during debounce/async work
+- [ ] Uses `usePersistentState` for per-tool settings (not raw `useState`)
+- [ ] Follows ConversionTool's pattern for state/effect/action structure
+
 ## State Management
 - **Global state** → Zustand stores in `stores/` (theme, toast).
 - **Per-tool state** → `usePersistentState` hook (localStorage, survives reload).
