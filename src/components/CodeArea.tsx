@@ -18,7 +18,7 @@ export default function CodeArea({ value, onChange, placeholder, readOnly }: Cod
       placeholder={placeholder}
       readOnly={readOnly}
       spellCheck={false}
-      className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
+      className="min-h-0 flex-1 w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
     />
   )
 }

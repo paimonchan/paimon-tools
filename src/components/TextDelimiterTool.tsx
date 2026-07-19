@@ -334,7 +334,7 @@ export default function TextDelimiterTool() {
             value={inputText}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder="Paste items, one per line…"
-            className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
+            className="min-h-0 flex-1 w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
             spellCheck={false}
           />
         </Pane>
@@ -365,7 +365,7 @@ export default function TextDelimiterTool() {
             <textarea
               value={output}
               readOnly
-              className="h-full min-h-[20rem] w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
+              className="min-h-0 flex-1 w-full resize-none bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed text-ink-100 outline-none placeholder:text-ink-600"
               spellCheck={false}
               placeholder="Delimited output will appear here…"
             />
