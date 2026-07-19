@@ -319,7 +319,7 @@ export default function TextDelimiterTool() {
           )}
           <span className="font-600 uppercase tracking-wider">Controls</span>
           {!controlsOpen && (
-            <span className="ml-0.5 truncate text-ink-500 group-hover:text-ink-400">
+            <span className="ml-0.5 truncate text-ink-400 group-hover:text-ink-300">
               — {summary}
             </span>
           )}
@@ -332,7 +332,7 @@ export default function TextDelimiterTool() {
                 {activeCount} active
               </span>
             )}
-            <span className="rounded-md border border-ink-700/50 bg-ink-800/40 px-2 py-0.5 text-[10px] text-ink-500 transition-colors group-hover:border-honey-500/20 group-hover:text-honey-300">
+            <span className="rounded-md border border-ink-700/50 bg-ink-800/40 px-2 py-0.5 text-[10px] text-ink-300 transition-colors group-hover:border-honey-500/20 group-hover:text-honey-300">
               {controlsOpen ? 'Collapse' : 'Configure'}
             </span>
           </span>
@@ -360,7 +360,7 @@ export default function TextDelimiterTool() {
                 </div>
                 {delimiter === ',' && (
                   <div className="mt-2 flex flex-wrap items-center gap-2 pt-2 border-t border-ink-700/30">
-                    <span className="text-[11px] text-ink-500">Style:</span>
+                    <span className="text-[11px] text-ink-400">Style:</span>
                     {COMMA_STYLES.map((s) => (
                       <Chip key={s.value} active={commaStyle === s.value} onClick={() => setCommaStyle(s.value)}>
                         {s.label}
@@ -370,7 +370,7 @@ export default function TextDelimiterTool() {
                 )}
                 {delimiter === 'custom' && (
                   <div className="mt-2 flex items-center gap-2 pt-2 border-t border-ink-700/30">
-                    <span className="text-[11px] text-ink-500 shrink-0">Custom:</span>
+                    <span className="text-[11px] text-ink-400 shrink-0">Custom:</span>
                     <input
                       value={customDelimiter}
                       onChange={(e) => setCustomDelimiter(e.target.value)}
@@ -393,20 +393,20 @@ export default function TextDelimiterTool() {
                   ))}
                 </div>
                 <div className="mb-2">
-                  <span className="text-[11px] text-ink-500 mb-1 block">Wrap each item</span>
+                  <span className="text-[11px] text-ink-400 mb-1 block">Wrap each item</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-ink-500">Open</span>
+                    <span className="text-[11px] text-ink-400">Open</span>
                     <ShortInput value={wrapOpen} onChange={setWrapOpen} placeholder="<li>" />
-                    <span className="text-[11px] text-ink-500">Close</span>
+                    <span className="text-[11px] text-ink-400">Close</span>
                     <ShortInput value={wrapClose} onChange={setWrapClose} placeholder="</li>" />
                   </div>
                 </div>
                 <div>
-                  <span className="text-[11px] text-ink-500 mb-1 block">Global wrapper</span>
+                  <span className="text-[11px] text-ink-400 mb-1 block">Global wrapper</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-ink-500">Open</span>
+                    <span className="text-[11px] text-ink-400">Open</span>
                     <ShortInput value={wrapperOpen} onChange={setWrapperOpen} placeholder="<ul>" />
-                    <span className="text-[11px] text-ink-500">Close</span>
+                    <span className="text-[11px] text-ink-400">Close</span>
                     <ShortInput value={wrapperClose} onChange={setWrapperClose} placeholder="</ul>" />
                   </div>
                 </div>
@@ -438,7 +438,7 @@ export default function TextDelimiterTool() {
                     <span>lines (header)</span>
                   </label>
                 </div>
-                <p className="mt-3 pt-3 border-t border-ink-700/30 text-[10px] text-ink-500 italic">
+                <p className="mt-3 pt-3 border-t border-ink-700/30 text-[10px] text-ink-400 italic">
                   Note: values containing the delimiter character are not escaped — same behavior as delim.co.
                 </p>
               </Card>
@@ -448,7 +448,7 @@ export default function TextDelimiterTool() {
       </div>
 
       {/* ── Status bar ── */}
-      <div className="mt-3 flex items-center justify-between border-t border-ink-800 pt-2 text-[11px] text-ink-500">
+      <div className="mt-3 flex items-center justify-between border-t border-ink-800 pt-2 text-[11px] text-ink-400">
         <div className="flex items-center gap-4">
           <span>{inputText.split('\n').length} lines input</span>
           <span>{output.length.toLocaleString()} chars output</span>
