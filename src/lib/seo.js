@@ -10,7 +10,7 @@
     10|/** Base site URL — used for canonical URLs, OG, sitemap. */
     11|export const SITE_URL = 'https://paimonchan.github.io/paimon-tools'
     12|
-    13|const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+    13|const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`
     14|const DEFAULT_OG_ALT = 'Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser'
     15|
     16|export const HOME_SEO = {
