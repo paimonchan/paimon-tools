@@ -131,6 +131,20 @@
     91|    preloads: ['converter'],
     92|    bodyHtml: `<h2>JSON to Excel (.xlsx) Converter</h2>
     93|<p>Export a JSON array as a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally — no uploads, no sign-up, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Convert API JSON responses into formatted Excel reports for stakeholders</li>
+  <li>Create shareable .xlsx files from JSON datasets for non-technical teams</li>
+  <li>Generate Excel-compatible reports from database export JSON</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste a JSON array of objects. SheetJS creates a .xlsx workbook in your browser with data in a sheet named "Data". Click download — all processing is local.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../excel-to-json/">Excel to JSON Converter</a> — reverse: extract JSON from .xlsx</li>
+  <li><a href="../json-to-csv/">JSON to CSV Converter</a> — export as CSV instead</li>
+  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — convert CSV to .xlsx</li>
+</ul>
     94|<p><a href="../">← Back to all Paimon Tools</a></p>`,
     95|  },
     96|  'excel-to-json': {
@@ -145,6 +159,20 @@
    105|    preloads: ['converter'],
    106|    bodyHtml: `<h2>Excel to JSON Converter</h2>
    107|<p>Extract JSON data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get a JSON array from the first sheet — no uploads, no sign-up, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Extract spreadsheet data from clients for use in web applications</li>
+  <li>Convert .xlsx reports into JSON for data processing pipelines</li>
+  <li>Parse Excel exports into structured JSON without any server upload</li>
+</ul>
+<h3>How It Works</h3>
+<p>Drop or select an .xlsx file. SheetJS reads the first sheet in your browser and converts each row to a JSON object. Header row defines the keys. All processing is local.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../json-to-excel/">JSON to Excel Converter</a> — reverse: convert JSON to .xlsx</li>
+  <li><a href="../excel-to-csv/">Excel to CSV Converter</a> — extract CSV instead</li>
+  <li><a href="../combine-files/">Combine Files</a> — merge multiple Excel files</li>
+</ul>
    108|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    109|  },
    110|  'csv-to-excel': {
@@ -159,6 +187,20 @@
    119|    preloads: ['converter'],
    120|    bodyHtml: `<h2>CSV to Excel (.xlsx) Converter</h2>
    121|<p>Turn a CSV table into a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally — no uploads, no sign-up, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Convert CSV reports from analytics into professional .xlsx spreadsheets</li>
+  <li>Create formatted Excel files from plain CSV data for presentations</li>
+  <li>Transform database CSV exports into Excel for client delivery</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste CSV data with headers. SheetJS creates a .xlsx file preserving your data structure. Click download — all processing is local with no uploads.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../excel-to-csv/">Excel to CSV Converter</a> — reverse: extract CSV from .xlsx</li>
+  <li><a href="../csv-to-json/">CSV to JSON Converter</a> — convert CSV to JSON instead</li>
+  <li><a href="../json-to-excel/">JSON to Excel Converter</a> — convert JSON to .xlsx</li>
+</ul>
    122|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    123|  },
    124|  'excel-to-csv': {
@@ -173,6 +215,20 @@
    133|    preloads: ['converter'],
    134|    bodyHtml: `<h2>Excel to CSV Converter</h2>
    135|<p>Extract CSV data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get CSV from the first sheet — no uploads, no sign-up, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Convert Excel spreadsheets to CSV for database import pipelines</li>
+  <li>Extract raw tabular data from .xlsx files for legacy systems</li>
+  <li>Prepare Excel data for ETL processes that only accept CSV input</li>
+</ul>
+<h3>How It Works</h3>
+<p>Drop or select an .xlsx file. SheetJS reads the first sheet and converts rows to CSV format preserving headers. All processing happens locally.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — reverse: convert CSV to .xlsx</li>
+  <li><a href="../excel-to-json/">Excel to JSON Converter</a> — extract JSON instead</li>
+  <li><a href="../combine-files/">Combine Files</a> — merge multiple Excel files</li>
+</ul>
    136|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    137|  },
    138|  'json-formatter': {
@@ -186,11 +242,23 @@
    146|    ogImageAlt: DEFAULT_OG_ALT,
    147|    h1: 'JSON Formatter & Beautifier',
    148|    breadcrumb: 'Format / JSON Formatter',
-    bodyHtml: `<h2>JSON Formatter &amp; Beautifier</h2>
-    <p>Format, beautify, and validate JSON entirely in your browser. Pretty-print with 2 spaces, 4 spaces, or tabs — your data never leaves your device.</p>
-    <p>Validates JSON syntax on the fly, highlighting errors as you type.</p>
-    <p><a href="../">← Back to all Paimon Tools</a></p>`,
-    faq: [
+    189|    bodyHtml: `<h2>JSON Formatter &amp; Beautifier</h2>
+     <p>Format, beautify, and validate JSON entirely in your browser. Pretty-print with 2 spaces, 4 spaces, or tabs — your data never leaves your device.</p>
+     <p>Validates JSON syntax on the fly, highlighting errors as you type.</p>
+    <h3>Common Use Cases</h3>
+    <ul>
+    <li>Clean up minified JSON from API responses for debugging</li>
+    <li>Validate JSON syntax before deploying configuration files</li>
+    <li>Apply consistent indentation to JSON for code review</li>
+    </ul>
+    <h3>Related Tools</h3>
+    <ul>
+    <li><a href="../json-minifier/">JSON Minifier</a> — compress JSON by stripping whitespace</li>
+    <li><a href="../json-to-yaml/">JSON to YAML Converter</a> — convert JSON to YAML</li>
+    <li><a href="../json-to-csv/">JSON to CSV Converter</a> — convert JSON data to tabular format</li>
+    </ul>
+     <p><a href="../">← Back to all Paimon Tools</a></p>`,
+     faq: [
       { q: 'Does it validate as I type?',
         a: 'Yes. JSON is auto-validated on every keystroke with inline error messages showing exactly where the error is.' },
       { q: 'What indentation options are available?',
@@ -208,6 +276,19 @@
    162|    breadcrumb: 'Format / JSON Minifier',
    163|    bodyHtml: `<h2>JSON Minifier</h2>
    164|<p>Minify and compress JSON entirely in your browser. Strips all unnecessary whitespace to reduce file size — validates syntax as it goes. No uploads, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Reduce JSON payload size for API requests and storage</li>
+  <li>Compact configuration files for production deployment</li>
+  <li>Prepare JSON for bandwidth-constrained environments</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste your JSON and get an instantly minified version with all whitespace removed. Syntax is validated during compression. All processing is local.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../json-formatter/">JSON Formatter</a> — reverse: pretty-print minified JSON</li>
+  <li><a href="../json-to-csv/">JSON to CSV Converter</a> — convert JSON to tabular format</li>
+</ul>
    165|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    166|  },
    167|  'base64-encode': {
@@ -222,6 +303,19 @@
    176|    bodyHtml: `<h2>Base64 Encode</h2>
    177|<p>Encode any text to Base64 entirely in your browser. UTF-8 safe — handles Unicode, emoji, and special characters. No uploads, no sign-up, fully private.</p>
    178|<p>Example input: <code>Hello, World!</code> → <code>SGVsbG8sIFdvcmxkIQ==</code></p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Encode binary data for embedding in JSON or HTML documents</li>
+  <li>Prepare data for HTTP headers that require Base64 encoding</li>
+  <li>Convert credentials or tokens for basic auth headers</li>
+</ul>
+<h3>How It Works</h3>
+<p>Type or paste text in the input pane. The browser's built-in btoa() function with UTF-8 encoding converts it to Base64 instantly. All processing is local.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../base64-decode/">Base64 Decode</a> — reverse: decode Base64 back to text</li>
+  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> — generate secure hashes</li>
+</ul>
    179|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    180|  },
    181|  'base64-decode': {
@@ -236,6 +330,19 @@
    190|    bodyHtml: `<h2>Base64 Decode</h2>
    191|<p>Decode Base64 strings back to readable text entirely in your browser. Supports standard Base64 encoded strings. No uploads, no sign-up, fully private.</p>
    192|<p>Example input: <code>SGVsbG8sIFdvcmxkIQ==</code> → <code>Hello, World!</code></p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Decode Base64 data from API responses and JWT token payloads</li>
+  <li>Read Base64-encoded environment variables and config values</li>
+  <li>Convert inline image data URLs back to readable text</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste a Base64 string in the input pane. The browser's built-in atob() function decodes it back to readable text with full UTF-8 support. Results update instantly.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../base64-encode/">Base64 Encode</a> — reverse: encode text to Base64</li>
+  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> — generate secure hashes</li>
+</ul>
    193|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    194|  },
    195|  'uuid-generator': {
@@ -249,6 +356,19 @@
    203|    breadcrumb: 'Tools / UUID Generator',
    204|    bodyHtml: `<h2>UUID Generator</h2>
    205|<p>Generate random UUID v4 identifiers entirely in your browser. Click to generate — no uploads, no sign-up, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Generate unique primary keys for database records and APIs</li>
+  <li>Create session tokens, request IDs, and correlation IDs</li>
+  <li>Generate identifiers for distributed system entities</li>
+</ul>
+<h3>How It Works</h3>
+<p>Uses the Web Crypto API's crypto.randomUUID() for cryptographically secure UUID v4 generation. Generate individually or in batch mode. All processing is local.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> — generate secure hashes</li>
+  <li><a href="../base64-encode/">Base64 Encode</a> — encode UUIDs to Base64</li>
+</ul>
    206|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    207|  },
    208|  'yaml-to-json': {
@@ -262,6 +382,17 @@
    216|    breadcrumb: 'Convert / YAML to JSON',
     bodyHtml: `<h2>YAML to JSON Converter</h2>
     <p>Convert YAML to JSON entirely in your browser. Paste YAML and get clean, formatted JSON — no uploads, no sign-up, fully private.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Convert Docker Compose and Kubernetes YAML to JSON for scripting</li>
+  <li>Transform CI/CD pipeline configurations between formats</li>
+  <li>Parse YAML config files for use in JavaScript applications</li>
+</ul>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../json-to-yaml/">JSON to YAML Converter</a> — reverse: convert JSON to YAML</li>
+  <li><a href="../json-formatter/">JSON Formatter</a> — pretty-print the resulting JSON</li>
+</ul>
     <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
       { q: 'What YAML features are supported?',
@@ -277,11 +408,24 @@
    227|    ogImageAlt: DEFAULT_OG_ALT,
    228|    h1: 'JSON to YAML Converter',
    229|    breadcrumb: 'Convert / JSON to YAML',
-   230|    bodyHtml: `<h2>JSON to YAML Converter</h2>
-   231|<p>Convert JSON to YAML entirely in your browser. Paste JSON and get clean, readable YAML output — no uploads, no sign-up, fully private.</p>
-   232|<p><a href="../">← Back to all Paimon Tools</a></p>`,
-   233|  },
-   234|  'hash-generator': {
+   bodyHtml: `<h2>JSON to YAML Converter</h2>
+   <p>Convert JSON to YAML entirely in your browser. Paste JSON and get clean, readable YAML output — no uploads, no sign-up, fully private.</p>
+   <h3>Common Use Cases</h3>
+   <ul>
+   <li>Convert JSON API documentation examples to YAML format</li>
+   <li>Transform app config files from JSON to YAML for Ansible, Docker</li>
+   <li>Prepare JSON data for platforms that prefer YAML format</li>
+   </ul>
+   <h3>How It Works</h3>
+   <p>Paste valid JSON in the input pane. The js-yaml library converts it to clean YAML output preserving your data structure. All processing is local.</p>
+   <h3>Related Tools</h3>
+   <ul>
+   <li><a href="../yaml-to-json/">YAML to JSON Converter</a> — reverse: convert YAML to JSON</li>
+   <li><a href="../json-formatter/">JSON Formatter</a> — pretty-print JSON before conversion</li>
+   </ul>
+   <p><a href="../">← Back to all Paimon Tools</a></p>`,
+   },
+   'hash-generator': {
    235|    title: 'SHA-256 Hash Generator — Free Online | Paimon Tools',
    236|    description:
    237|      'Generate SHA-256 hash of any text online, free. Pure JS implementation — 100% in-browser, no uploads, no sign-up, fully private.',
@@ -290,11 +434,24 @@
    240|    ogImageAlt: DEFAULT_OG_ALT,
    241|    h1: 'SHA-256 Hash Generator',
    242|    breadcrumb: 'Tools / Hash Generator',
-   243|    bodyHtml: `<h2>SHA-256 Hash Generator</h2>
-   244|<p>Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation — your data never leaves your device. No uploads, no sign-up, fully private.</p>
-   245|<p><a href="../">← Back to all Paimon Tools</a></p>`,
-   246|  },
-   247|  'combine-files': {
+   bodyHtml: `<h2>SHA-256 Hash Generator</h2>
+   <p>Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation using the Web Crypto API — your data never leaves your device. No uploads, no sign-up, fully private.</p>
+   <h3>Common Use Cases</h3>
+   <ul>
+   <li>Verify file integrity by comparing SHA-256 checksums</li>
+   <li>Generate password hashes for secure storage and testing</li>
+   <li>Create content-addressed identifiers for deduplication</li>
+   </ul>
+   <h3>How It Works</h3>
+   <p>Type or paste text (or drop a file) and the Web Crypto API computes its SHA-256 hash instantly. The same algorithm used in HTTPS and Git. All processing is local.</p>
+   <h3>Related Tools</h3>
+   <ul>
+   <li><a href="../uuid-generator/">UUID Generator</a> — generate random identifiers</li>
+   <li><a href="../base64-encode/">Base64 Encode</a> — encode hash output to Base64</li>
+   </ul>
+   <p><a href="../">← Back to all Paimon Tools</a></p>`,
+   },
+   'combine-files': {
    248|    title: 'Free Online File Combiner — Merge CSV & Excel Files | Paimon Tools',
    249|    description:
    250|      'Combine multiple CSV and Excel files into one, free. Append rows from 2+ files, auto-detect format, union columns — 100% in your browser, no uploads, no sign-up.',
@@ -304,11 +461,25 @@
    254|    h1: 'Combine CSV & Excel Files',
    255|    breadcrumb: 'Tools / Combine Files',
    256|    preloads: ['converter'],
-   257|    bodyHtml: `<h2>Combine CSV &amp; Excel Files</h2>
-   258|<p>Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns — no uploads, no sign-up, fully private. Supports mixed formats.</p>
-   259|<p><a href="../">← Back to all Paimon Tools</a></p>`,
-   260|  },
-   261|  'diff-tool': {
+   bodyHtml: `<h2>Combine CSV &amp; Excel Files</h2>
+   <p>Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns — no uploads, no sign-up, fully private. Supports mixed formats.</p>
+   <h3>Common Use Cases</h3>
+   <ul>
+   <li>Merge monthly CSV reports into a single annual dataset</li>
+   <li>Combine Excel spreadsheets from different departments into one file</li>
+   <li>Union CSV exports from multiple sources for unified analysis</li>
+   </ul>
+   <h3>How It Works</h3>
+   <p>Add two or more files (CSV, TSV, or Excel). The tool auto-detects each format, unions all columns, and appends rows. Download as CSV or Excel. All processing is local.</p>
+   <h3>Related Tools</h3>
+   <ul>
+   <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — convert individual CSVs to .xlsx</li>
+   <li><a href="../excel-to-csv/">Excel to CSV Converter</a> — extract CSV from .xlsx files</li>
+   <li><a href="../diff-tool/">Diff Tool</a> — compare two files side by side</li>
+   </ul>
+   <p><a href="../">← Back to all Paimon Tools</a></p>`,
+   },
+   'diff-tool': {
    262|    title: 'Free Online Diff Tool — Compare Text Files Side by Side | Paimon Tools',
    263|    description:
    264|      'Compare two texts or files online free. Side-by-side diff viewer with color-coded lines. Paste text or drop files — 100% in your browser, no uploads, no limits, no sign-up.',
@@ -319,6 +490,19 @@
    269|    breadcrumb: 'Tools / Diff Tool',
     bodyHtml: `<h2>Diff Tool — Compare Text Side by Side</h2>
     <p>Compare two texts or files entirely in your browser. Side-by-side or unified diff view with color-coded added/removed lines. Paste text or drop files — no uploads, no sign-up, fully private. Unlimited size.</p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Compare code revisions to see exactly what changed</li>
+  <li>Review document edits before and after modifications</li>
+  <li>Find discrepancies between config files across environments</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste text A in the left pane and text B in the right pane. The diff engine compares them line by line with word-level tokenization. Added lines appear in green, removed in red, modified in yellow.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../text-delimiter/">Text Delimiter Tool</a> — join and wrap list items</li>
+  <li><a href="../combine-files/">Combine Files</a> — merge multiple files into one</li>
+</ul>
     <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
       { q: 'What is the maximum file size?',
