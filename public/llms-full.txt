@@ -1,0 +1,334 @@
+# Paimon Tools — Full Content
+> 100% client-side data conversion tools. Your data never leaves the browser.
+
+Paimon Tools is a free, open-source collection of in-browser utilities for converting, formatting, and manipulating data. Everything runs locally — no uploads, no servers, no sign-up. This file contains the full content of every tool page for AI consumption.
+
+---
+
+## Home — Paimon Tools
+
+Paimon Tools is a free, private, in-browser data converter and toolkit. Convert between JSON, CSV, and Excel entirely in your browser — no uploads, no sign-up, no servers. Your data never leaves your device.
+
+### Available Tools
+- JSON to CSV — convert JSON arrays to CSV tables
+- CSV to JSON — convert CSV tables to JSON arrays
+- JSON to Excel (.xlsx) — export JSON as spreadsheets
+- Excel to JSON — extract JSON from .xlsx files
+- CSV to Excel — turn CSV into .xlsx
+- Excel to CSV — extract CSV from .xlsx sheets
+- JSON Formatter — pretty-print and validate JSON
+- JSON Minifier — compress JSON by stripping whitespace
+- Code Playground — run JavaScript, Python & HTML online
+- Base64 Encode — encode text to Base64
+- Base64 Decode — decode Base64 back to text
+- YAML to JSON — convert YAML to JSON
+- JSON to YAML — convert JSON to YAML
+- SHA-256 Hash — generate SHA-256 checksum
+- Combine Files — merge multiple CSV & Excel files into one
+- Diff Tool — compare two texts side by side
+
+---
+
+## JSON to CSV Converter
+
+Convert a JSON array to a CSV table entirely in your browser. Paste your JSON data and get clean CSV output — no uploads, no sign-up, fully private.
+
+### Example
+Input JSON: `[{"name":"Alice","age":30},{"name":"Bob","age":25}]`
+
+Output CSV:
+```
+name,age
+Alice,30
+Bob,25
+```
+
+### How It Works
+1. Paste or type a JSON array into the input pane
+2. The CSV output updates in real-time as you type
+3. Copy the result or download as a .csv file
+
+### FAQ
+- **What JSON formats are supported?** Standard JSON arrays of objects. Keys become column headers, values become rows. Nested objects are stringified.
+- **Is my data uploaded anywhere?** No. Everything runs locally in your browser. Your data never leaves your device.
+
+---
+
+## CSV to JSON Converter
+
+Convert a CSV table to a JSON array entirely in your browser. Paste CSV data with headers and get clean JSON — no uploads, no sign-up, fully private.
+
+### Example
+Input CSV:
+```csv
+name,age
+Alice,30
+Bob,25
+```
+
+Output JSON:
+```json
+[{"name":"Alice","age":30},{"name":"Bob","age":25}]
+```
+
+### How It Works
+1. Paste or type CSV data with headers into the input pane
+2. JSON output updates in real-time
+3. Copy the result or download as a .json file
+
+### FAQ
+- **Does it support escaped commas/quotes?** Yes. Standard CSV escaping (quoted fields, escaped quotes) is fully supported.
+- **What about empty cells?** Empty cells become null values in the JSON output.
+
+---
+
+## JSON to Excel Converter
+
+Export a JSON array as a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally — no uploads, no sign-up.
+
+### How It Works
+1. Paste or type a JSON array into the input pane
+2. The preview updates in real-time
+3. Click download to get a .xlsx file with the data in sheet "Data"
+
+---
+
+## Excel to JSON Converter
+
+Extract JSON data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get a JSON array from the first sheet — no uploads, no sign-up.
+
+---
+
+## CSV to Excel Converter and Excel to CSV Converter
+
+Bidirectional conversion between CSV and Excel (.xlsx) formats. Process locally — just paste CSV or drop an Excel file and get the result instantly.
+
+---
+
+## JSON Formatter & Beautifier
+
+Format, beautify, and validate JSON entirely in your browser. Pretty-print with 2 spaces, 4 spaces, or tabs — validates syntax on the fly, highlighting errors as you type. Your data never leaves your device.
+
+### FAQ
+- **Does it validate as I type?** Yes. JSON is auto-validated on every keystroke with inline error messages.
+- **What indentation options are available?** 2 spaces, 4 spaces, or tabs.
+
+---
+
+## JSON Minifier
+
+Minify and compress JSON entirely in your browser. Strips all unnecessary whitespace to reduce file size — validates syntax as it goes. No uploads, fully private.
+
+---
+
+## Base64 Encode
+
+Encode any text to Base64 entirely in your browser. UTF-8 safe — handles Unicode, emoji, and special characters. No uploads, no sign-up.
+
+### Example
+Input: `Hello, World!` → Output: `SGVsbG8sIFdvcmxkIQ==`
+
+---
+
+## Base64 Decode
+
+Decode Base64 strings back to readable text entirely in your browser. Supports standard Base64 encoded strings.
+
+### Example
+Input: `SGVsbG8sIFdvcmxkIQ==` → Output: `Hello, World!`
+
+---
+
+## UUID Generator
+
+Generate random UUID v4 identifiers entirely in your browser. Click to generate — no uploads, no sign-up.
+
+### FAQ
+- **What UUID version is generated?** UUID v4 (random). Cryptographically secure random values from the Web Crypto API.
+- **Can I generate multiple at once?** Yes, use the "Generate multiple" option to create a batch.
+
+---
+
+## YAML to JSON Converter
+
+Convert YAML to JSON entirely in your browser. Paste YAML and get clean, formatted JSON — no uploads, no sign-up.
+
+---
+
+## JSON to YAML Converter
+
+Convert JSON to YAML entirely in your browser. Paste JSON and get clean, readable YAML output — no uploads, no sign-up.
+
+---
+
+## SHA-256 Hash Generator
+
+Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation using the Web Crypto API — your data never leaves your device.
+
+### FAQ
+- **Is this cryptographically secure?** Yes. Uses the Web Crypto API's built-in SHA-256 implementation — the same one browsers use for HTTPS.
+- **Can I hash files?** Yes. Drop a file and its SHA-256 hash is computed locally.
+
+---
+
+## Combine CSV & Excel Files
+
+Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns — supports mixed formats.
+
+### How It Works
+1. Add two or more CSV or Excel files
+2. The tool auto-detects format and unions columns
+3. Download the combined result as CSV or Excel
+
+---
+
+## Diff Tool
+
+Compare two texts or files entirely in your browser. Side-by-side or unified diff view with color-coded added/removed lines. Paste text or drop files — no uploads, no sign-up, unlimited size.
+
+### How It Works
+1. Paste text A in the left pane and text B in the right pane
+2. Differences are highlighted in real-time with color-coded lines
+3. Added lines are green, removed lines are red, modified lines are yellow
+
+---
+
+## Text Delimiter Tool
+
+Join list items with custom delimiter, quotes, and wrapping — entirely in your browser.
+
+### Common Use Cases
+- Generate SQL `IN ('a', 'b', 'c')` from a list
+- Create HTML lists with `<li>` tags
+- Build JavaScript array literals `["a", "b", "c"]`
+- Convert column data to pipe-separated values
+
+### How It Works
+1. Paste your items (one per line)
+2. Choose a delimiter, quoting, and optional wrapping
+3. Output updates instantly — all processing is local
+
+---
+
+## Online Code Playground
+
+Write and run code in your browser. Choose from JavaScript (sandboxed execution), Python (via Pyodide WASM), HTML (live iframe preview), or JSON (format & validate). Everything runs locally.
+
+### Languages
+- [JavaScript Playground](https://paimonchan.github.io/paimon-tools/code/javascript/) — sandboxed JS execution
+- [TypeScript Playground](https://paimonchan.github.io/paimon-tools/code/typescript/) — transpile & run via esbuild-wasm
+- [Python Playground](https://paimonchan.github.io/paimon-tools/code/python/) — Pyodide WASM Python
+- [HTML Playground](https://paimonchan.github.io/paimon-tools/code/html/) — live iframe preview
+- [JSON Playground](https://paimonchan.github.io/paimon-tools/code/json/) — format & validate
+
+---
+
+## JavaScript Online Playground
+
+Write and run JavaScript code in your browser. Sandboxed execution (Web Worker) with full console output.
+
+### Features
+- Sandboxed execution via Web Worker — runs in isolation with no DOM access
+- Async callback capture — setTimeout, setInterval, fetch.then tracked automatically
+- CodeMirror 6 with oneDark theme, bracket matching, and line numbers
+- Share code via compressed URL hash — no server needed
+
+### Example
+```javascript
+async function getData() {
+  const res = await fetch('https://api.example.com/data');
+  const json = await res.json();
+  console.log(json);
+}
+getData();
+```
+
+### FAQ
+- **Does it support setTimeout and fetch?** Yes. Async callbacks are tracked automatically via API instrumentation. The playground waits for all pending operations before finalizing.
+- **Can I use ES modules?** In Plain JavaScript, use dynamic import(). For full npm import support, use the TypeScript playground.
+
+---
+
+## TypeScript Online Playground
+
+Write and run TypeScript code in your browser. Powered by esbuild-wasm for fast transpilation with npm import support.
+
+### Features
+- TypeScript transpilation via esbuild-wasm — runs in your browser, no server
+- npm import support via esm.sh CDN — use any npm package
+- Sandboxed execution (Web Worker) with full console capture
+- CodeMirror 6 with TypeScript syntax highlighting
+
+### Example
+```typescript
+import lodash from 'lodash';
+const arr = [1, 2, 3, 4, 5];
+console.log(lodash.chunk(arr, 2));
+```
+
+### FAQ
+- **Does it support npm imports?** Yes. Bare imports are bundled via esbuild-wasm with packages resolved from esm.sh CDN.
+- **Is compilation server-side?** No. esbuild-wasm runs entirely in your browser as a WebAssembly binary.
+
+---
+
+## Python Online Playground
+
+Write and run Python code in your browser, powered by Pyodide WASM.
+
+### Features
+- Full CPython runtime via Pyodide WASM (~12 MB, cached after first load)
+- Standard library: math, json, random, statistics, collections
+- Print output captured and displayed in real time
+- CodeMirror 6 with Python syntax highlighting
+
+### Example
+```python
+squares = [x**2 for x in range(10)]
+print(f"Squares: {squares}")
+```
+
+### FAQ
+- **Does it include numpy or pandas?** Pyodide includes many scientific libraries, but numpy and pandas are not bundled by default. Standard library modules are fully supported.
+- **Why is the first run slow?** The first run downloads the Pyodide WASM binary (~12 MB). After that it is cached and subsequent runs are instant.
+
+---
+
+## HTML Online Playground
+
+Write HTML, CSS and JavaScript with a live iframe preview — updates in real time.
+
+### Features
+- Live iframe preview with srcdoc — edit and see changes instantly
+- Sandboxed — your page runs in isolation from the parent
+- Supports full HTML documents including `<style>` and `<script>` tags
+- CodeMirror 6 with HTML syntax highlighting
+
+### FAQ
+- **Is the HTML preview sandboxed?** Yes. The preview runs in a sandboxed iframe using srcdoc. It has no access to the parent page, cookies, or localStorage.
+
+---
+
+## JSON Online Playground
+
+Format, validate and edit JSON in your browser with syntax highlighting and auto-validation.
+
+### Features
+- Real-time JSON validation with inline error highlighting
+- Auto-formatting with configurable indentation
+- CodeMirror 6 with JSON syntax highlighting and bracket matching
+
+### FAQ
+- **Does it validate as I type?** Yes. JSON is auto-validated on every keystroke with inline error messages.
+
+---
+
+## Technical Details
+
+- **Repository**: https://github.com/paimonchan/paimon-tools
+- **License**: MIT
+- **Stack**: React 19, TypeScript 7, Vite 8, Tailwind CSS v4
+- **Data Libraries**: SheetJS (xlsx), PapaParse (CSV), js-yaml (YAML), json5 (JSON5)
+- **Code Editor**: CodeMirror 6 (JSON, JavaScript, TypeScript, Python, CSS, HTML, Markdown, SQL, XML, YAML)
+- **Python Runtime**: Pyodide WASM
+- **Playground Bundler**: esbuild-wasm

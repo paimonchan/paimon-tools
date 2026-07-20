@@ -1,0 +1,59 @@
+# Paimon Tools
+> 100% client-side data conversion tools. Your data never leaves the browser.
+
+Paimon Tools is a free, open-source collection of in-browser utilities for converting, formatting, and manipulating data. Everything runs locally — no uploads, no servers, no sign-up.
+
+## Core Features
+
+- **Privacy-first**: All processing happens in your browser. Zero network requests.
+- **No sign-up required**: Open any tool and use it immediately.
+- **Works offline**: Once loaded, tools need no internet connection.
+- **Open source**: MIT license, audit the code yourself on GitHub.
+
+## Tool Categories
+
+### Convert
+- [JSON to CSV](https://paimonchan.github.io/paimon-tools/json-to-csv/): Convert JSON arrays to CSV tables
+- [CSV to JSON](https://paimonchan.github.io/paimon-tools/csv-to-json/): Convert CSV tables to JSON arrays
+- [JSON to Excel](https://paimonchan.github.io/paimon-tools/json-to-excel/): Export JSON as .xlsx spreadsheets
+- [Excel to JSON](https://paimonchan.github.io/paimon-tools/excel-to-json/): Extract JSON from .xlsx files
+- [CSV to Excel](https://paimonchan.github.io/paimon-tools/csv-to-excel/): Turn CSV into .xlsx spreadsheets
+- [Excel to CSV](https://paimonchan.github.io/paimon-tools/excel-to-csv/): Extract CSV from .xlsx sheets
+- [YAML to JSON](https://paimonchan.github.io/paimon-tools/yaml-to-json/): Convert YAML to JSON
+- [JSON to YAML](https://paimonchan.github.io/paimon-tools/json-to-yaml/): Convert JSON to YAML
+- [Base64 Encode](https://paimonchan.github.io/paimon-tools/base64-encode/): Encode text to Base64 (UTF-8 safe)
+- [Base64 Decode](https://paimonchan.github.io/paimon-tools/base64-decode/): Decode Base64 back to text
+
+### Format & Manipulate
+- [JSON Formatter](https://paimonchan.github.io/paimon-tools/json-formatter/): Pretty-print and validate JSON
+- [JSON Minifier](https://paimonchan.github.io/paimon-tools/json-minifier/): Compress JSON by stripping whitespace
+- [Text Delimiter Tool](https://paimonchan.github.io/paimon-tools/text-delimiter/): Join list items with custom delimiter, quotes, and wrapping
+
+### Developer Tools
+- [Diff Tool](https://paimonchan.github.io/paimon-tools/diff-tool/): Compare two texts side by side
+- [UUID Generator](https://paimonchan.github.io/paimon-tools/uuid-generator/): Generate random UUID v4 identifiers
+- [SHA-256 Hash Generator](https://paimonchan.github.io/paimon-tools/hash-generator/): Generate SHA-256 checksums
+- [Combine Files](https://paimonchan.github.io/paimon-tools/combine-files/): Merge multiple CSV & Excel files
+
+### Code Playground
+- [Code Playground](https://paimonchan.github.io/paimon-tools/code/): Multi-language online code editor
+- [JavaScript](https://paimonchan.github.io/paimon-tools/code/javascript/): Sandboxed JS execution
+- [TypeScript](https://paimonchan.github.io/paimon-tools/code/typescript/): Transpile & run via esbuild-wasm
+- [Python](https://paimonchan.github.io/paimon-tools/code/python/): Pyodide WASM Python
+- [HTML](https://paimonchan.github.io/paimon-tools/code/html/): Live iframe preview
+- [JSON](https://paimonchan.github.io/paimon-tools/code/json/): Format & validate
+
+## Tech Stack
+- **Frontend**: React 19, TypeScript 7, Vite 8
+- **Styling**: Tailwind CSS v4
+- **Icons**: lucide-react
+- **Converters**: SheetJS (xlsx), PapaParse (CSV), js-yaml (YAML), json5 (JSON5)
+- **Code Editor**: CodeMirror 6 with multi-language support
+- **Python**: Pyodide WASM
+- **Playground Bundler**: esbuild-wasm
+
+## Key Principles
+- **Privacy**: No data is ever sent to a server. Every conversion, format, and execution happens locally in your browser.
+- **Offline-capable**: After initial load, tools work without internet access.
+- **Free**: No paid tiers, no usage limits, no account required.
+- **Open source**: [GitHub repository](https://github.com/paimonchan/paimon-tools)
