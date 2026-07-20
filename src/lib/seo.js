@@ -62,6 +62,20 @@
     bodyHtml: `<h2>JSON to CSV Converter</h2>
 <p>Convert a JSON array to a CSV table entirely in your browser. Paste your JSON data and get clean CSV output — no uploads, no sign-up, fully private.</p>
 <p>Example input: <code>[{"name":"Alice","age":30},{"name":"Bob","age":25}]</code></p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Export API response data to spreadsheet-friendly CSV format</li>
+  <li>Convert MongoDB/Airtable exports from JSON to tabular data</li>
+  <li>Prepare JSON data for import into Google Sheets or Excel</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste a JSON array of objects into the input pane. Keys become CSV column headers, values become rows. Nested objects are stringified. All processing happens locally in your browser.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../csv-to-json/">CSV to JSON Converter</a> — reverse conversion back to JSON</li>
+  <li><a href="../json-to-excel/">JSON to Excel Converter</a> — export JSON as .xlsx spreadsheet</li>
+  <li><a href="../json-formatter/">JSON Formatter</a> — pretty-print and validate JSON first</li>
+</ul>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
       { q: 'What JSON format is supported?',
@@ -83,6 +97,20 @@
     bodyHtml: `<h2>CSV to JSON Converter</h2>
 <p>Convert a CSV table to a JSON array entirely in your browser. Paste CSV data with headers and get clean JSON — no uploads, no sign-up, fully private.</p>
 <p>Example input: <code>name,age\\nAlice,30\\nBob,25</code></p>
+<h3>Common Use Cases</h3>
+<ul>
+  <li>Transform CSV reports from Google Sheets into JSON for web apps</li>
+  <li>Convert legacy database exports into structured JSON data</li>
+  <li>Parse downloaded CSV data from analytics platforms into JSON objects</li>
+</ul>
+<h3>How It Works</h3>
+<p>Paste CSV data with a header row. The first row defines object keys; subsequent rows become array values. Supports quoted fields, escaped commas, and empty cells (become null). All processing is local.</p>
+<h3>Related Tools</h3>
+<ul>
+  <li><a href="../json-to-csv/">JSON to CSV Converter</a> — reverse conversion back to CSV</li>
+  <li><a href="../excel-to-json/">Excel to JSON Converter</a> — extract JSON from .xlsx files</li>
+  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — convert CSV to .xlsx instead</li>
+</ul>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
       { q: 'Does it support escaped commas/quotes?',
