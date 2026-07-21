@@ -1,5 +1,5 @@
      1|/**
-     2| * seo.js — per-tool SEO metadata, kept in a dependency-free module so it can
+     2| * seo.js - per-tool SEO metadata, kept in a dependency-free module so it can
      3| * be imported both by the app (registry.ts) and by the prerender build script
      4| * (which runs in plain Node, no JSX/bundler).
      5| *
@@ -7,39 +7,39 @@
      7| * registry.ts and the prerender script both derive from it.
      8| */
      9|
-    10|/** Base site URL — used for canonical URLs, OG, sitemap. */
+    10|/** Base site URL - used for canonical URLs, OG, sitemap. */
     11|export const SITE_URL = 'https://paimonchan.github.io/paimon-tools'
     12|
     13|const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.webp`
-    14|const DEFAULT_OG_ALT = 'Paimon Tools — convert JSON, CSV and Excel data, 100% in your browser'
+    14|const DEFAULT_OG_ALT = 'Paimon Tools - convert JSON, CSV and Excel data, 100% in your browser'
     15|
     16|export const HOME_SEO = {
-    17|  title: 'Paimon Tools — Free JSON, CSV & Excel Converter',
+    17|  title: 'Paimon Tools - Free JSON, CSV & Excel Converter',
     18|  description:
-    19|    'Free, private, in-browser data converter: JSON to CSV, CSV to Excel, Excel to JSON, JSON formatter and minifier. No sign-up, no uploads — your data never leaves your device. Open source.',
+    19|    'Free, private, in-browser data converter: JSON to CSV, CSV to Excel, Excel to JSON, JSON formatter and minifier. No sign-up, no uploads - your data never leaves your device. Open source.',
     20|  path: '',
     21|  ogImage: DEFAULT_OG_IMAGE,
     22|  ogImageAlt: DEFAULT_OG_ALT,
-    23|  bodyHtml: `<h1>Paimon Tools — Free Converter for JSON, CSV &amp; Excel</h1>
-    24|<p>Convert between <strong>JSON, CSV, and Excel</strong> entirely in your browser — no uploads, no sign-up, no servers. Your data never leaves your device.</p>
+    23|  bodyHtml: `<h1>Paimon Tools - Free Converter for JSON, CSV &amp; Excel</h1>
+    24|<p>Convert between <strong>JSON, CSV, and Excel</strong> entirely in your browser - no uploads, no sign-up, no servers. Your data never leaves your device.</p>
     25|<h2>Available conversion tools</h2>
     26|<ul>
-    27|  <li><a href="json-to-csv/">JSON to CSV</a> — convert JSON arrays to CSV tables</li>
-    28|  <li><a href="csv-to-json/">CSV to JSON</a> — convert CSV tables to JSON arrays</li>
-    29|  <li><a href="json-to-excel/">JSON to Excel (.xlsx)</a> — export JSON as spreadsheets</li>
-    30|  <li><a href="excel-to-json/">Excel to JSON</a> — extract JSON from .xlsx files</li>
-    31|  <li><a href="csv-to-excel/">CSV to Excel</a> — turn CSV into .xlsx</li>
-    32|  <li><a href="excel-to-csv/">Excel to CSV</a> — extract CSV from .xlsx sheets</li>
-    33|  <li><a href="json-formatter/">JSON Formatter</a> — pretty-print and validate JSON</li>
-    34|  <li><a href="json-minifier/">JSON Minifier</a> — compress JSON by stripping whitespace</li>
-    35|  <li><a href="code/">Code Playground</a> — run JavaScript, Python &amp; HTML online</li>
-    36|  <li><a href="base64-encode/">Base64 Encode</a> — encode text to Base64</li>
-    37|  <li><a href="base64-decode/">Base64 Decode</a> — decode Base64 back to text</li>
-    38|  <li><a href="yaml-to-json/">YAML to JSON</a> — convert YAML to JSON</li>
-    39|  <li><a href="json-to-yaml/">JSON to YAML</a> — convert JSON to YAML</li>
-    40|  <li><a href="hash-generator/">SHA-256 Hash</a> — generate SHA-256 checksum</li>
-    41|  <li><a href="combine-files/">Combine Files</a> — merge multiple CSV &amp; Excel files into one
-    42|  <li><a href="diff-tool/">Diff Tool</a> — compare two texts side by side
+    27|  <li><a href="json-to-csv/">JSON to CSV</a> - convert JSON arrays to CSV tables</li>
+    28|  <li><a href="csv-to-json/">CSV to JSON</a> - convert CSV tables to JSON arrays</li>
+    29|  <li><a href="json-to-excel/">JSON to Excel (.xlsx)</a> - export JSON as spreadsheets</li>
+    30|  <li><a href="excel-to-json/">Excel to JSON</a> - extract JSON from .xlsx files</li>
+    31|  <li><a href="csv-to-excel/">CSV to Excel</a> - turn CSV into .xlsx</li>
+    32|  <li><a href="excel-to-csv/">Excel to CSV</a> - extract CSV from .xlsx sheets</li>
+    33|  <li><a href="json-formatter/">JSON Formatter</a> - pretty-print and validate JSON</li>
+    34|  <li><a href="json-minifier/">JSON Minifier</a> - compress JSON by stripping whitespace</li>
+    35|  <li><a href="code/">Code Playground</a> - run JavaScript, Python &amp; HTML online</li>
+    36|  <li><a href="base64-encode/">Base64 Encode</a> - encode text to Base64</li>
+    37|  <li><a href="base64-decode/">Base64 Decode</a> - decode Base64 back to text</li>
+    38|  <li><a href="yaml-to-json/">YAML to JSON</a> - convert YAML to JSON</li>
+    39|  <li><a href="json-to-yaml/">JSON to YAML</a> - convert JSON to YAML</li>
+    40|  <li><a href="hash-generator/">SHA-256 Hash</a> - generate SHA-256 checksum</li>
+    41|  <li><a href="combine-files/">Combine Files</a> - merge multiple CSV &amp; Excel files into one
+    42|  <li><a href="diff-tool/">Diff Tool</a> - compare two texts side by side
     43|</ul>
     44|<p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
     45|}
@@ -50,9 +50,9 @@
     50| */
     51|export const TOOL_SEO = {
     52|  'json-to-csv': {
-    53|    title: 'JSON to CSV Converter — Free, Private, In-Browser | Paimon Tools',
+    53|    title: 'JSON to CSV Converter - Free, Private, In-Browser | Paimon Tools',
     54|    description:
-    55|      'Convert JSON to CSV instantly in your browser. Paste a JSON array and get a clean CSV table — no uploads, no sign-up, your data never leaves your device.',
+    55|      'Convert JSON to CSV instantly in your browser. Paste a JSON array and get a clean CSV table - no uploads, no sign-up, your data never leaves your device.',
     56|    path: 'json-to-csv',
     57|    ogImage: DEFAULT_OG_IMAGE,
     58|    ogImageAlt: DEFAULT_OG_ALT,
@@ -60,7 +60,7 @@
     60|    breadcrumb: 'Convert / JSON to CSV',
     61|    preloads: ['converter'],
     bodyHtml: `<h2>JSON to CSV Converter</h2>
-<p>Convert a JSON array to a CSV table entirely in your browser. Paste your JSON data and get clean CSV output — no uploads, no sign-up, fully private.</p>
+<p>Convert a JSON array to a CSV table entirely in your browser. Paste your JSON data and get clean CSV output - no uploads, no sign-up, fully private.</p>
 <p>Example input: <code>[{"name":"Alice","age":30},{"name":"Bob","age":25}]</code></p>
 <h3>Common Use Cases</h3>
 <ul>
@@ -72,9 +72,9 @@
 <p>Paste a JSON array of objects into the input pane. Keys become CSV column headers, values become rows. Nested objects are stringified. All processing happens locally in your browser.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../csv-to-json/">CSV to JSON Converter</a> — reverse conversion back to JSON</li>
-  <li><a href="../json-to-excel/">JSON to Excel Converter</a> — export JSON as .xlsx spreadsheet</li>
-  <li><a href="../json-formatter/">JSON Formatter</a> — pretty-print and validate JSON first</li>
+  <li><a href="../csv-to-json/">CSV to JSON Converter</a> - reverse conversion back to JSON</li>
+  <li><a href="../json-to-excel/">JSON to Excel Converter</a> - export JSON as .xlsx spreadsheet</li>
+  <li><a href="../json-formatter/">JSON Formatter</a> - pretty-print and validate JSON first</li>
 </ul>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
@@ -85,9 +85,9 @@
     ],
   },
   'csv-to-json': {
-    68|    title: 'CSV to JSON Converter — Free, Private, In-Browser | Paimon Tools',
+    68|    title: 'CSV to JSON Converter - Free, Private, In-Browser | Paimon Tools',
     69|    description:
-    70|      'Convert CSV to JSON online, entirely in your browser. Paste a CSV table with headers and get a JSON array — no uploads, no sign-up, fully private.',
+    70|      'Convert CSV to JSON online, entirely in your browser. Paste a CSV table with headers and get a JSON array - no uploads, no sign-up, fully private.',
     71|    path: 'csv-to-json',
     72|    ogImage: DEFAULT_OG_IMAGE,
     73|    ogImageAlt: DEFAULT_OG_ALT,
@@ -95,7 +95,7 @@
     75|    breadcrumb: 'Convert / CSV to JSON',
     76|    preloads: ['converter'],
     bodyHtml: `<h2>CSV to JSON Converter</h2>
-<p>Convert a CSV table to a JSON array entirely in your browser. Paste CSV data with headers and get clean JSON — no uploads, no sign-up, fully private.</p>
+<p>Convert a CSV table to a JSON array entirely in your browser. Paste CSV data with headers and get clean JSON - no uploads, no sign-up, fully private.</p>
 <p>Example input: <code>name,age\\nAlice,30\\nBob,25</code></p>
 <h3>Common Use Cases</h3>
 <ul>
@@ -107,9 +107,9 @@
 <p>Paste CSV data with a header row. The first row defines object keys; subsequent rows become array values. Supports quoted fields, escaped commas, and empty cells (become null). All processing is local.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../json-to-csv/">JSON to CSV Converter</a> — reverse conversion back to CSV</li>
-  <li><a href="../excel-to-json/">Excel to JSON Converter</a> — extract JSON from .xlsx files</li>
-  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — convert CSV to .xlsx instead</li>
+  <li><a href="../json-to-csv/">JSON to CSV Converter</a> - reverse conversion back to CSV</li>
+  <li><a href="../excel-to-json/">Excel to JSON Converter</a> - extract JSON from .xlsx files</li>
+  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> - convert CSV to .xlsx instead</li>
 </ul>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
@@ -120,9 +120,9 @@
     ],
   },
   'json-to-excel': {
-    83|    title: 'JSON to Excel (.xlsx) Converter — Free & Private | Paimon Tools',
+    83|    title: 'JSON to Excel (.xlsx) Converter - Free & Private | Paimon Tools',
     84|    description:
-    85|      'Convert JSON to Excel (.xlsx) instantly in your browser. Export a JSON array as a downloadable spreadsheet — no uploads, no sign-up, your data stays local.',
+    85|      'Convert JSON to Excel (.xlsx) instantly in your browser. Export a JSON array as a downloadable spreadsheet - no uploads, no sign-up, your data stays local.',
     86|    path: 'json-to-excel',
     87|    ogImage: DEFAULT_OG_IMAGE,
     88|    ogImageAlt: DEFAULT_OG_ALT,
@@ -130,7 +130,7 @@
     90|    breadcrumb: 'Convert / JSON to Excel',
     91|    preloads: ['converter'],
     92|    bodyHtml: `<h2>JSON to Excel (.xlsx) Converter</h2>
-    93|<p>Export a JSON array as a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally — no uploads, no sign-up, fully private.</p>
+    93|<p>Export a JSON array as a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally - no uploads, no sign-up, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Convert API JSON responses into formatted Excel reports for stakeholders</li>
@@ -138,19 +138,19 @@
   <li>Generate Excel-compatible reports from database export JSON</li>
 </ul>
 <h3>How It Works</h3>
-<p>Paste a JSON array of objects. SheetJS creates a .xlsx workbook in your browser with data in a sheet named "Data". Click download — all processing is local.</p>
+<p>Paste a JSON array of objects. SheetJS creates a .xlsx workbook in your browser with data in a sheet named "Data". Click download - all processing is local.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../excel-to-json/">Excel to JSON Converter</a> — reverse: extract JSON from .xlsx</li>
-  <li><a href="../json-to-csv/">JSON to CSV Converter</a> — export as CSV instead</li>
-  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — convert CSV to .xlsx</li>
+  <li><a href="../excel-to-json/">Excel to JSON Converter</a> - reverse: extract JSON from .xlsx</li>
+  <li><a href="../json-to-csv/">JSON to CSV Converter</a> - export as CSV instead</li>
+  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> - convert CSV to .xlsx</li>
 </ul>
     94|<p><a href="../">← Back to all Paimon Tools</a></p>`,
     95|  },
     96|  'excel-to-json': {
-    97|    title: 'Excel to JSON Converter — Free & Private, In-Browser | Paimon Tools',
+    97|    title: 'Excel to JSON Converter - Free & Private, In-Browser | Paimon Tools',
     98|    description:
-    99|      'Convert Excel (.xlsx) to JSON in your browser. Drop a spreadsheet and get a JSON array of its first sheet — no uploads, no sign-up, fully private.',
+    99|      'Convert Excel (.xlsx) to JSON in your browser. Drop a spreadsheet and get a JSON array of its first sheet - no uploads, no sign-up, fully private.',
    100|    path: 'excel-to-json',
    101|    ogImage: DEFAULT_OG_IMAGE,
    102|    ogImageAlt: DEFAULT_OG_ALT,
@@ -158,7 +158,7 @@
    104|    breadcrumb: 'Convert / Excel to JSON',
    105|    preloads: ['converter'],
    106|    bodyHtml: `<h2>Excel to JSON Converter</h2>
-   107|<p>Extract JSON data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get a JSON array from the first sheet — no uploads, no sign-up, fully private.</p>
+   107|<p>Extract JSON data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get a JSON array from the first sheet - no uploads, no sign-up, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Extract spreadsheet data from clients for use in web applications</li>
@@ -169,16 +169,16 @@
 <p>Drop or select an .xlsx file. SheetJS reads the first sheet in your browser and converts each row to a JSON object. Header row defines the keys. All processing is local.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../json-to-excel/">JSON to Excel Converter</a> — reverse: convert JSON to .xlsx</li>
-  <li><a href="../excel-to-csv/">Excel to CSV Converter</a> — extract CSV instead</li>
-  <li><a href="../combine-files/">Combine Files</a> — merge multiple Excel files</li>
+  <li><a href="../json-to-excel/">JSON to Excel Converter</a> - reverse: convert JSON to .xlsx</li>
+  <li><a href="../excel-to-csv/">Excel to CSV Converter</a> - extract CSV instead</li>
+  <li><a href="../combine-files/">Combine Files</a> - merge multiple Excel files</li>
 </ul>
    108|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    109|  },
    110|  'csv-to-excel': {
-   111|    title: 'CSV to Excel (.xlsx) Converter — Free & Private | Paimon Tools',
+   111|    title: 'CSV to Excel (.xlsx) Converter - Free & Private | Paimon Tools',
    112|    description:
-   113|      'Convert CSV to Excel (.xlsx) instantly in your browser. Turn a CSV table into a downloadable spreadsheet — no uploads, no sign-up, your data stays local.',
+   113|      'Convert CSV to Excel (.xlsx) instantly in your browser. Turn a CSV table into a downloadable spreadsheet - no uploads, no sign-up, your data stays local.',
    114|    path: 'csv-to-excel',
    115|    ogImage: DEFAULT_OG_IMAGE,
    116|    ogImageAlt: DEFAULT_OG_ALT,
@@ -186,7 +186,7 @@
    118|    breadcrumb: 'Convert / CSV to Excel',
    119|    preloads: ['converter'],
    120|    bodyHtml: `<h2>CSV to Excel (.xlsx) Converter</h2>
-   121|<p>Turn a CSV table into a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally — no uploads, no sign-up, fully private.</p>
+   121|<p>Turn a CSV table into a downloadable Excel spreadsheet (.xlsx) entirely in your browser. Your data is processed locally - no uploads, no sign-up, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Convert CSV reports from analytics into professional .xlsx spreadsheets</li>
@@ -194,19 +194,19 @@
   <li>Transform database CSV exports into Excel for client delivery</li>
 </ul>
 <h3>How It Works</h3>
-<p>Paste CSV data with headers. SheetJS creates a .xlsx file preserving your data structure. Click download — all processing is local with no uploads.</p>
+<p>Paste CSV data with headers. SheetJS creates a .xlsx file preserving your data structure. Click download - all processing is local with no uploads.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../excel-to-csv/">Excel to CSV Converter</a> — reverse: extract CSV from .xlsx</li>
-  <li><a href="../csv-to-json/">CSV to JSON Converter</a> — convert CSV to JSON instead</li>
-  <li><a href="../json-to-excel/">JSON to Excel Converter</a> — convert JSON to .xlsx</li>
+  <li><a href="../excel-to-csv/">Excel to CSV Converter</a> - reverse: extract CSV from .xlsx</li>
+  <li><a href="../csv-to-json/">CSV to JSON Converter</a> - convert CSV to JSON instead</li>
+  <li><a href="../json-to-excel/">JSON to Excel Converter</a> - convert JSON to .xlsx</li>
 </ul>
    122|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    123|  },
    124|  'excel-to-csv': {
-   125|    title: 'Excel to CSV Converter — Free & Private, In-Browser | Paimon Tools',
+   125|    title: 'Excel to CSV Converter - Free & Private, In-Browser | Paimon Tools',
    126|    description:
-   127|      'Convert Excel (.xlsx) to CSV in your browser. Drop a spreadsheet and get CSV from its first sheet — no uploads, no sign-up, fully private.',
+   127|      'Convert Excel (.xlsx) to CSV in your browser. Drop a spreadsheet and get CSV from its first sheet - no uploads, no sign-up, fully private.',
    128|    path: 'excel-to-csv',
    129|    ogImage: DEFAULT_OG_IMAGE,
    130|    ogImageAlt: DEFAULT_OG_ALT,
@@ -214,7 +214,7 @@
    132|    breadcrumb: 'Convert / Excel to CSV',
    133|    preloads: ['converter'],
    134|    bodyHtml: `<h2>Excel to CSV Converter</h2>
-   135|<p>Extract CSV data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get CSV from the first sheet — no uploads, no sign-up, fully private.</p>
+   135|<p>Extract CSV data from an Excel (.xlsx) spreadsheet entirely in your browser. Drop a file and get CSV from the first sheet - no uploads, no sign-up, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Convert Excel spreadsheets to CSV for database import pipelines</li>
@@ -225,16 +225,16 @@
 <p>Drop or select an .xlsx file. SheetJS reads the first sheet and converts rows to CSV format preserving headers. All processing happens locally.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — reverse: convert CSV to .xlsx</li>
-  <li><a href="../excel-to-json/">Excel to JSON Converter</a> — extract JSON instead</li>
-  <li><a href="../combine-files/">Combine Files</a> — merge multiple Excel files</li>
+  <li><a href="../csv-to-excel/">CSV to Excel Converter</a> - reverse: convert CSV to .xlsx</li>
+  <li><a href="../excel-to-json/">Excel to JSON Converter</a> - extract JSON instead</li>
+  <li><a href="../combine-files/">Combine Files</a> - merge multiple Excel files</li>
 </ul>
    136|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    137|  },
    138|  'json-formatter': {
-   139|    title: 'JSON Formatter & Beautifier — Pretty Print JSON Free | Paimon Tools',
+   139|    title: 'JSON Formatter & Beautifier - Pretty Print JSON Free | Paimon Tools',
    140|    description:
-   141|      'Format and beautify JSON online, in your browser. Validate syntax and pretty-print with 2 spaces, 4 spaces, or tabs — no uploads, fully private.',
+   141|      'Format and beautify JSON online, in your browser. Validate syntax and pretty-print with 2 spaces, 4 spaces, or tabs - no uploads, fully private.',
    142|    keywords:
    143|      'json formatter, json beautifier, pretty print json, format json, json validator, indent json',
    144|    path: 'json-formatter',
@@ -243,7 +243,7 @@
    147|    h1: 'JSON Formatter & Beautifier',
    148|    breadcrumb: 'Format / JSON Formatter',
     189|    bodyHtml: `<h2>JSON Formatter &amp; Beautifier</h2>
-     <p>Format, beautify, and validate JSON entirely in your browser. Pretty-print with 2 spaces, 4 spaces, or tabs — your data never leaves your device.</p>
+     <p>Format, beautify, and validate JSON entirely in your browser. Pretty-print with 2 spaces, 4 spaces, or tabs - your data never leaves your device.</p>
      <p>Validates JSON syntax on the fly, highlighting errors as you type.</p>
     <h3>Common Use Cases</h3>
     <ul>
@@ -253,9 +253,9 @@
     </ul>
     <h3>Related Tools</h3>
     <ul>
-    <li><a href="../json-minifier/">JSON Minifier</a> — compress JSON by stripping whitespace</li>
-    <li><a href="../json-to-yaml/">JSON to YAML Converter</a> — convert JSON to YAML</li>
-    <li><a href="../json-to-csv/">JSON to CSV Converter</a> — convert JSON data to tabular format</li>
+    <li><a href="../json-minifier/">JSON Minifier</a> - compress JSON by stripping whitespace</li>
+    <li><a href="../json-to-yaml/">JSON to YAML Converter</a> - convert JSON to YAML</li>
+    <li><a href="../json-to-csv/">JSON to CSV Converter</a> - convert JSON data to tabular format</li>
     </ul>
      <p><a href="../">← Back to all Paimon Tools</a></p>`,
      faq: [
@@ -266,16 +266,16 @@
     ],
   },
   'json-minifier': {
-   155|    title: 'JSON Minifier — Compress & Minify JSON Free | Paimon Tools',
+   155|    title: 'JSON Minifier - Compress & Minify JSON Free | Paimon Tools',
    156|    description:
-   157|      'Minify JSON online, in your browser. Strip all whitespace to compress your JSON — validates syntax as it goes — no uploads, fully private.',
+   157|      'Minify JSON online, in your browser. Strip all whitespace to compress your JSON - validates syntax as it goes - no uploads, fully private.',
    158|    path: 'json-minifier',
    159|    ogImage: DEFAULT_OG_IMAGE,
    160|    ogImageAlt: DEFAULT_OG_ALT,
    161|    h1: 'JSON Minifier',
    162|    breadcrumb: 'Format / JSON Minifier',
    163|    bodyHtml: `<h2>JSON Minifier</h2>
-   164|<p>Minify and compress JSON entirely in your browser. Strips all unnecessary whitespace to reduce file size — validates syntax as it goes. No uploads, fully private.</p>
+   164|<p>Minify and compress JSON entirely in your browser. Strips all unnecessary whitespace to reduce file size - validates syntax as it goes. No uploads, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Reduce JSON payload size for API requests and storage</li>
@@ -286,22 +286,22 @@
 <p>Paste your JSON and get an instantly minified version with all whitespace removed. Syntax is validated during compression. All processing is local.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../json-formatter/">JSON Formatter</a> — reverse: pretty-print minified JSON</li>
-  <li><a href="../json-to-csv/">JSON to CSV Converter</a> — convert JSON to tabular format</li>
+  <li><a href="../json-formatter/">JSON Formatter</a> - reverse: pretty-print minified JSON</li>
+  <li><a href="../json-to-csv/">JSON to CSV Converter</a> - convert JSON to tabular format</li>
 </ul>
    165|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    166|  },
    167|  'base64-encode': {
-   168|    title: 'Base64 Encode — Free Online Base64 Encoder | Paimon Tools',
+   168|    title: 'Base64 Encode - Free Online Base64 Encoder | Paimon Tools',
    169|    description:
-   170|      'Encode text to Base64 online, free. UTF-8 safe — handles Unicode, emoji & special characters. 100% in-browser, no uploads, no sign-up, fully private.',
+   170|      'Encode text to Base64 online, free. UTF-8 safe - handles Unicode, emoji & special characters. 100% in-browser, no uploads, no sign-up, fully private.',
    171|    path: 'base64-encode',
    172|    ogImage: DEFAULT_OG_IMAGE,
    173|    ogImageAlt: DEFAULT_OG_ALT,
    174|    h1: 'Base64 Encode',
    175|    breadcrumb: 'Convert / Base64 Encode',
    176|    bodyHtml: `<h2>Base64 Encode</h2>
-   177|<p>Encode any text to Base64 entirely in your browser. UTF-8 safe — handles Unicode, emoji, and special characters. No uploads, no sign-up, fully private.</p>
+   177|<p>Encode any text to Base64 entirely in your browser. UTF-8 safe - handles Unicode, emoji, and special characters. No uploads, no sign-up, fully private.</p>
    178|<p>Example input: <code>Hello, World!</code> → <code>SGVsbG8sIFdvcmxkIQ==</code></p>
 <h3>Common Use Cases</h3>
 <ul>
@@ -313,15 +313,15 @@
 <p>Type or paste text in the input pane. The browser's built-in btoa() function with UTF-8 encoding converts it to Base64 instantly. All processing is local.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../base64-decode/">Base64 Decode</a> — reverse: decode Base64 back to text</li>
-  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> — generate secure hashes</li>
+  <li><a href="../base64-decode/">Base64 Decode</a> - reverse: decode Base64 back to text</li>
+  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> - generate secure hashes</li>
 </ul>
    179|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    180|  },
    181|  'base64-decode': {
-   182|    title: 'Base64 Decode — Free Online Base64 Decoder | Paimon Tools',
+   182|    title: 'Base64 Decode - Free Online Base64 Decoder | Paimon Tools',
    183|    description:
-   184|      'Decode Base64 to text online, free. Convert Base64 strings back to readable text — 100% in-browser, no uploads, no sign-up, fully private.',
+   184|      'Decode Base64 to text online, free. Convert Base64 strings back to readable text - 100% in-browser, no uploads, no sign-up, fully private.',
    185|    path: 'base64-decode',
    186|    ogImage: DEFAULT_OG_IMAGE,
    187|    ogImageAlt: DEFAULT_OG_ALT,
@@ -340,22 +340,22 @@
 <p>Paste a Base64 string in the input pane. The browser's built-in atob() function decodes it back to readable text with full UTF-8 support. Results update instantly.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../base64-encode/">Base64 Encode</a> — reverse: encode text to Base64</li>
-  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> — generate secure hashes</li>
+  <li><a href="../base64-encode/">Base64 Encode</a> - reverse: encode text to Base64</li>
+  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> - generate secure hashes</li>
 </ul>
    193|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    194|  },
    195|  'uuid-generator': {
-   196|    title: 'UUID Generator — Free Online UUID v4 Generator | Paimon Tools',
+   196|    title: 'UUID Generator - Free Online UUID v4 Generator | Paimon Tools',
    197|    description:
-   198|      'Generate UUID v4 identifiers online, free. Create random UUIDs instantly — 100% in-browser, no uploads, no sign-up, fully private.',
+   198|      'Generate UUID v4 identifiers online, free. Create random UUIDs instantly - 100% in-browser, no uploads, no sign-up, fully private.',
    199|    path: 'uuid-generator',
    200|    ogImage: DEFAULT_OG_IMAGE,
    201|    ogImageAlt: DEFAULT_OG_ALT,
    202|    h1: 'UUID Generator',
    203|    breadcrumb: 'Tools / UUID Generator',
    204|    bodyHtml: `<h2>UUID Generator</h2>
-   205|<p>Generate random UUID v4 identifiers entirely in your browser. Click to generate — no uploads, no sign-up, fully private.</p>
+   205|<p>Generate random UUID v4 identifiers entirely in your browser. Click to generate - no uploads, no sign-up, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Generate unique primary keys for database records and APIs</li>
@@ -366,22 +366,22 @@
 <p>Uses the Web Crypto API's crypto.randomUUID() for cryptographically secure UUID v4 generation. Generate individually or in batch mode. All processing is local.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> — generate secure hashes</li>
-  <li><a href="../base64-encode/">Base64 Encode</a> — encode UUIDs to Base64</li>
+  <li><a href="../hash-generator/">SHA-256 Hash Generator</a> - generate secure hashes</li>
+  <li><a href="../base64-encode/">Base64 Encode</a> - encode UUIDs to Base64</li>
 </ul>
    206|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    207|  },
    208|  'yaml-to-json': {
-   209|    title: 'YAML to JSON Converter — Free Online | Paimon Tools',
+   209|    title: 'YAML to JSON Converter - Free Online | Paimon Tools',
    210|    description:
-   211|      'Convert YAML to JSON online, free. Paste YAML and get formatted JSON — 100% in-browser, no uploads, no sign-up, fully private.',
+   211|      'Convert YAML to JSON online, free. Paste YAML and get formatted JSON - 100% in-browser, no uploads, no sign-up, fully private.',
    212|    path: 'yaml-to-json',
    213|    ogImage: DEFAULT_OG_IMAGE,
    214|    ogImageAlt: DEFAULT_OG_ALT,
    215|    h1: 'YAML to JSON Converter',
    216|    breadcrumb: 'Convert / YAML to JSON',
     bodyHtml: `<h2>YAML to JSON Converter</h2>
-    <p>Convert YAML to JSON entirely in your browser. Paste YAML and get clean, formatted JSON — no uploads, no sign-up, fully private.</p>
+    <p>Convert YAML to JSON entirely in your browser. Paste YAML and get clean, formatted JSON - no uploads, no sign-up, fully private.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Convert Docker Compose and Kubernetes YAML to JSON for scripting</li>
@@ -390,26 +390,26 @@
 </ul>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../json-to-yaml/">JSON to YAML Converter</a> — reverse: convert JSON to YAML</li>
-  <li><a href="../json-formatter/">JSON Formatter</a> — pretty-print the resulting JSON</li>
+  <li><a href="../json-to-yaml/">JSON to YAML Converter</a> - reverse: convert JSON to YAML</li>
+  <li><a href="../json-formatter/">JSON Formatter</a> - pretty-print the resulting JSON</li>
 </ul>
     <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
       { q: 'What YAML features are supported?',
-        a: 'Standard YAML 1.2 — strings, numbers, booleans, arrays, nested objects, and multiline strings.' },
+        a: 'Standard YAML 1.2 - strings, numbers, booleans, arrays, nested objects, and multiline strings.' },
     ],
   },
   'json-to-yaml': {
-   222|    title: 'JSON to YAML Converter — Free Online | Paimon Tools',
+   222|    title: 'JSON to YAML Converter - Free Online | Paimon Tools',
    223|    description:
-   224|      'Convert JSON to YAML online, free. Paste JSON and get clean YAML output — 100% in-browser, no uploads, no sign-up, fully private.',
+   224|      'Convert JSON to YAML online, free. Paste JSON and get clean YAML output - 100% in-browser, no uploads, no sign-up, fully private.',
    225|    path: 'json-to-yaml',
    226|    ogImage: DEFAULT_OG_IMAGE,
    227|    ogImageAlt: DEFAULT_OG_ALT,
    228|    h1: 'JSON to YAML Converter',
    229|    breadcrumb: 'Convert / JSON to YAML',
    bodyHtml: `<h2>JSON to YAML Converter</h2>
-   <p>Convert JSON to YAML entirely in your browser. Paste JSON and get clean, readable YAML output — no uploads, no sign-up, fully private.</p>
+   <p>Convert JSON to YAML entirely in your browser. Paste JSON and get clean, readable YAML output - no uploads, no sign-up, fully private.</p>
    <h3>Common Use Cases</h3>
    <ul>
    <li>Convert JSON API documentation examples to YAML format</li>
@@ -420,22 +420,22 @@
    <p>Paste valid JSON in the input pane. The js-yaml library converts it to clean YAML output preserving your data structure. All processing is local.</p>
    <h3>Related Tools</h3>
    <ul>
-   <li><a href="../yaml-to-json/">YAML to JSON Converter</a> — reverse: convert YAML to JSON</li>
-   <li><a href="../json-formatter/">JSON Formatter</a> — pretty-print JSON before conversion</li>
+   <li><a href="../yaml-to-json/">YAML to JSON Converter</a> - reverse: convert YAML to JSON</li>
+   <li><a href="../json-formatter/">JSON Formatter</a> - pretty-print JSON before conversion</li>
    </ul>
    <p><a href="../">← Back to all Paimon Tools</a></p>`,
    },
    'hash-generator': {
-   235|    title: 'SHA-256 Hash Generator — Free Online | Paimon Tools',
+   235|    title: 'SHA-256 Hash Generator - Free Online | Paimon Tools',
    236|    description:
-   237|      'Generate SHA-256 hash of any text online, free. Pure JS implementation — 100% in-browser, no uploads, no sign-up, fully private.',
+   237|      'Generate SHA-256 hash of any text online, free. Pure JS implementation - 100% in-browser, no uploads, no sign-up, fully private.',
    238|    path: 'hash-generator',
    239|    ogImage: DEFAULT_OG_IMAGE,
    240|    ogImageAlt: DEFAULT_OG_ALT,
    241|    h1: 'SHA-256 Hash Generator',
    242|    breadcrumb: 'Tools / Hash Generator',
    bodyHtml: `<h2>SHA-256 Hash Generator</h2>
-   <p>Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation using the Web Crypto API — your data never leaves your device. No uploads, no sign-up, fully private.</p>
+   <p>Generate SHA-256 hash of any text entirely in your browser. Pure JavaScript implementation using the Web Crypto API - your data never leaves your device. No uploads, no sign-up, fully private.</p>
    <h3>Common Use Cases</h3>
    <ul>
    <li>Verify file integrity by comparing SHA-256 checksums</li>
@@ -446,15 +446,15 @@
    <p>Type or paste text (or drop a file) and the Web Crypto API computes its SHA-256 hash instantly. The same algorithm used in HTTPS and Git. All processing is local.</p>
    <h3>Related Tools</h3>
    <ul>
-   <li><a href="../uuid-generator/">UUID Generator</a> — generate random identifiers</li>
-   <li><a href="../base64-encode/">Base64 Encode</a> — encode hash output to Base64</li>
+   <li><a href="../uuid-generator/">UUID Generator</a> - generate random identifiers</li>
+   <li><a href="../base64-encode/">Base64 Encode</a> - encode hash output to Base64</li>
    </ul>
    <p><a href="../">← Back to all Paimon Tools</a></p>`,
    },
    'combine-files': {
-   248|    title: 'Free Online File Combiner — Merge CSV & Excel Files | Paimon Tools',
+   248|    title: 'Free Online File Combiner - Merge CSV & Excel Files | Paimon Tools',
    249|    description:
-   250|      'Combine multiple CSV and Excel files into one, free. Append rows from 2+ files, auto-detect format, union columns — 100% in your browser, no uploads, no sign-up.',
+   250|      'Combine multiple CSV and Excel files into one, free. Append rows from 2+ files, auto-detect format, union columns - 100% in your browser, no uploads, no sign-up.',
    251|    path: 'combine-files',
    252|    ogImage: DEFAULT_OG_IMAGE,
    253|    ogImageAlt: DEFAULT_OG_ALT,
@@ -462,7 +462,7 @@
    255|    breadcrumb: 'Tools / Combine Files',
    256|    preloads: ['converter'],
    bodyHtml: `<h2>Combine CSV &amp; Excel Files</h2>
-   <p>Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns — no uploads, no sign-up, fully private. Supports mixed formats.</p>
+   <p>Merge multiple CSV, TSV and Excel files into one file entirely in your browser. Append rows from 2+ files, auto-detect format, union columns - no uploads, no sign-up, fully private. Supports mixed formats.</p>
    <h3>Common Use Cases</h3>
    <ul>
    <li>Merge monthly CSV reports into a single annual dataset</li>
@@ -473,23 +473,23 @@
    <p>Add two or more files (CSV, TSV, or Excel). The tool auto-detects each format, unions all columns, and appends rows. Download as CSV or Excel. All processing is local.</p>
    <h3>Related Tools</h3>
    <ul>
-   <li><a href="../csv-to-excel/">CSV to Excel Converter</a> — convert individual CSVs to .xlsx</li>
-   <li><a href="../excel-to-csv/">Excel to CSV Converter</a> — extract CSV from .xlsx files</li>
-   <li><a href="../diff-tool/">Diff Tool</a> — compare two files side by side</li>
+   <li><a href="../csv-to-excel/">CSV to Excel Converter</a> - convert individual CSVs to .xlsx</li>
+   <li><a href="../excel-to-csv/">Excel to CSV Converter</a> - extract CSV from .xlsx files</li>
+   <li><a href="../diff-tool/">Diff Tool</a> - compare two files side by side</li>
    </ul>
    <p><a href="../">← Back to all Paimon Tools</a></p>`,
    },
    'diff-tool': {
-   262|    title: 'Free Online Diff Tool — Compare Text Files Side by Side | Paimon Tools',
+   262|    title: 'Free Online Diff Tool - Compare Text Files Side by Side | Paimon Tools',
    263|    description:
-   264|      'Compare two texts or files online free. Side-by-side diff viewer with color-coded lines. Paste text or drop files — 100% in your browser, no uploads, no limits, no sign-up.',
+   264|      'Compare two texts or files online free. Side-by-side diff viewer with color-coded lines. Paste text or drop files - 100% in your browser, no uploads, no limits, no sign-up.',
    265|    path: 'diff-tool',
    266|    ogImage: DEFAULT_OG_IMAGE,
    267|    ogImageAlt: DEFAULT_OG_ALT,
-   268|    h1: 'Diff Tool — Compare Text Side by Side',
+   268|    h1: 'Diff Tool - Compare Text Side by Side',
    269|    breadcrumb: 'Tools / Diff Tool',
-    bodyHtml: `<h2>Diff Tool — Compare Text Side by Side</h2>
-    <p>Compare two texts or files entirely in your browser. Side-by-side or unified diff view with color-coded added/removed lines. Paste text or drop files — no uploads, no sign-up, fully private. Unlimited size.</p>
+    bodyHtml: `<h2>Diff Tool - Compare Text Side by Side</h2>
+    <p>Compare two texts or files entirely in your browser. Side-by-side or unified diff view with color-coded added/removed lines. Paste text or drop files - no uploads, no sign-up, fully private. Unlimited size.</p>
 <h3>Common Use Cases</h3>
 <ul>
   <li>Compare code revisions to see exactly what changed</li>
@@ -500,26 +500,26 @@
 <p>Paste text A in the left pane and text B in the right pane. The diff engine compares them line by line with word-level tokenization. Added lines appear in green, removed in red, modified in yellow.</p>
 <h3>Related Tools</h3>
 <ul>
-  <li><a href="../text-delimiter/">Text Delimiter Tool</a> — join and wrap list items</li>
-  <li><a href="../combine-files/">Combine Files</a> — merge multiple files into one</li>
+  <li><a href="../text-delimiter/">Text Delimiter Tool</a> - join and wrap list items</li>
+  <li><a href="../combine-files/">Combine Files</a> - merge multiple files into one</li>
 </ul>
     <p><a href="../">← Back to all Paimon Tools</a></p>`,
     faq: [
       { q: 'What is the maximum file size?',
-        a: 'There is no hard limit. Diffs are processed entirely in your browser — larger texts may take slightly longer but are fully supported.' },
+        a: 'There is no hard limit. Diffs are processed entirely in your browser - larger texts may take slightly longer but are fully supported.' },
     ],
   },
   'text-delimiter': {
-   275|    title: 'Text Delimiter Tool — Join & Wrap List Items Free | Paimon Tools',
+   275|    title: 'Text Delimiter Tool - Join & Wrap List Items Free | Paimon Tools',
    276|    description:
    277|      'Join list items with custom delimiter, quotes, and wrapping. Perfect for SQL IN clauses, HTML lists, and array literals. 100% in your browser, no uploads, free.',
    278|    path: 'text-delimiter',
    279|    ogImage: DEFAULT_OG_IMAGE,
-   280|    ogImageAlt: 'Paimon Tools Text Delimiter — join list items with custom separator',
+   280|    ogImageAlt: 'Paimon Tools Text Delimiter - join list items with custom separator',
    281|    h1: 'Text Delimiter Tool',
    282|    breadcrumb: 'Tools / Text Delimiter',
    283|    bodyHtml: `<h2>Text Delimiter Tool</h2>
-   284|<p>Join list items with custom delimiter, quotes, and wrapping — entirely in your browser. Perfect for SQL IN clauses, HTML lists (with &lt;li&gt; wrapping), and array literals.</p>
+   284|<p>Join list items with custom delimiter, quotes, and wrapping - entirely in your browser. Perfect for SQL IN clauses, HTML lists (with &lt;li&gt; wrapping), and array literals.</p>
    285|<h2>Common Use Cases</h2>
    286|<ul>
    287|  <li>Generate SQL <code>IN ('a', 'b', 'c')</code> from a list</li>
@@ -528,50 +528,50 @@
    290|  <li>Convert column data to pipe-separated values</li>
    291|</ul>
    292|<h2>How It Works</h2>
-   293|<p>Paste your items (one per line), choose a delimiter and optional quoting/wrapping. The output updates instantly. All processing happens locally — no uploads, fully private.</p>
+   293|<p>Paste your items (one per line), choose a delimiter and optional quoting/wrapping. The output updates instantly. All processing happens locally - no uploads, fully private.</p>
    294|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    295|  },
    296|  playground: {
-   297|    title: 'Online Code Playground — Free In-Browser Code Editor | Paimon Tools',
+   297|    title: 'Online Code Playground - Free In-Browser Code Editor | Paimon Tools',
    298|    description:
-   299|      'Write and run JavaScript, Python & HTML online, free. Code playground with live preview, Pyodide WASM Python (fetched from CDN, cached locally), syntax highlighting, and sandboxed execution — 100% client-side, no sign-up.',
+   299|      'Write and run JavaScript, Python & HTML online, free. Code playground with live preview, Pyodide WASM Python (fetched from CDN, cached locally), syntax highlighting, and sandboxed execution - 100% client-side, no sign-up.',
    300|    path: 'code',
    301|    ogImage: DEFAULT_OG_IMAGE,
-   302|    ogImageAlt: 'Paimon Tools Code Playground — run JavaScript, Python & HTML in your browser',
+   302|    ogImageAlt: 'Paimon Tools Code Playground - run JavaScript, Python & HTML in your browser',
    303|    h1: 'Online Code Playground',
    304|    breadcrumb: 'Tools / Playground',
    305|    bodyHtml: `<h2>Online Code Playground</h2>
-   306|<p>Write and run code in your browser. Choose from <strong>JavaScript</strong> (sandboxed execution), <strong>Python</strong> (via Pyodide WASM), <strong>HTML</strong> (live iframe preview), or <strong>JSON</strong> (format &amp; validate). Everything runs locally — no uploads, no sign-up, fully private.</p>
+   306|<p>Write and run code in your browser. Choose from <strong>JavaScript</strong> (sandboxed execution), <strong>Python</strong> (via Pyodide WASM), <strong>HTML</strong> (live iframe preview), or <strong>JSON</strong> (format &amp; validate). Everything runs locally - no uploads, no sign-up, fully private.</p>
    307|<p><strong>Try a specific language:</strong></p>
    308|<ul>
-   309|  <li><a href="code/javascript/">JavaScript Playground</a> — sandboxed JS execution</li>
-   310|  <li><a href="code/typescript/">TypeScript Playground</a> — transpile & run via esbuild</li>
-   311|  <li><a href="code/python/">Python Playground</a> — Pyodide WASM Python</li>
-   312|  <li><a href="code/html/">HTML Playground</a> — live iframe preview</li>
-   313|  <li><a href="code/json/">JSON Playground</a> — format &amp; validate</li>
+   309|  <li><a href="code/javascript/">JavaScript Playground</a> - sandboxed JS execution</li>
+   310|  <li><a href="code/typescript/">TypeScript Playground</a> - transpile & run via esbuild</li>
+   311|  <li><a href="code/python/">Python Playground</a> - Pyodide WASM Python</li>
+   312|  <li><a href="code/html/">HTML Playground</a> - live iframe preview</li>
+   313|  <li><a href="code/json/">JSON Playground</a> - format &amp; validate</li>
    314|</ul>
    315|<p><a href="../">← Back to all Paimon Tools</a></p>`,
    316|  },
    317|
    318|  // Per-language playground sub-pages (deep links at /code/<language>/)
    319|  'playground-javascript': {
-   320|    title: 'JavaScript Online — Run JS Code in Browser | Paimon Tools',
+   320|    title: 'JavaScript Online - Run JS Code in Browser | Paimon Tools',
    321|    description:
-   322|      'Write and run JavaScript online, free. Code playground with sandboxed execution, console output, syntax highlighting, and instant results — 100% in your browser, no sign-up.',
+   322|      'Write and run JavaScript online, free. Code playground with sandboxed execution, console output, syntax highlighting, and instant results - 100% in your browser, no sign-up.',
    323|    path: 'code/javascript',
    324|    ogImage: DEFAULT_OG_IMAGE,
-   325|    ogImageAlt: 'JavaScript Online Playground — run JS code in your browser, free',
+   325|    ogImageAlt: 'JavaScript Online Playground - run JS code in your browser, free',
    326|    h1: 'JavaScript Online Playground',
    327|    breadcrumb: 'Playground / JavaScript',
    328|    preloads: ['playground'],
    329|    bodyHtml: `<h2>JavaScript Online Playground</h2>
-   330|<p>Write and run JavaScript code in your browser. Sandboxed execution (Web Worker) with full console output, CodeMirror syntax highlighting, and instant results — no uploads, no sign-up, fully private.</p>
+   330|<p>Write and run JavaScript code in your browser. Sandboxed execution (Web Worker) with full console output, CodeMirror syntax highlighting, and instant results - no uploads, no sign-up, fully private.</p>
    331|<h2>Features</h2>
    332|<ul>
-   333|  <li>Sandboxed execution via Web Worker — your code runs in isolation with no DOM access</li>
-   334|  <li>Async callback capture — setTimeout, setInterval, fetch.then tracked automatically</li>
+   333|  <li>Sandboxed execution via Web Worker - your code runs in isolation with no DOM access</li>
+   334|  <li>Async callback capture - setTimeout, setInterval, fetch.then tracked automatically</li>
    335|  <li>CodeMirror 6 with oneDark theme, bracket matching, and line numbers</li>
-   336|  <li>Share code via compressed URL hash (lz-string) — no server needed</li>
+   336|  <li>Share code via compressed URL hash (lz-string) - no server needed</li>
    337|</ul>
    338|<h2>Example: Fetch API with Async/Await</h2>
    339|<pre>async function getData() {
@@ -581,7 +581,7 @@
    343|}
    344|getData();</pre>
    345|<h2>How It Works</h2>
-   346|<p>Your JavaScript runs in a dedicated Web Worker with its own event loop. Console output is streamed back in real time. Async callbacks are tracked — the playground waits for them to complete before finalizing. Everything is sandboxed: no DOM access, no localStorage, no cross-origin requests beyond standard fetch.</p>
+   346|<p>Your JavaScript runs in a dedicated Web Worker with its own event loop. Console output is streamed back in real time. Async callbacks are tracked - the playground waits for them to complete before finalizing. Everything is sandboxed: no DOM access, no localStorage, no cross-origin requests beyond standard fetch.</p>
    347|<p><a href="../../">← Back to all Paimon Tools</a></p>`,
    348|    faq: [
    349|      { q: 'Does the playground support setTimeout and fetch?',
@@ -592,21 +592,21 @@
    354|  },
    355|
    356|  'playground-typescript': {
-   357|    title: 'TypeScript Online — Run TS Code in Browser | Paimon Tools',
+   357|    title: 'TypeScript Online - Run TS Code in Browser | Paimon Tools',
    358|    description:
-   359|      'Write and run TypeScript online, free. Transpiled via esbuild-wasm with npm import support, sandboxed execution, console output, and syntax highlighting — 100% in your browser, no sign-up.',
+   359|      'Write and run TypeScript online, free. Transpiled via esbuild-wasm with npm import support, sandboxed execution, console output, and syntax highlighting - 100% in your browser, no sign-up.',
    360|    path: 'code/typescript',
    361|    ogImage: DEFAULT_OG_IMAGE,
-   362|    ogImageAlt: 'TypeScript Online Playground — transpile and run TS code in your browser, free',
+   362|    ogImageAlt: 'TypeScript Online Playground - transpile and run TS code in your browser, free',
    363|    h1: 'TypeScript Online Playground',
    364|    breadcrumb: 'Playground / TypeScript',
    365|    preloads: ['playground'],
    366|    bodyHtml: `<h2>TypeScript Online Playground</h2>
-   367|<p>Write and run TypeScript code in your browser. Powered by <strong>esbuild-wasm</strong> for fast transpilation with npm import support via esm.sh CDN. Sandboxed execution, full console output, and CodeMirror syntax highlighting — no uploads, no sign-up, fully private.</p>
+   367|<p>Write and run TypeScript code in your browser. Powered by <strong>esbuild-wasm</strong> for fast transpilation with npm import support via esm.sh CDN. Sandboxed execution, full console output, and CodeMirror syntax highlighting - no uploads, no sign-up, fully private.</p>
    368|<h2>Features</h2>
    369|<ul>
-   370|  <li>TypeScript transpilation via esbuild-wasm — runs in your browser, no server</li>
-   371|  <li>npm import support via esm.sh CDN — use any npm package</li>
+   370|  <li>TypeScript transpilation via esbuild-wasm - runs in your browser, no server</li>
+   371|  <li>npm import support via esm.sh CDN - use any npm package</li>
    372|  <li>Sandboxed execution (Web Worker) with full console capture</li>
    373|  <li>CodeMirror 6 with TypeScript syntax highlighting</li>
    374|</ul>
@@ -628,17 +628,17 @@
    390|  },
    391|
    392|  'playground-python': {
-   393|    title: 'Python Online — Run Python in Browser (Pyodide) | Paimon Tools',
+   393|    title: 'Python Online - Run Python in Browser (Pyodide) | Paimon Tools',
    394|    description:
-   395|      'Write and run Python online in your browser, free. Powered by Pyodide WASM (fetched from CDN, cached locally) — no server, no setup. Full Python with syntax highlighting and stdout output.',
+   395|      'Write and run Python online in your browser, free. Powered by Pyodide WASM (fetched from CDN, cached locally) - no server, no setup. Full Python with syntax highlighting and stdout output.',
    396|    path: 'code/python',
    397|    ogImage: DEFAULT_OG_IMAGE,
-   398|    ogImageAlt: 'Python Online Playground — Pyodide WASM Python in your browser',
+   398|    ogImageAlt: 'Python Online Playground - Pyodide WASM Python in your browser',
    399|    h1: 'Python Online Playground',
    400|    breadcrumb: 'Playground / Python',
    401|    preloads: ['playground'],
    402|    bodyHtml: `<h2>Python Online Playground</h2>
-   403|<p>Write and run Python code in your browser, powered by <strong>Pyodide WASM</strong> (fetched from CDN, cached locally). Full Python with syntax highlighting and stdout output — no server, no setup, fully private.</p>
+   403|<p>Write and run Python code in your browser, powered by <strong>Pyodide WASM</strong> (fetched from CDN, cached locally). Full Python with syntax highlighting and stdout output - no server, no setup, fully private.</p>
    404|<h2>Features</h2>
    405|<ul>
    406|  <li>Full CPython runtime via Pyodide WASM (~12 MB, cached after first load)</li>
@@ -664,21 +664,21 @@
    426|
    427|
    428|  'playground-html': {
-   429|    title: 'HTML Online — Live Preview HTML Editor | Paimon Tools',
+   429|    title: 'HTML Online - Live Preview HTML Editor | Paimon Tools',
    430|    description:
-   431|      'Write HTML online with live iframe preview, free. Edit HTML, CSS and JavaScript in a live-reload sandbox — no uploads, no sign-up, 100% in your browser.',
+   431|      'Write HTML online with live iframe preview, free. Edit HTML, CSS and JavaScript in a live-reload sandbox - no uploads, no sign-up, 100% in your browser.',
    432|    path: 'code/html',
    433|    ogImage: DEFAULT_OG_IMAGE,
-   434|    ogImageAlt: 'HTML Online Playground — live preview HTML editor in your browser',
+   434|    ogImageAlt: 'HTML Online Playground - live preview HTML editor in your browser',
    435|    h1: 'HTML Online Playground',
    436|    breadcrumb: 'Playground / HTML',
    437|    preloads: ['playground'],
    438|    bodyHtml: `<h2>HTML Online Playground</h2>
-   439|<p>Write HTML, CSS and JavaScript with a live iframe preview — updates in real time. Edit and see results instantly, no uploads, no sign-up, fully private.</p>
+   439|<p>Write HTML, CSS and JavaScript with a live iframe preview - updates in real time. Edit and see results instantly, no uploads, no sign-up, fully private.</p>
    440|<h2>Features</h2>
    441|<ul>
-   442|  <li>Live iframe preview with srcdoc — edit HTML/CSS/JS and see changes instantly</li>
-   443|  <li>Sandboxed execution — your page runs in isolation from the parent</li>
+   442|  <li>Live iframe preview with srcdoc - edit HTML/CSS/JS and see changes instantly</li>
+   443|  <li>Sandboxed execution - your page runs in isolation from the parent</li>
    444|  <li>Supports full HTML documents including &lt;style&gt; and &lt;script&gt; tags</li>
    445|  <li>CodeMirror 6 with HTML syntax highlighting</li>
    446|</ul>
@@ -703,17 +703,17 @@
    465|
    466|
    467|  'playground-json': {
-   468|    title: 'JSON Online — Format, Validate & Edit JSON | Paimon Tools',
+   468|    title: 'JSON Online - Format, Validate & Edit JSON | Paimon Tools',
    469|    description:
-   470|      'Format, validate and edit JSON online, free. Syntax highlighting, auto-validation, and pretty-printing — 100% client-side, no uploads, fully private.',
+   470|      'Format, validate and edit JSON online, free. Syntax highlighting, auto-validation, and pretty-printing - 100% client-side, no uploads, fully private.',
    471|    path: 'code/json',
    472|    ogImage: DEFAULT_OG_IMAGE,
-   473|    ogImageAlt: 'JSON Online Playground — format, validate and edit JSON in your browser',
+   473|    ogImageAlt: 'JSON Online Playground - format, validate and edit JSON in your browser',
    474|    h1: 'JSON Online Playground',
    475|    breadcrumb: 'Playground / JSON',
    476|    preloads: ['playground'],
    477|    bodyHtml: `<h2>JSON Online Playground</h2>
-   478|<p>Format, validate and edit JSON in your browser. Syntax highlighting with auto-validation, pretty-printing, and formatting tools — no uploads, no sign-up, fully private.</p>
+   478|<p>Format, validate and edit JSON in your browser. Syntax highlighting with auto-validation, pretty-printing, and formatting tools - no uploads, no sign-up, fully private.</p>
    479|<h2>Features</h2>
    480|<ul>
    481|  <li>Real-time JSON validation with inline error highlighting</li>
@@ -734,18 +734,18 @@
    496|  },
    497|
    498|  '404': {
-   499|    title: 'Page Not Found — Paimon Tools',
+   499|    title: 'Page Not Found - Paimon Tools',
    500|    description: 'The page you are looking for does not exist. Browse our free JSON, CSV and Excel conversion tools, code playground, and developer utilities.',
    501|    path: '404',
    502|    ogImage: DEFAULT_OG_IMAGE,
-   503|    ogImageAlt: 'Paimon Tools — page not found',
+   503|    ogImageAlt: 'Paimon Tools - page not found',
    504|    h1: 'Page Not Found (404)',
    505|    breadcrumb: 'Error / 404',
    506|    bodyHtml: `<h2>Page Not Found (404)</h2>
    507|<p>The page or tool you are looking for does not exist. It may have been moved or the URL might be incorrect.</p>
    508|<h2>Browse our free tools</h2>
    509|<ul>
-   510|  <li><a href="../">Home — all Paimon Tools</a></li>
+   510|  <li><a href="../">Home - all Paimon Tools</a></li>
    511|  <li><a href="../json-to-csv/">JSON to CSV Converter</a></li>
    512|  <li><a href="../csv-to-json/">CSV to JSON Converter</a></li>
    513|  <li><a href="../json-to-excel/">JSON to Excel (.xlsx)</a></li>
@@ -892,12 +892,12 @@
    654|      }
    655|  }
    656|
-   657|  // 404 page — not a WebApplication, just a generic WebPage
+   657|  // 404 page - not a WebApplication, just a generic WebPage
    658|  if (toolId === '404') {
    659|    return {
    660|      '@context': 'https://schema.org',
    661|      '@type': 'WebPage',
-   662|      name: '404 — Page Not Found',
+   662|      name: '404 - Page Not Found',
    663|      description: TOOL_SEO['404'].description,
    664|      url: `${SITE_URL}/404/`,
    665|      isPartOf: { '@type': 'WebApplication', name: 'Paimon Tools', url: `${SITE_URL}/` },
@@ -924,9 +924,9 @@
    686|/** Crawlable noscript body for a tool (or home) page. */
    687|export function noscriptBodyFor(toolId) {
    688|  if (!toolId || !TOOL_SEO[toolId]) {
-   689|    return `<h1>Paimon Tools — Free In-Browser Data Converter</h1>
+   689|    return `<h1>Paimon Tools - Free In-Browser Data Converter</h1>
    690|      <p>Convert between <strong>JSON, CSV, and Excel</strong> entirely in your browser.
-   691|        No backend, no uploads, no sign-up — your data never leaves your device.</p>
+   691|        No backend, no uploads, no sign-up - your data never leaves your device.</p>
    692|      <h2>Available tools</h2>
    693|      <ul>
    694|        <li><a href="${SITE_URL}/json-to-csv/">JSON to CSV converter</a></li>
@@ -942,9 +942,9 @@
    704|        <li><a href="${SITE_URL}/yaml-to-json/">YAML to JSON converter</a></li>
    705|        <li><a href="${SITE_URL}/json-to-yaml/">JSON to YAML converter</a></li>
    706|        <li><a href="${SITE_URL}/hash-generator/">SHA-256 hash generator</a></li>
-   707|        <li><a href="${SITE_URL}/combine-files/">Combine Files</a> — merge multiple CSV &amp; Excel files</li>
-   708|        <li><a href="${SITE_URL}/diff-tool/">Diff Tool</a> — compare two texts side by side</li>
-   709|        <li><a href="${SITE_URL}/code/">Code Playground</a> — run JavaScript, Python &amp; HTML</li>
+   707|        <li><a href="${SITE_URL}/combine-files/">Combine Files</a> - merge multiple CSV &amp; Excel files</li>
+   708|        <li><a href="${SITE_URL}/diff-tool/">Diff Tool</a> - compare two texts side by side</li>
+   709|        <li><a href="${SITE_URL}/code/">Code Playground</a> - run JavaScript, Python &amp; HTML</li>
    710|      </ul>
    711|      <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`
    712|  }
@@ -952,7 +952,7 @@
    714|  const seo = TOOL_SEO[toolId]
    715|  return `<h1>${seo.h1}</h1>
    716|      <p>${seo.description}</p>
-   717|      <p>This tool runs entirely in your browser — no uploads, no sign-up.
+   717|      <p>This tool runs entirely in your browser - no uploads, no sign-up.
    718|        Enable JavaScript to use it, or return to the
    719|        <a href="${SITE_URL}/">full list of data conversion tools</a>.</p>`
    720|}
