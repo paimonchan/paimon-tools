@@ -24,6 +24,7 @@ const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
 const CombineFilesTool = lazy(() => import('./components/CombineFilesTool'))
 const DiffTool = lazy(() => import('./components/DiffTool'))
 const TextDelimiterTool = lazy(() => import('./components/TextDelimiterTool'))
+const ExplainTool = lazy(() => import('./components/ExplainTool'))
 
 // Registry pattern for ref tools — add new tools here, routing auto-works
 const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
@@ -31,6 +32,7 @@ const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
   'diff-tool': DiffTool,
   'playground': PlaygroundTool,
   'text-delimiter': TextDelimiterTool,
+  'plan-explorer': ExplainTool,
 }
 
 function Shell() {

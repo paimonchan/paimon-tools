@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -323,6 +323,16 @@ export const TOOLS: ToolDefinition[] = [
     ],
     description:
       'Convert a list of items into delimited text. Choose separator, quoting, and wrapping — perfect for SQL IN clauses, HTML lists, and array literals. 100% client-side.',
+  },
+  {
+    id: 'plan-explorer',
+    name: 'Plan Explorer',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'git-branch',
+    keywords: ['explain', 'postgresql', 'postgres', 'query plan', 'database', 'sql explain', 'plan visualizer', 'performance', 'bottleneck'],
+    description:
+      'Visualize PostgreSQL EXPLAIN plans as interactive trees. Paste EXPLAIN output, see node costs, rows, and bottlenecks — 100% client-side, no uploads, no sign-up.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

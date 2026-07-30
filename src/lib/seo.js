@@ -733,6 +733,37 @@ print(json.dumps(data, indent=2))</pre>
     ],
   },
 
+  'plan-explorer': {
+    title: 'PostgreSQL Plan Explorer - Visualize EXPLAIN Output Online | Paimon Tools',
+    description:
+      'Free, private PostgreSQL EXPLAIN plan visualizer. Paste query plan output, see interactive tree with costs, rows, bottlenecks, and node details. 100% in your browser, no uploads, no sign-up.',
+    path: 'plan-explorer',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Plan Explorer - visualize PostgreSQL EXPLAIN plans as interactive trees',
+    h1: 'PostgreSQL Plan Explorer',
+    breadcrumb: 'Tools / Plan Explorer',
+    bodyHtml: `<h2>PostgreSQL Plan Explorer</h2>
+<p>Paste your PostgreSQL EXPLAIN output and get an interactive tree visualization. Each node shows cost, rows, and width — the bottleneck (highest cost node) is highlighted in red. Hover any node for details: actual time, buffers, loops, and annotations.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Run <code>EXPLAIN (ANALYZE, BUFFERS) your_query;</code> in PostgreSQL</li>
+  <li>Copy the output and paste it into the input pane</li>
+  <li>The tree auto-renders — pan & zoom to explore</li>
+  <li>Share via URL hash, download as SVG, or copy as text</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li>Interactive tree with pan &amp; zoom (D3.js)</li>
+  <li>Color-coded nodes: scan (blue), join (green), sort (purple), and more</li>
+  <li>Bottleneck detection — highest cost node highlighted</li>
+  <li>Hover tooltip with cost, rows, buffers, annotations</li>
+  <li>Share plans via compressed URL hash</li>
+  <li>Download as SVG or copy as indented text</li>
+  <li>100% client-side — your query plans never leave your device</li>
+</ul>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+
   '404': {
     title: 'Page Not Found - Paimon Tools',
     description: 'The page you are looking for does not exist. Browse our free JSON, CSV and Excel conversion tools, code playground, and developer utilities.',

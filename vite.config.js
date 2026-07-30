@@ -21,6 +21,8 @@ export default defineConfig({
             return 'vendor-codemirror-core'
           if (id.includes('@uiw/react-codemirror'))
             return 'vendor-codemirror-react'
+          if (id.includes('d3-') || id.includes('d3-hierarchy') || id.includes('d3-selection') || id.includes('d3-zoom') || id.includes('d3-scale'))
+            return 'vendor-d3'
         },
       },
     },
