@@ -14,8 +14,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import {
   Copy, Download, Share2, Eraser, Sparkles, GitBranch, ChevronDown, ChevronUp,
-  Columns3, ListTree, Table, BarChart3, FileText, Terminal, Database, Hash,
-  ArrowUpDown, Activity, Cpu, HardDrive, Info, Eye, Layers, Zap,
+  Columns3, ListTree, Table, BarChart3, FileText, Terminal, Database,
+  ArrowUpDown, Cpu, Info, Layers, Zap,
 } from 'lucide-react'
 import * as d3Hierarchy from 'd3-hierarchy'
 import * as d3Selection from 'd3-selection'
@@ -103,15 +103,6 @@ const METRIC_LABELS: Record<Metric, string> = {
   cost: 'Cost',
   buffers: 'Buffers',
   io: 'IO',
-}
-
-const METRIC_ICONS: Record<Metric, typeof Activity> = {
-  time: Activity,
-  rows: Layers,
-  estimation: Eye,
-  cost: Hash,
-  buffers: Database,
-  io: HardDrive,
 }
 
 const TAB_ICONS: Record<Tab, typeof Table> = {
