@@ -34,6 +34,7 @@ const LS_KEY = 'plan-explorer-input'
 const LS_VIEW_KEY = 'plan-explorer-view'
 const LS_METRIC_KEY = 'plan-explorer-metric'
 const LS_TAB_KEY = 'plan-explorer-tab'
+const LS_TREE_METRIC_KEY = 'plan-explorer-tree-metric'
 const SAMPLE_PLAN = `Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)
   ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)
         Hash Cond: (a.id = b.a_id)
@@ -49,6 +50,7 @@ type Tab = 'plan' | 'grid' | 'raw' | 'query' | 'stats'
 type ViewMode = 'table' | 'tree'
 type Metric = 'time' | 'rows' | 'estimation' | 'cost' | 'buffers' | 'io'
 type DetailTab = 'general' | 'io' | 'output' | 'workers' | 'misc'
+type TreeMetric = 'none' | 'duration' | 'rows' | 'cost'
 
 interface FlatRow {
   node: ExplainNode
@@ -347,6 +349,8 @@ export default function ExplainTool() {
   const [detailTab, setDetailTab] = useState<DetailTab>('general')
   const [queryText, setQueryText] = useState('')
   const [queryStatus, setQueryStatus] = useState<'hidden' | 'auto' | 'manual'>('hidden')
+  const [inputCollapsed, setInputCollapsed] = useState(false)
+  const [treeMetric, setTreeMetric] = useState<TreeMetric>(() => (loadPersisted(LS_TREE_METRIC_KEY, 'none') as TreeMetric))
 
   const svgRef = useRef<SVGSVGElement>(null)
   const treeContainerRef = useRef<HTMLDivElement>(null)
@@ -535,6 +539,7 @@ export default function ExplainTool() {
       setDurationMs(elapsed)
       setSelectedNode(null)
       setCollapsedIds(new Set())
+      setInputCollapsed(true)
 
       // Try to extract SQL query from input
       // Look for lines before EXPLAIN keyword
@@ -588,6 +593,7 @@ export default function ExplainTool() {
     setSelectedNode(null)
     setCollapsedIds(new Set())
     setQueryText('')
+    setInputCollapsed(false)
   }, [])
 
   // ── Share ───────────────────────────────────────────
@@ -671,6 +677,11 @@ export default function ExplainTool() {
     savePersisted(LS_METRIC_KEY, m)
   }, [])
 
+  const handleTreeMetric = useCallback((m: TreeMetric) => {
+    setTreeMetric(m)
+    savePersisted(LS_TREE_METRIC_KEY, m)
+  }, [])
+
   // ── Collapse / Select ───────────────────────────────
 
   const handleRowClick = useCallback((row: FlatRow) => {
@@ -686,7 +697,7 @@ export default function ExplainTool() {
     setDetailTab('general')
   }, [selectedNode])
 
-  // ── D3 tree rendering ───────────────────────────────
+  // ── D3 tree rendering (block-based, Dalibo-style) ──
 
   useEffect(() => {
     if (viewMode !== 'tree' || !plan?.tree || !treeContainerRef.current) {
@@ -723,23 +734,31 @@ export default function ExplainTool() {
     const currentPlan = plan.tree as ExplainNode
     const filteredTree = buildFiltered(currentPlan)
     const root = d3Hierarchy.hierarchy<ExplainNode>(filteredTree!, (d) => d.children.length > 0 ? d.children : undefined)
+
+    // Block dimensions
+    const BLOCK_W = 170
+    const BLOCK_H = 52
+    const VERT_GAP = 40
+
     const treeLayout = d3Hierarchy.tree<ExplainNode>()
-      .size([height - 80, width - 200])
-      .separation((a, b) => a.parent === b.parent ? 1.5 : 2.5)
+      .nodeSize([BLOCK_W + 30, BLOCK_H + VERT_GAP])
+      .separation((a, b) => a.parent === b.parent ? 1.2 : 2)
     treeLayout(root)
 
-    const initialTransform = d3Zoom.zoomIdentity.translate(120, 40).scale(0.85)
-    void svg.call(zoomBehavior.transform as unknown as (sel: typeof svg, t: typeof initialTransform) => void, initialTransform)
+    // Center the tree horizontally
+    let xMin = root.x! - BLOCK_W / 2
+    let xMax = root.x! + BLOCK_W / 2
+    root.each((d: HierarchyNode<ExplainNode>) => {
+      const left = d.x! - BLOCK_W / 2
+      const right = d.x! + BLOCK_W / 2
+      if (left < xMin) xMin = left
+      if (right > xMax) xMax = right
+    })
+    const treeW = xMax - xMin
+    const offsetX = (width - treeW) / 2 - xMin
 
-    // Links
-    g.append<SVGGElement>('g')
-      .selectAll<SVGPathElement, d3Hierarchy.HierarchyLink<ExplainNode>>('path')
-      .data(root.links()).enter().append<SVGPathElement>('path')
-      .attr('d', (d: d3Hierarchy.HierarchyLink<ExplainNode>) => {
-        const sy = d.source.y!, sx = d.source.x, ty = d.target.y!, tx = d.target.x
-        return `M${sy},${sx} C${(sy + ty) / 2},${sx} ${(sy + ty) / 2},${tx} ${ty},${tx}`
-      })
-      .attr('fill', 'none').attr('stroke', '#2e2a24').attr('stroke-width', 2)
+    const initialTransform = d3Zoom.zoomIdentity.translate(offsetX, 30).scale(0.85)
+    void svg.call(zoomBehavior.transform as unknown as (sel: typeof svg, t: typeof initialTransform) => void, initialTransform)
 
     // Bottleneck
     let maxCost = 0
@@ -748,30 +767,119 @@ export default function ExplainTool() {
       if (d.data.cost.total > maxCost) { maxCost = d.data.cost.total; maxNodeId = (d.data as any)._id || '' }
     })
 
+    // Find max metric value for tree coloring
+    function getTreeMetricValue(node: ExplainNode): number {
+      switch (treeMetric) {
+        case 'duration': return node.actualTime?.last ?? 0
+        case 'rows': return node.rows
+        case 'cost': return node.cost.total
+        default: return 0
+      }
+    }
+    let maxTreeMetric = 0
+    root.each((d: HierarchyNode<ExplainNode>) => {
+      const v = getTreeMetricValue(d.data)
+      if (v > maxTreeMetric) maxTreeMetric = v
+    })
+
+    // Links — step paths (vertical → horizontal → vertical)
+    g.append<SVGGElement>('g')
+      .selectAll<SVGPathElement, d3Hierarchy.HierarchyLink<ExplainNode>>('path')
+      .data(root.links()).enter().append<SVGPathElement>('path')
+      .attr('d', (d: d3Hierarchy.HierarchyLink<ExplainNode>) => {
+        const sx = d.source.x, sy = d.source.y! + BLOCK_H / 2
+        const tx = d.target.x, ty = d.target.y! - BLOCK_H / 2
+        const my = (sy + ty) / 2
+        return `M${sx},${sy} V${my} H${tx} V${ty}`
+      })
+      .attr('fill', 'none').attr('stroke', '#2e2a24').attr('stroke-width', 2)
+
     // Nodes
     const node = g.append<SVGGElement>('g')
       .selectAll<SVGGElement, d3Hierarchy.HierarchyNode<ExplainNode>>('g')
       .data(root.descendants()).enter().append<SVGGElement>('g')
-      .attr('transform', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => `translate(${d.y},${d.x})`)
+      .attr('transform', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => `translate(${d.x},${d.y})`)
 
-    node.append('circle').attr('r', 6)
-      .attr('fill', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => getNodeColor(d.data.type))
-      .attr('stroke', (d: d3Hierarchy.HierarchyNode<ExplainNode>) =>
-        d.data === selectedNode ? '#e7ac34' : (d.data as any)._id === maxNodeId ? '#ef4444' : '#1d1a16')
+    // Block background rect
+    node.append('rect')
+      .attr('x', -BLOCK_W / 2).attr('y', -BLOCK_H / 2)
+      .attr('width', BLOCK_W).attr('height', BLOCK_H)
+      .attr('rx', 6).attr('ry', 6)
+      .attr('fill', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
+        const baseColor = getNodeColor(d.data.type)
+        if (treeMetric === 'none' || maxTreeMetric === 0) return baseColor + '40' // 25% opacity
+        const v = getTreeMetricValue(d.data)
+        const intensity = v / maxTreeMetric
+        // Interpolate between 15% and 60% opacity based on metric value
+        const alpha = Math.round(0.15 + intensity * 0.45)
+        const hex = alpha.toString(16).padStart(2, '0')
+        return baseColor + hex
+      })
+      .attr('stroke', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
+        if (d.data === selectedNode) return '#e7ac34'
+        if ((d.data as any)._id === maxNodeId) return '#ef4444'
+        return '#1d1a16'
+      })
       .attr('stroke-width', (d: d3Hierarchy.HierarchyNode<ExplainNode>) =>
-        d.data === selectedNode || (d.data as any)._id === maxNodeId ? 3 : 1.5)
+        d.data === selectedNode || (d.data as any)._id === maxNodeId ? 2.5 : 1.5)
 
-    // Collapse indicator
+    // Node name (bold, top-left)
+    node.append('text')
+      .attr('x', -BLOCK_W / 2 + 8).attr('y', -BLOCK_H / 2 + 16)
+      .attr('font-size', '11px').attr('font-weight', '600')
+      .attr('font-family', "'JetBrains Mono', ui-monospace, monospace")
+      .attr('fill', '#e4e0d6')
+      .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => truncateText(d.data.label, 20))
+
+    // Node number (#1, #2, etc.) — top-right
+    // Find the node index
+    let nodeIndex = 0
+    const idToIndex = new Map<string, number>()
+    root.eachBefore((d: HierarchyNode<ExplainNode>) => {
+      nodeIndex++
+      idToIndex.set((d.data as any)._id, nodeIndex)
+    })
+
+    node.append('text')
+      .attr('x', BLOCK_W / 2 - 8).attr('y', -BLOCK_H / 2 + 16)
+      .attr('text-anchor', 'end')
+      .attr('font-size', '9px').attr('fill', '#78716c')
+      .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
+        const idx = idToIndex.get((d.data as any)._id) || 0
+        return `#${idx}`
+      })
+
+    // Key info (small, below name)
+    node.append('text')
+      .attr('x', -BLOCK_W / 2 + 8).attr('y', -BLOCK_H / 2 + 30)
+      .attr('font-size', '8px').attr('fill', '#78716c')
+      .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
+        const keyInfo = getNodeKeyInfo(d.data)
+        if (keyInfo) return truncateText(keyInfo, 28)
+        return ''
+      })
+
+    // Metric value (bottom-right)
+    if (treeMetric !== 'none') {
+      node.append('text')
+        .attr('x', BLOCK_W / 2 - 8).attr('y', -BLOCK_H / 2 + 30)
+        .attr('text-anchor', 'end')
+        .attr('font-size', '8px').attr('fill', '#a8a29e')
+        .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
+          const v = getTreeMetricValue(d.data)
+          if (v === 0) return ''
+          return `${treeMetric}=${formatMetricShort(v)}`
+        })
+    }
+
+    // Collapse indicator (left edge)
     node.filter((d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
       const orig = findOriginalNode(currentPlan, (d.data as any)._id)
       return !!(orig && orig.children.length > 0)
-    }).append('text').attr('x', -6).attr('y', -12).attr('font-size', '8px').attr('fill', '#78716c').attr('text-anchor', 'middle')
+    }).append('text')
+      .attr('x', -BLOCK_W / 2 - 10).attr('y', 4)
+      .attr('font-size', '9px').attr('fill', '#78716c').attr('text-anchor', 'middle')
       .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => collapsedIds.has((d.data as any)._id) ? '▶' : '▼')
-
-    node.append('text').attr('x', 14).attr('y', -2).attr('font-size', '13px').attr('font-family', "'JetBrains Mono', ui-monospace, monospace").attr('fill', '#e4e0d6')
-      .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => truncateText(d.data.label, 30))
-    node.append('text').attr('x', 14).attr('y', 12).attr('font-size', '10px').attr('fill', '#78716c')
-      .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => `cost=${formatMetric(d.data.cost.total)} · rows=${d.data.rows}`)
 
     // Click
     node.on('click', function (_e: MouseEvent, d: d3Hierarchy.HierarchyNode<ExplainNode>) {
@@ -799,20 +907,20 @@ export default function ExplainTool() {
       if (n.buffers) html += `<div>Buffers: shared hit=${n.buffers.sharedHit}</div>`
       for (const ann of n.annotations) html += `<div style="color:#a8a29e;font-size:11px">${ann}</div>`
       tooltip.style('display', 'block').html(html).style('left', `${event.offsetX + 15}px`).style('top', `${event.offsetY - 10}px`)
-      d3Selection.select(this).select('circle').attr('r', 8).attr('stroke', '#e7ac34').attr('stroke-width', 2)
+      d3Selection.select(this).select('rect').attr('stroke', '#e7ac34').attr('stroke-width', 2.5)
     })
     node.on('mousemove', function (this: SVGGElement, event: MouseEvent) {
       tooltip.style('left', `${event.offsetX + 15}px`).style('top', `${event.offsetY - 10}px`)
     })
     node.on('mouseleave', function (this: SVGGElement, _e: MouseEvent, d: d3Hierarchy.HierarchyNode<ExplainNode>) {
-      d3Selection.select(this).select('circle').attr('r', 6)
+      d3Selection.select(this).select('rect')
         .attr('stroke', d.data === selectedNode ? '#e7ac34' : (d.data as any)._id === maxNodeId ? '#ef4444' : '#1d1a16')
-        .attr('stroke-width', d.data === selectedNode || (d.data as any)._id === maxNodeId ? 3 : 1.5)
+        .attr('stroke-width', d.data === selectedNode || (d.data as any)._id === maxNodeId ? 2.5 : 1.5)
       tooltip.style('display', 'none')
     })
 
     return () => { tooltip.remove() }
-  }, [plan, viewMode, selectedNode, collapsedIds])
+  }, [plan, viewMode, selectedNode, collapsedIds, treeMetric])
 
   // ── Keyboard shortcuts ──────────────────────────────
 
@@ -1006,22 +1114,36 @@ export default function ExplainTool() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-        {/* Input pane */}
-        <div className="flex min-h-0 flex-1 flex-col md:w-1/4 md:max-w-sm">
-          <div className="flex items-center justify-between border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
-            <div className="flex items-center gap-1.5">
-              <GitBranch className="h-3.5 w-3.5 text-honey-400" />
-              <span className="text-[11px] font-500 text-ink-200">Plan Explorer</span>
+        {/* Input pane — auto-collapses when plan parsed */}
+        <div className={`flex min-h-0 flex-col border-r border-ink-800 transition-all duration-200 ${inputCollapsed && plan ? 'md:w-8 md:max-w-8' : 'md:w-1/4 md:max-w-sm'}`}>
+          {inputCollapsed && plan ? (
+            /* Collapsed: thin strip */
+            <div className="flex flex-col items-center py-1 cursor-pointer" onClick={() => setInputCollapsed(false)} title="Expand input pane">
+              <GitBranch className="h-4 w-4 text-honey-400 mb-0.5" />
+              <span className="text-[8px] text-ink-500 writing-mode-vertical" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>Input</span>
             </div>
-            <div className="flex items-center gap-0.5">
-              <button onClick={handleSample} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Load sample plan"><Sparkles className="h-2.5 w-2.5" />Sample</button>
-              <button onClick={handleClear} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Clear (Esc)"><Eraser className="h-2.5 w-2.5" />Clear</button>
+          ) : (
+            /* Expanded: full input pane */
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="flex items-center justify-between border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
+                <div className="flex items-center gap-1.5">
+                  <GitBranch className="h-3.5 w-3.5 text-honey-400" />
+                  <span className="text-[11px] font-500 text-ink-200">Plan Explorer</span>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  {plan && (
+                    <button onClick={() => setInputCollapsed(true)} className="rounded px-1.5 py-0.5 text-[10px] text-ink-500 hover:bg-ink-800 hover:text-ink-200" title="Collapse input pane">◀</button>
+                  )}
+                  <button onClick={handleSample} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Load sample plan"><Sparkles className="h-2.5 w-2.5" />Sample</button>
+                  <button onClick={handleClear} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Clear (Esc)"><Eraser className="h-2.5 w-2.5" />Clear</button>
+                </div>
+              </div>
+              <textarea className="flex-1 resize-none border-0 bg-transparent p-3 font-mono text-[12px] leading-relaxed text-ink-200 outline-none placeholder:text-ink-600"
+                placeholder="Paste EXPLAIN output here, or drop a .plan file&#10;&#10;Example:&#10;Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)&#10;  ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)"
+                value={inputText} onChange={handleInputChange} onDragOver={handleDragOver} onDrop={handleDrop} spellCheck={false}
+              />
             </div>
-          </div>
-          <textarea className="flex-1 resize-none border-0 bg-transparent p-3 font-mono text-[12px] leading-relaxed text-ink-200 outline-none placeholder:text-ink-600"
-            placeholder="Paste EXPLAIN output here, or drop a .plan file&#10;&#10;Example:&#10;Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)&#10;  ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)"
-            value={inputText} onChange={handleInputChange} onDragOver={handleDragOver} onDrop={handleDrop} spellCheck={false}
-          />
+          )}
         </div>
 
         {/* Visualization pane */}
@@ -1082,6 +1204,14 @@ export default function ExplainTool() {
                     <div className="flex rounded border border-ink-700 overflow-hidden">
                       {(Object.keys(METRIC_LABELS) as Metric[]).map(m => (
                         <button key={m} onClick={() => handleMetric(m)} className={`px-1.5 py-0.5 text-[9px] ${metric === m ? 'bg-ink-700 text-ink-200' : 'text-ink-500 hover:bg-ink-800'}`} title={METRIC_LABELS[m]}>{m === 'time' ? 'ms' : m === 'estimation' ? '~' : m.slice(0, 2)}</button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Tree metric toggle */}
+                  {viewMode === 'tree' && plan?.tree && (
+                    <div className="flex rounded border border-ink-700 overflow-hidden">
+                      {(['none', 'duration', 'rows', 'cost'] as TreeMetric[]).map(m => (
+                        <button key={m} onClick={() => handleTreeMetric(m)} className={`px-1.5 py-0.5 text-[9px] ${treeMetric === m ? 'bg-ink-700 text-ink-200' : 'text-ink-500 hover:bg-ink-800'}`} title={m}>{m === 'none' ? '—' : m.slice(0, 3)}</button>
                       ))}
                     </div>
                   )}
