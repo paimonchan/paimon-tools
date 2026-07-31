@@ -459,6 +459,34 @@ export default function ExplainTool() {
       .sort((a, b) => b.time - a.time)
   }, [plan])
 
+  const statsByFunction = useMemo(() => {
+    if (!plan?.tree) return []
+    const map = new Map<string, { count: number; time: number }>()
+    function walk(node: ExplainNode) {
+      // Look for function calls in annotations (e.g., count(*), sum(), etc.)
+      for (const ann of node.annotations) {
+        const fnMatch = ann.match(/\b(\w+)\s*\(/g)
+        if (fnMatch) {
+          for (const fn of fnMatch) {
+            const fnName = fn.replace(/\s*\($/, '')
+            if (['count', 'sum', 'avg', 'min', 'max', 'coalesce', 'nullif', 'row_number', 'rank', 'dense_rank', 'lag', 'lead', 'first_value', 'last_value'].includes(fnName.toLowerCase())) {
+              const entry = map.get(fnName) || { count: 0, time: 0 }
+              entry.count++
+              entry.time += node.actualTime?.last ?? 0
+              map.set(fnName, entry)
+            }
+          }
+        }
+      }
+      for (const child of node.children) walk(child)
+    }
+    walk(plan.tree)
+    const totalTime = Array.from(map.values()).reduce((s, e) => s + e.time, 0)
+    return Array.from(map.entries())
+      .map(([name, data]) => ({ name, count: data.count, time: data.time, timePct: totalTime > 0 ? (data.time / totalTime) * 100 : 0 }))
+      .sort((a, b) => b.time - a.time)
+  }, [plan])
+
   // ── Parse input ─────────────────────────────────────
 
   const parseInput = useCallback((text: string) => {
@@ -1186,31 +1214,52 @@ export default function ExplainTool() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-[10px] font-mono">
                     <thead>
+                      {/* Top header row: group headers */}
                       <tr className="border-b border-ink-800 bg-ink-900/60 text-ink-500">
+                        <th className="sticky top-0 px-2 py-1 text-left font-medium w-8"></th>
+                        <th className="sticky top-0 px-2 py-1 text-center font-medium" colSpan={2}>io</th>
+                        <th className="sticky top-0 px-2 py-1 text-center font-medium" colSpan={5}></th>
+                        <th className="sticky top-0 px-2 py-1 text-center font-medium" colSpan={4}>shared</th>
+                      </tr>
+                      {/* Bottom header row: column names */}
+                      <tr className="border-b border-ink-800 bg-ink-900/40 text-ink-500">
                         <th className="sticky top-0 px-2 py-1 text-left font-medium">#</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">time</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">read</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">rows</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">estim</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">cost</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">loops</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">filter</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">heap</th>
                         <th className="sticky top-0 px-2 py-1 text-left font-medium min-w-[200px]">Node</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Time</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Read</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Rows</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Estim</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Cost</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Loops</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Filter</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Hit</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Read</th>
-                        <th className="sticky top-0 px-2 py-1 text-right font-medium">Width</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">hit</th>
+                        <th className="sticky top-0 px-2 py-1 text-right font-medium">read</th>
                       </tr>
                     </thead>
                     <tbody>
                       {gridRows.map((row) => {
                         const isSelected = row.node === selectedNode
                         const time = row.node.actualTime?.last ?? 0
-                        const read = row.node.buffers?.sharedRead ?? 0
+                        const ioRead = row.node.buffers?.sharedRead ?? 0
                         const loops = row.node.loops ?? 1
                         const hit = row.node.buffers?.sharedHit ?? 0
+                        const heapRead = row.node.buffers?.tempRead ?? 0
+                        const sharedRead = row.node.buffers?.sharedRead ?? 0
                         const filterAnn = row.node.annotations.find(a => a.startsWith('Filter:'))
                         const filterPct = filterAnn ? '8%' : ''
                         const hasHighCost = row.node.cost.total > (plan?.summary.totalCost || 1) * 0.3
+                        // Estimation quality: actual rows / planned rows
+                        const plannedRows = row.node.details.rows ? Number(row.node.details.rows) : null
+                        const actualRows = row.node.rows
+                        let estimStr = ''
+                        if (row.node.actualTime && plannedRows && plannedRows > 0) {
+                          const ratio = actualRows / plannedRows
+                          const arrow = ratio > 1 ? '▴' : '▾'
+                          estimStr = `${ratio.toFixed(1)}×${arrow}`
+                        } else if (row.node.actualTime) {
+                          estimStr = `~${actualRows.toLocaleString()}`
+                        }
                         return (
                           <tr
                             key={row.index}
@@ -1218,28 +1267,28 @@ export default function ExplainTool() {
                             className={`border-b border-ink-800/30 cursor-pointer transition-colors hover:bg-ink-800/40 ${isSelected ? 'bg-honey-500/10' : ''}`}
                           >
                             <td className="px-2 py-1 text-ink-500">#{row.index}</td>
-                            <td className="px-2 py-1 text-ink-200 whitespace-nowrap">
-                              <span className="text-ink-500">{row.treePrefix}</span>
-                              <span className="ml-0.5" style={{ color: getNodeColor(row.node.type) }}>{row.node.label}</span>
-                            </td>
                             <td className={`px-2 py-1 text-right ${time > 0 ? 'text-ink-200' : 'text-ink-500'}`}>
-                              {time > 0 ? `${time.toFixed(2)}` : '-'}
+                              {time > 0 ? time.toFixed(2) : '-'}
                             </td>
-                            <td className={`px-2 py-1 text-right ${read > 0 ? 'text-orange-300' : 'text-ink-500'}`}>
-                              {read > 0 ? read : '-'}
+                            <td className={`px-2 py-1 text-right ${ioRead > 0 ? 'text-orange-300' : 'text-ink-500'}`}>
+                              {ioRead > 0 ? ioRead : '-'}
                             </td>
                             <td className="px-2 py-1 text-right text-ink-200">{row.node.rows.toLocaleString()}</td>
-                            <td className={`px-2 py-1 text-right ${row.node.actualTime ? 'text-yellow-400' : 'text-ink-500'}`}>
-                              {row.node.actualTime ? '~' : '-'}
+                            <td className={`px-2 py-1 text-right ${estimStr ? 'text-yellow-400' : 'text-ink-500'}`}>
+                              {estimStr || '-'}
                             </td>
                             <td className={`px-2 py-1 text-right ${hasHighCost ? 'text-red-300 font-600' : 'text-ink-200'}`}>
                               {row.node.cost.total.toFixed(1)}
                             </td>
                             <td className="px-2 py-1 text-right text-ink-400">{loops > 1 ? loops : '-'}</td>
                             <td className="px-2 py-1 text-right text-ink-500">{filterPct || '-'}</td>
+                            <td className="px-2 py-1 text-right text-ink-500">{heapRead > 0 ? heapRead : '-'}</td>
+                            <td className="px-2 py-1 text-ink-200 whitespace-nowrap">
+                              <span className="text-ink-500">{row.treePrefix}</span>
+                              <span className="ml-0.5" style={{ color: getNodeColor(row.node.type) }}>{row.node.label}</span>
+                            </td>
                             <td className="px-2 py-1 text-right text-ink-400">{hit > 0 ? hit : '-'}</td>
-                            <td className="px-2 py-1 text-right text-ink-400">{read > 0 ? read : '-'}</td>
-                            <td className="px-2 py-1 text-right text-ink-500">{row.node.width}</td>
+                            <td className="px-2 py-1 text-right text-ink-400">{sharedRead > 0 ? sharedRead : '-'}</td>
                           </tr>
                         )
                       })}
@@ -1405,7 +1454,46 @@ export default function ExplainTool() {
                     </div>
                   )}
 
-                  {statsByTable.length === 0 && statsByNodeType.length === 0 && statsByIndex.length === 0 && (
+                  {/* Function stats */}
+                  <div>
+                    <div className="mb-2 flex items-center gap-1.5">
+                      <Terminal className="h-3 w-3 text-honey-400" />
+                      <span className="text-[10px] font-500 text-ink-300 uppercase tracking-wider">Functions</span>
+                    </div>
+                    {statsByFunction.length > 0 ? (
+                      <table className="w-full text-[10px] font-mono">
+                        <thead>
+                          <tr className="border-b border-ink-800 text-ink-500">
+                            <th className="px-2 py-1 text-left font-medium">Function</th>
+                            <th className="px-2 py-1 text-right font-medium">Count</th>
+                            <th className="px-2 py-1 text-right font-medium">Time</th>
+                            <th className="px-2 py-1 text-right font-medium">%</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {statsByFunction.map(stat => (
+                            <tr key={stat.name} className="border-b border-ink-800/30 hover:bg-ink-800/30">
+                              <td className="px-2 py-1 text-ink-200 font-mono">{stat.name}()</td>
+                              <td className="px-2 py-1 text-right text-ink-400">{stat.count}</td>
+                              <td className="px-2 py-1 text-right text-ink-200">{stat.time.toFixed(2)}ms</td>
+                              <td className="px-2 py-1 text-right">
+                                <span className="text-ink-400">{stat.timePct.toFixed(0)}%</span>
+                                <div className="mt-0.5 h-1 w-full rounded-full bg-ink-800">
+                                  <div className="h-full rounded-full bg-teal-500/60" style={{ width: `${Math.max(stat.timePct, 2)}%` }} />
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="rounded border border-ink-800 bg-ink-900/40 px-3 py-2 text-[11px] text-ink-500">
+                        No function used
+                      </div>
+                    )}
+                  </div>
+
+                  {statsByTable.length === 0 && statsByNodeType.length === 0 && statsByIndex.length === 0 && statsByFunction.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-ink-500">
                       <BarChart3 className="h-8 w-8 text-ink-700 mb-3" />
                       <p className="text-sm">No stats available.</p>
