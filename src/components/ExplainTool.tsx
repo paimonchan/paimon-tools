@@ -684,18 +684,58 @@ export default function ExplainTool() {
 
   // ── Collapse / Select ───────────────────────────────
 
-  const handleRowClick = useCallback((row: FlatRow) => {
-    if (row.hasChildren) {
+  // Build parent map for auto-expand
+  const parentMap = useMemo(() => {
+    const map = new Map<string, string>()
+    if (!plan?.tree) return map
+    function walk(node: ExplainNode, parentId?: string) {
+      const id = (node as any)._id
+      if (parentId) map.set(id, parentId)
+      for (const child of node.children) walk(child, id)
+    }
+    walk(plan.tree)
+    return map
+  }, [plan])
+
+  // Get ancestor IDs for a node (walks up to root)
+  const getAncestorIds = useCallback((nodeId: string): string[] => {
+    const ancestors: string[] = []
+    let currentId = nodeId
+    let maxIter = 100
+    while (maxIter > 0) {
+      const parentId = parentMap.get(currentId)
+      if (!parentId) break
+      ancestors.push(parentId)
+      currentId = parentId
+      maxIter--
+    }
+    return ancestors
+  }, [parentMap])
+
+  const handleRowSelect = useCallback((row: FlatRow) => {
+    // Select (or deselect if same node)
+    setSelectedNode(prev => row.node === prev ? null : row.node)
+    setDetailTab('general')
+    // Auto-expand ancestors so the selected node is visible
+    const ancestors = getAncestorIds(row._id)
+    if (ancestors.length > 0) {
       setCollapsedIds(prev => {
         const next = new Set(prev)
-        if (next.has(row._id)) next.delete(row._id)
-        else next.add(row._id)
+        for (const aid of ancestors) next.delete(aid)
         return next
       })
     }
-    setSelectedNode(row.node === selectedNode ? null : row.node)
-    setDetailTab('general')
-  }, [selectedNode])
+  }, [getAncestorIds])
+
+  const handleCollapseToggle = useCallback((row: FlatRow, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCollapsedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(row._id)) next.delete(row._id)
+      else next.add(row._id)
+      return next
+    })
+  }, [])
 
   // ── D3 tree rendering (block-based, Dalibo-style) ──
 
@@ -881,14 +921,33 @@ export default function ExplainTool() {
       .attr('font-size', '9px').attr('fill', '#78716c').attr('text-anchor', 'middle')
       .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => collapsedIds.has((d.data as any)._id) ? '▶' : '▼')
 
-    // Click
-    node.on('click', function (_e: MouseEvent, d: d3Hierarchy.HierarchyNode<ExplainNode>) {
-      const id = (d.data as any)._id
-      const orig = findOriginalNode(currentPlan, id)
-      if (orig && orig.children.length > 0) {
-        setCollapsedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
+    // Click on block → select; click on collapse indicator → toggle collapse
+    node.on('click', function (event: MouseEvent, d: d3Hierarchy.HierarchyNode<ExplainNode>) {
+      const target = event.target as SVGElement
+      const isCollapseText = target.tagName === 'text' && (target.textContent === '▶' || target.textContent === '▼')
+
+      if (isCollapseText) {
+        // Toggle collapse only
+        event.stopPropagation()
+        const id = (d.data as any)._id
+        setCollapsedIds(prev => {
+          const n = new Set(prev)
+          if (n.has(id)) n.delete(id); else n.add(id)
+          return n
+        })
+      } else {
+        // Select only (with auto-expand ancestors)
+        const id = (d.data as any)._id
+        setSelectedNode(d.data === selectedNode ? null : d.data)
+        const ancestors = getAncestorIds(id)
+        if (ancestors.length > 0) {
+          setCollapsedIds(prev => {
+            const next = new Set(prev)
+            for (const aid of ancestors) next.delete(aid)
+            return next
+          })
+        }
       }
-      setSelectedNode(d.data === selectedNode ? null : d.data)
     })
 
     // Tooltip
@@ -920,7 +979,7 @@ export default function ExplainTool() {
     })
 
     return () => { tooltip.remove() }
-  }, [plan, viewMode, selectedNode, collapsedIds, treeMetric])
+  }, [plan, viewMode, selectedNode, collapsedIds, treeMetric, getAncestorIds])
 
   // ── Keyboard shortcuts ──────────────────────────────
 
@@ -1283,7 +1342,7 @@ export default function ExplainTool() {
                     return (
                       <div
                         key={row._id}
-                        onClick={() => handleRowClick(row)}
+                        onClick={() => handleRowSelect(row)}
                         className={`flex cursor-pointer items-center gap-2 px-2 py-1 text-[11px] transition-colors hover:bg-ink-800/50 ${isSelected ? 'bg-honey-500/10' : ''}`}
                       >
                         {/* Row number */}
@@ -1296,10 +1355,10 @@ export default function ExplainTool() {
                             </span>
                           )}
                         </div>
-                        {/* Collapse icon */}
-                        <div className="flex shrink-0 items-center w-3">
+                        {/* Collapse icon — separate click handler */}
+                        <div className="flex shrink-0 items-center w-3" onClick={row.hasChildren ? (e) => handleCollapseToggle(row, e) : undefined}>
                           {row.hasChildren ? (
-                            <span className="text-[8px] text-ink-500">{row.isCollapsed ? '▶' : '▼'}</span>
+                            <span className="text-[8px] text-ink-500 hover:text-ink-200 cursor-pointer">{row.isCollapsed ? '▶' : '▼'}</span>
                           ) : (
                             <span className="w-3" />
                           )}
