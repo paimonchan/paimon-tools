@@ -334,11 +334,19 @@ function getNodeKeyInfo(node: ExplainNode): string {
 function looksLikePlan(text: string): boolean {
   const trimmed = text.trim()
   if (!trimmed) return false
-  // A node line ends with the standard (cost=.. .. rows=.. width=..) marker.
-  // The label before it can contain anything (colons like "Gather Motion 2:1",
-  // dots, underscores, arrows, etc.) so match any chars up to the marker.
-  // Costs are decimals ("0.00..431.00") so use [\d.]+ for each range side.
-  return /^\s*(?:->\s*)?.*\(\s*cost=[\d.]+\.\.[\d.]+\s+rows=\d+\s+width=\d+\)/m.test(trimmed)
+  // Node lines carry three markers: cost=.. .. , rows=.. and width=..
+  // Check for them anywhere — robust against colons, decimals, workers,
+  // actual-time suffixes, and any node label shape.
+  return (
+    /\bcost=[\d.]+\.\.[\d.]+/.test(trimmed) &&
+    /\brows=\d+/.test(trimmed) &&
+    /\bwidth=\d+/.test(trimmed)
+  )
+}
+
+// JSON plans (EXPLAIN FORMAT JSON) are not supported by the text parser
+function isJsonPlan(text: string): boolean {
+  return /^\s*[[{]/.test(text.trim())
 }
 
 // ── Component ─────────────────────────────────────────
@@ -533,7 +541,11 @@ export default function ExplainTool() {
       const elapsed = performance.now() - start
 
       if (!result.tree) {
-        setError('Could not parse EXPLAIN output.')
+        setError(
+          isJsonPlan(trimmed)
+            ? 'JSON format detected — this tool parses text-format EXPLAIN. Run EXPLAIN without FORMAT JSON.'
+            : 'Could not parse EXPLAIN output.',
+        )
         setStatus('error')
         setPlan(null)
         return
@@ -1269,6 +1281,11 @@ export default function ExplainTool() {
                     <span className="flex items-center gap-1 text-[9px] text-honey-300">
                       <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-honey-400" />
                       Plan detected — click Analyze
+                    </span>
+                  ) : isJsonPlan(inputText) ? (
+                    <span className="flex items-center gap-1 text-[9px] text-yellow-400">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" />
+                      JSON plan — paste text format instead
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 text-[9px] text-red-400">
