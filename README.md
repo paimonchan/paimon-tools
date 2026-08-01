@@ -44,7 +44,7 @@ and discarded when you close the tab.
 
 ## Tools
 
-**17 tools** across three categories, plus a multi-language code playground.
+**19 tools** across three categories, plus a multi-language code playground.
 
 ### Convert
 
@@ -55,6 +55,11 @@ and discarded when you close the tab.
 | [CSV → Excel](https://paimonchan.github.io/paimon-tools/csv-to-excel/) | CSV to `.xlsx` (and back) |
 | [YAML → JSON](https://paimonchan.github.io/paimon-tools/yaml-to-json/) | YAML ↔ JSON conversion |
 | [Base64 Encode](https://paimonchan.github.io/paimon-tools/base64-encode/) | Text ↔ Base64 (UTF-8 safe, emoji-friendly) |
+| [CSV → JSON](https://paimonchan.github.io/paimon-tools/csv-to-json/) | CSV table (with header row) to JSON array |
+| [Excel → JSON](https://paimonchan.github.io/paimon-tools/excel-to-json/) | `.xlsx` first sheet to JSON array |
+| [Excel → CSV](https://paimonchan.github.io/paimon-tools/excel-to-csv/) | `.xlsx` first sheet to CSV |
+| [Base64 Decode](https://paimonchan.github.io/paimon-tools/base64-decode/) | Base64 back to readable text |
+| [JSON → YAML](https://paimonchan.github.io/paimon-tools/json-to-yaml/) | JSON ↔ YAML conversion |
 
 ### Format
 
@@ -74,6 +79,8 @@ commas, and comments are accepted.
 | [UUID Generator](https://paimonchan.github.io/paimon-tools/uuid-generator/) | Create one or many UUID v4 identifiers |
 | [Combine Files](https://paimonchan.github.io/paimon-tools/combine-files/) | Merge multiple CSV/Excel files into one (append rows, union columns) |
 | [Diff Tool](https://paimonchan.github.io/paimon-tools/diff-tool/) | Compare two texts side-by-side with color-coded changes |
+| [Text Delimiter](https://paimonchan.github.io/paimon-tools/text-delimiter/) | Split/join text with custom delimiters, like delim.co |
+| [Plan Explorer](https://paimonchan.github.io/paimon-tools/plan-explorer/) | Visualize PostgreSQL `EXPLAIN` plans as a tree |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
 ### Code Playground
@@ -115,7 +122,9 @@ src/
 │   │   ├── hash-gen.ts        SHA-256 (pure JS)
 │   │   ├── uuid-gen.ts        UUID v4
 │   │   ├── excel-merge.ts     Combine-files engine
-│   │   └── diff-engine.ts     Line diff engine
+│   │   ├── diff-engine.ts     Line diff engine
+│   │   ├── delimiter-tool.ts  Text delimiter engine
+│   │   └── explain-parser.ts  PostgreSQL EXPLAIN plan parser
 │   ├── registry.ts            Tool definitions (config-driven, discriminated union)
 │   └── result.ts              Result<T> = Ok<T> | Err
 ├── playground/                Code playground (lazy-loaded route)
