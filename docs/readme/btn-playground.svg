@@ -1,21 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" width="230" height="52" viewBox="0 0 230 52" fill="none">
   <defs>
-    <linearGradient id="sheen2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.05"/>
-      <stop offset="1" stop-color="#000000" stop-opacity="0.15"/>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2e2a24"/>
+      <stop offset="1" stop-color="#1d1a16"/>
     </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.18"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
   </defs>
   <!-- charcoal base -->
-  <rect width="200" height="50" rx="12" fill="#1d1a16"/>
-  <rect width="200" height="50" rx="12" fill="url(#sheen2)"/>
+  <rect width="230" height="52" rx="13" fill="url(#base)"/>
+  <rect width="230" height="52" rx="13" fill="url(#sheen)"/>
   <!-- honey border -->
-  <rect x="0.75" y="0.75" width="198.5" height="48.5" rx="11.25" fill="none" stroke="#eec35a" stroke-width="1.5"/>
+  <rect x="0.75" y="0.75" width="228.5" height="50.5" rx="12.25" fill="none" stroke="#eec35a" stroke-width="1.5"/>
   <!-- code brackets icon </> -->
-  <g stroke="#eec35a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M24 19 L18 25 L24 31"/>
-    <path d="M36 19 L42 25 L36 31"/>
-    <path d="M32 17 L28 33"/>
+  <g stroke="#eec35a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M24 18 L17 26 L24 34"/>
+    <path d="M38 18 L45 26 L38 34"/>
+    <path d="M33 16 L29 36"/>
   </g>
   <!-- label -->
-  <text x="118" y="32" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#eec35a" text-anchor="middle">Code Playground</text>
+  <text x="128" y="33" font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#eec35a" text-anchor="middle" letter-spacing="0.2">Code Playground</text>
 </svg>

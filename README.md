@@ -2,23 +2,23 @@
 
 <img src="public/og-image.png" alt="Paimon Tools — private, in-browser tools for data & code" width="100%" />
 
-# Paimon Tools
+# 🍯 Paimon Tools
 
 ### Private, in-browser tools for data & code — nothing ever leaves your device.
 
-<a href="https://paimonchan.github.io/paimon-tools/"><img src="docs/readme/btn-open.svg" alt="Open the App" height="50"></a>
-<a href="https://paimonchan.github.io/paimon-tools/code/"><img src="docs/readme/btn-playground.svg" alt="Code Playground" height="50"></a>
-<a href="https://github.com/paimonchan/paimon-tools"><img src="docs/readme/btn-github.svg" alt="Star on GitHub" height="50"></a>
+<a href="https://paimonchan.github.io/paimon-tools/"><img src="docs/readme/btn-open.svg" alt="Open the App" height="52"></a>
+<a href="https://paimonchan.github.io/paimon-tools/code/"><img src="docs/readme/btn-playground.svg" alt="Code Playground" height="52"></a>
+<a href="https://github.com/paimonchan/paimon-tools"><img src="docs/readme/btn-github.svg" alt="Star on GitHub" height="52"></a>
 
-[![Deploy](https://img.shields.io/github/actions/workflow/status/paimonchan/paimon-tools/deploy.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=deploy)](https://github.com/paimonchan/paimon-tools/actions)
-[![License: MIT](https://img.shields.io/badge/license-MIT-423d35?style=flat-square)](LICENSE)
+[![Deploy](https://img.shields.io/github/actions/workflow/status/paimonchan/paimon-tools/deploy.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Deploy&color=423d35)](https://github.com/paimonchan/paimon-tools/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-eec35a?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/paimonchan/paimon-tools?style=for-the-badge&logo=github&logoColor=white&color=955217)](https://github.com/paimonchan/paimon-tools/stargazers)
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
-[![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Zustand](https://img.shields.io/badge/Zustand-5-443e38?style=flat-square)](https://github.com/pmndrs/zustand)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-eec35a?style=flat-square)](#contributing)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Zustand](https://img.shields.io/badge/Zustand-5-443e38?style=for-the-badge)](https://github.com/pmndrs/zustand)
 
 </div>
 
@@ -28,7 +28,7 @@
 > Every tool runs entirely in your browser — paste your data, run your code,
 > and nothing ever touches a server. That's not a feature, it's the whole point.
 
-## Why use this?
+## ✨ Why use this?
 
 Most online converters and code-runners send your data to a server you don't
 control. If you're converting a config file with secrets, a customer list, or
@@ -37,31 +37,30 @@ running a script — **that's a problem**.
 Paimon Tools ships the entire engine to your browser. Data is processed locally
 and discarded when you close the tab.
 
-- **Private by design** — zero network requests during conversion
-- **Instant** — no upload/download round-trip
-- **Works offline** — once loaded, it needs no connection
-- **Free & open source** — audit the code yourself
+| 🛡️ Private by design | ⚡ Instant | 🌙 Works offline | 🆓 Free & open source |
+|:---:|:---:|:---:|:---:|
+| Zero network requests during conversion | No upload/download round-trip | Once loaded, needs no connection | Audit the code yourself |
 
-## Tools
+## 🧰 Tools
 
 **19 tools** across three categories, plus a multi-language code playground.
 
-### Convert
+### 🔄 Convert
 
 | Tool | What it does |
 |------|--------------|
 | [JSON → CSV](https://paimonchan.github.io/paimon-tools/json-to-csv/) | JSON array to CSV table (and back) |
-| [JSON → Excel](https://paimonchan.github.io/paimon-tools/json-to-excel/) | JSON to downloadable `.xlsx` (and back) |
-| [CSV → Excel](https://paimonchan.github.io/paimon-tools/csv-to-excel/) | CSV to `.xlsx` (and back) |
-| [YAML → JSON](https://paimonchan.github.io/paimon-tools/yaml-to-json/) | YAML ↔ JSON conversion |
-| [Base64 Encode](https://paimonchan.github.io/paimon-tools/base64-encode/) | Text ↔ Base64 (UTF-8 safe, emoji-friendly) |
 | [CSV → JSON](https://paimonchan.github.io/paimon-tools/csv-to-json/) | CSV table (with header row) to JSON array |
+| [JSON → Excel](https://paimonchan.github.io/paimon-tools/json-to-excel/) | JSON to downloadable `.xlsx` (and back) |
 | [Excel → JSON](https://paimonchan.github.io/paimon-tools/excel-to-json/) | `.xlsx` first sheet to JSON array |
+| [CSV → Excel](https://paimonchan.github.io/paimon-tools/csv-to-excel/) | CSV to `.xlsx` (and back) |
 | [Excel → CSV](https://paimonchan.github.io/paimon-tools/excel-to-csv/) | `.xlsx` first sheet to CSV |
-| [Base64 Decode](https://paimonchan.github.io/paimon-tools/base64-decode/) | Base64 back to readable text |
+| [YAML → JSON](https://paimonchan.github.io/paimon-tools/yaml-to-json/) | YAML ↔ JSON conversion |
 | [JSON → YAML](https://paimonchan.github.io/paimon-tools/json-to-yaml/) | JSON ↔ YAML conversion |
+| [Base64 Encode](https://paimonchan.github.io/paimon-tools/base64-encode/) | Text ↔ Base64 (UTF-8 safe, emoji-friendly) |
+| [Base64 Decode](https://paimonchan.github.io/paimon-tools/base64-decode/) | Base64 back to readable text |
 
-### Format
+### 🧹 Format
 
 | Tool | What it does |
 |------|--------------|
@@ -71,7 +70,7 @@ and discarded when you close the tab.
 Both JSON tools support **Lenient mode** (JSON5) — single quotes, trailing
 commas, and comments are accepted.
 
-### Tools
+### 🛠️ Utilities
 
 | Tool | What it does |
 |------|--------------|
@@ -83,7 +82,7 @@ commas, and comments are accepted.
 | [Plan Explorer](https://paimonchan.github.io/paimon-tools/plan-explorer/) | Visualize PostgreSQL `EXPLAIN` plans as a tree |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
-### Code Playground
+## 💻 Code Playground
 
 A browser-native REPL with no backend:
 
@@ -94,7 +93,7 @@ A browser-native REPL with no backend:
 - **Share via URL** — code is compressed (lz-string) into the URL hash
 - **CodeMirror 6** editor with per-language syntax highlighting
 
-## Features
+## ⭐ Features
 
 - **Command palette** (`⌘K` / `Ctrl K`) to jump between tools
 - **Resizable split panes** — input and output side by side
@@ -108,7 +107,7 @@ A browser-native REPL with no backend:
 - **Fully typed** — TypeScript throughout, zero `any`
 - **Code-split bundles** — heavy deps (SheetJS, CodeMirror, Pyodide) load on demand
 
-## Project structure
+## 🗂️ Project structure
 
 ```
 src/
@@ -151,7 +150,7 @@ src/
 
 See [`AGENTS.md`](AGENTS.md) for the full layer rules and conventions.
 
-## Deploy it yourself
+## 🚀 Deploy it yourself
 
 The build is a fully static site — host it anywhere.
 
@@ -172,7 +171,7 @@ and publishes on every push to `main`. Enable **Settings → Pages → Source:
 GitHub Actions** to activate it. The [prerender script](scripts/prerender.mjs)
 generates a static HTML page per tool route and the sitemap automatically.
 
-## Adding a tool
+## ➕ Adding a tool
 
 ### Converter
 
@@ -190,7 +189,7 @@ up automatically — no UI changes.
 2. Create a lazy-loaded component with `React.lazy()`
 3. Route it in `App.tsx`
 
-## Built with
+## 🧱 Built with
 
 - **[TypeScript 7](https://www.typescriptlang.org/)** — fully typed
 - **[React 19](https://react.dev/)** + **[Vite 8](https://vite.dev/)** (Rolldown)
@@ -205,12 +204,12 @@ up automatically — no UI changes.
 - **[esbuild-wasm](https://esbuild.github.io/)** — in-browser ESM bundler
 - **[lz-string](https://github.com/pieroxy/lz-string)** — URL share compression
 
-## Contributing
+## 🤝 Contributing
 
 PRs welcome. The codebase is structured so most changes are local — touching a
 converter never involves the UI, and vice versa. See [`AGENTS.md`](AGENTS.md)
 for conventions.
 
-## License
+## 📄 License
 
 MIT — do whatever you want.
