@@ -275,6 +275,21 @@ function formatMetricShort(value: number): string {
   return `${(value / 1_000_000).toFixed(2)}M`
 }
 
+// PostgreSQL block size (default 8 KiB). Dalibo displays buffer counts as data size.
+const PG_BLOCK_SIZE = 8 * 1024
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MiB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GiB`
+}
+
+/** "123 blks (960.9 KiB)" — like dalibo's per-node I/O sizes. */
+function blksToSize(blocks: number): string {
+  return `${blocks.toLocaleString()} blks (${formatBytes(blocks * PG_BLOCK_SIZE)})`
+}
+
 function truncateText(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text
   return text.slice(0, maxLen - 1) + '…'
@@ -1019,7 +1034,11 @@ export default function ExplainTool() {
       let html = `<div style="font-weight:600;margin-bottom:4px;color:${getNodeColor(n.type)}">${n.label}</div>`
       html += `<div>Cost: ${n.cost.startup}..${n.cost.total}</div><div>Rows: ${n.rows.toLocaleString()} · Width: ${n.width}</div>`
       if (n.actualTime) html += `<div>Actual: ${n.actualTime.first}..${n.actualTime.last} ms</div>`
-      if (n.buffers) html += `<div>Buffers: shared hit=${n.buffers.sharedHit}</div>`
+      if (n.ioTimings) html += `<div style="color:#eec35a">I/O: read ${n.ioTimings.read.toFixed(2)} ms · write ${n.ioTimings.write.toFixed(2)} ms</div>`
+      if (n.buffers) {
+        const totalBlks = n.buffers.sharedHit + n.buffers.sharedRead + n.buffers.sharedWritten + n.buffers.localHit + n.buffers.localRead + n.buffers.tempRead + n.buffers.tempWritten
+        html += `<div>Buffers: ${blksToSize(totalBlks)} total</div>`
+      }
       for (const ann of n.annotations) html += `<div style="color:#a8a29e;font-size:11px">${ann}</div>`
       tooltip.style('display', 'block').html(html).style('left', `${event.offsetX + 15}px`).style('top', `${event.offsetY - 10}px`)
       d3Selection.select(this).select('rect').attr('stroke', '#e7ac34').attr('stroke-width', 2.5)
@@ -1129,20 +1148,36 @@ export default function ExplainTool() {
   }
 
   function buildIODetail(node: ExplainNode): string {
+    let html = ''
+    // I/O timings first (track_io_timing) — most visible in dalibo
+    if (node.ioTimings) {
+      html += `<div style="font-size:11px;color:#a8a29e;margin-bottom:6px">I/O Timings</div>`
+      html += `<div class="dr"><span class="dl">Read Time</span><span style="color:#e4e0d6">${node.ioTimings.read.toFixed(3)} ms</span></div>`
+      html += `<div class="dr"><span class="dl">Write Time</span><span style="color:#e4e0d6">${node.ioTimings.write.toFixed(3)} ms</span></div>`
+      const ioTotal = node.ioTimings.read + node.ioTimings.write
+      if (ioTotal > 0 && node.actualTime) {
+        const pct = ((ioTotal / node.actualTime.last) * 100).toFixed(1)
+        html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">% of Execution</span><span style="color:#eec35a">${pct}%</span></div>`
+      }
+      html += `<div style="height:8px"></div>`
+    }
     if (!node.buffers) {
-      return `<div style="color:#78716c;font-size:11px;padding:12px;text-align:center">No buffer information available. Enable BUFFERS in EXPLAIN (ANALYZE, BUFFERS).</div>`
+      if (!node.ioTimings) {
+        return `<div style="color:#78716c;font-size:11px;padding:12px;text-align:center">No buffer information available. Enable BUFFERS in EXPLAIN (ANALYZE, BUFFERS).</div>`
+      }
+      return html
     }
     const b = node.buffers
-    let html = ''
-    html += `<div class="dr"><span class="dl">Shared Hit</span><span style="color:#e4e0d6">${b.sharedHit.toLocaleString()}</span></div>`
-    html += `<div class="dr"><span class="dl">Shared Read</span><span style="color:#e4e0d6">${b.sharedRead.toLocaleString()}</span></div>`
-    html += `<div class="dr"><span class="dl">Shared Written</span><span style="color:#e4e0d6">${b.sharedWritten.toLocaleString()}</span></div>`
-    html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">Local Hit</span><span style="color:#e4e0d6">${b.localHit.toLocaleString()}</span></div>`
-    html += `<div class="dr"><span class="dl">Local Read</span><span style="color:#e4e0d6">${b.localRead.toLocaleString()}</span></div>`
-    html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">Temp Read</span><span style="color:#e4e0d6">${b.tempRead.toLocaleString()}</span></div>`
-    html += `<div class="dr"><span class="dl">Temp Written</span><span style="color:#e4e0d6">${b.tempWritten.toLocaleString()}</span></div>`
+    html += `<div style="font-size:11px;color:#a8a29e;margin-bottom:6px">Buffers <span style="color:#5f574d">(1 blk = 8 KiB)</span></div>`
+    html += `<div class="dr"><span class="dl">Shared Hit</span><span style="color:#e4e0d6">${blksToSize(b.sharedHit)}</span></div>`
+    html += `<div class="dr"><span class="dl">Shared Read</span><span style="color:#e4e0d6">${blksToSize(b.sharedRead)}</span></div>`
+    html += `<div class="dr"><span class="dl">Shared Written</span><span style="color:#e4e0d6">${blksToSize(b.sharedWritten)}</span></div>`
+    html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">Local Hit</span><span style="color:#e4e0d6">${blksToSize(b.localHit)}</span></div>`
+    html += `<div class="dr"><span class="dl">Local Read</span><span style="color:#e4e0d6">${blksToSize(b.localRead)}</span></div>`
+    html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">Temp Read</span><span style="color:#e4e0d6">${blksToSize(b.tempRead)}</span></div>`
+    html += `<div class="dr"><span class="dl">Temp Written</span><span style="color:#e4e0d6">${blksToSize(b.tempWritten)}</span></div>`
     const total = b.sharedHit + b.sharedRead + b.sharedWritten + b.localHit + b.localRead + b.tempRead + b.tempWritten
-    html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">Total Blocks</span><span style="color:#e4e0d6;font-weight:600">${total.toLocaleString()}</span></div>`
+    html += `<div class="dr" style="border-top:1px solid #2e2a24;padding-top:4px;margin-top:4px"><span class="dl">Total</span><span style="color:#e4e0d6;font-weight:600">${blksToSize(total)}</span></div>`
     if (total > 0) {
       const hitRate = ((b.sharedHit + b.localHit) / total * 100).toFixed(1)
       html += `<div class="dr"><span class="dl">Cache Hit Rate</span><span style="color:#22c55e">${hitRate}%</span></div>`

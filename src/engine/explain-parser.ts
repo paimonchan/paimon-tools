@@ -26,6 +26,7 @@ export interface ExplainNode {
   actualTime?: ActualTime
   loops?: number
   buffers?: Buffers
+  ioTimings?: IOTimings
 }
 
 export interface Cost {
@@ -46,6 +47,12 @@ export interface Buffers {
   localRead: number
   tempRead: number
   tempWritten: number
+}
+
+/** I/O timings from track_io_timing (EXPLAIN ANALYZE). Milliseconds per node. */
+export interface IOTimings {
+  read: number
+  write: number
 }
 
 export type NodeType =
@@ -111,8 +118,56 @@ const NODE_LINE_RE = /^(\s*)(?:->\s*)?([\w\s]+?)\s*\(cost=([\d.]+)\.\.([\d.]+)\s
 // Matches EXPLAIN ANALYZE actual time: "  Actual Time: 0.123..12.345  Rows: 1000  Loops: 1"
 const ACTUAL_TIME_RE = /Actual\s*(?:Time|time):\s*([\d.]+)\.\.([\d.]+)\s+Rows:\s*(\d+)\s+Loops:\s*(\d+)/i
 
-// Matches buffer info: "  Buffers: shared hit=123 read=45"
-const BUFFERS_RE = /Buffers:\s*(shared\s+hit=(\d+))?(?:\s+shared\s+read=(\d+))?(?:\s+shared\s+written=(\d+))?(?:\s+local\s+hit=(\d+))?(?:\s+local\s+read=(\d+))?(?:\s+temp\s+read=(\d+))?(?:\s+temp\s+written=(\d+))?/i
+// Matches buffer info line: "  Buffers: shared hit=123 read=45 written=0 temp read=12 temp written=3"
+const BUFFERS_LINE_RE = /^\s*Buffers:\s*(.*)$/i
+
+/**
+ * Parse the token list after "Buffers:" into a Buffers object.
+ * Postgres output omits the "shared" prefix on later tokens:
+ *   "shared hit=12000 read=3405 written=0 temp read=120 temp written=45"
+ * so we walk tokens in order: [modifier]? key=value.
+ */
+function parseBuffers(line: string): Buffers | null {
+  const m = line.match(BUFFERS_LINE_RE)
+  if (!m) return null
+  const tokens = m[1].trim().split(/\s+/).filter(Boolean)
+  const b: Buffers = {
+    sharedHit: 0, sharedRead: 0, sharedWritten: 0,
+    localHit: 0, localRead: 0, tempRead: 0, tempWritten: 0,
+  }
+  let mod: string | null = null
+  for (const tok of tokens) {
+    if (tok === 'shared' || tok === 'local' || tok === 'temp') {
+      mod = tok
+      continue
+    }
+    const kv = tok.match(/^(\w+)=(\d+)$/)
+    if (!kv) continue
+    const key = kv[1]
+    const val = parseInt(kv[2], 10)
+    switch (key) {
+      case 'hit':
+        if (mod === 'shared') b.sharedHit = val
+        else if (mod === 'local') b.localHit = val
+        break
+      case 'read':
+        if (mod === 'local') b.localRead = val
+        else if (mod === 'temp') b.tempRead = val
+        else b.sharedRead = val
+        break
+      case 'written':
+        if (mod === 'temp') b.tempWritten = val
+        else b.sharedWritten = val
+        break
+    }
+    // Modifier persists until the next explicit modifier (PG output:
+    // "shared hit=N read=M written=K temp read=L") — do NOT reset here.
+  }
+  return b
+}
+
+// Matches I/O timings: "  I/O Timings: read=12.345 write=6.789" (track_io_timing)
+const IO_TIMINGS_RE = /I\/O\s*Timings?:\s*read=([\d.]+)(?:\s+write=([\d.]+))?/i
 
 // Matches annotation lines: "  Hash Cond: (a.id = b.a_id)" or "  Sort Key: created_at DESC"
 const ANNOTATION_RE = /^\s+(?:[\w\s]+):\s+(.+)/
@@ -133,6 +188,7 @@ interface RawNode {
   actualTime?: ActualTime
   loops?: number
   buffers?: Buffers
+  ioTimings?: IOTimings
   annotations: string[]
 }
 
@@ -195,16 +251,18 @@ export function parseExplain(text: string): ExplainPlan {
             i++ // consume
             continue
           }
-          const bufferMatch = nextLine.match(BUFFERS_RE)
+          const bufferMatch = parseBuffers(nextLine)
           if (bufferMatch) {
-            node.buffers = {
-              sharedHit: parseInt(bufferMatch[2] || '0', 10),
-              sharedRead: parseInt(bufferMatch[3] || '0', 10),
-              sharedWritten: parseInt(bufferMatch[4] || '0', 10),
-              localHit: parseInt(bufferMatch[5] || '0', 10),
-              localRead: parseInt(bufferMatch[6] || '0', 10),
-              tempRead: parseInt(bufferMatch[7] || '0', 10),
-              tempWritten: parseInt(bufferMatch[8] || '0', 10),
+            node.buffers = bufferMatch
+            i++ // consume
+            continue
+          }
+          // Check for I/O timings (track_io_timing): "  I/O Timings: read=12.345 write=6.789"
+          const ioMatch = nextLine.match(IO_TIMINGS_RE)
+          if (ioMatch) {
+            node.ioTimings = {
+              read: parseFloat(ioMatch[1] || '0'),
+              write: parseFloat(ioMatch[2] || '0'),
             }
             i++ // consume
             continue
@@ -283,6 +341,7 @@ function buildTree(rawNodes: RawNode[]): ExplainNode | null {
     actualTime: root.actualTime,
     loops: root.loops,
     buffers: root.buffers,
+    ioTimings: root.ioTimings,
   }
 
   // Stack-based approach: maintain a stack of parent nodes
@@ -309,6 +368,7 @@ function buildTree(rawNodes: RawNode[]): ExplainNode | null {
       actualTime: raw.actualTime,
       loops: raw.loops,
       buffers: raw.buffers,
+      ioTimings: raw.ioTimings,
     }
 
     if (stack.length > 0) {
