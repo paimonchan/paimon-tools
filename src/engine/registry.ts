@@ -325,8 +325,8 @@ export const TOOLS: ToolDefinition[] = [
       'Convert a list of items into delimited text. Choose separator, quoting, and wrapping — perfect for SQL IN clauses, HTML lists, and array literals. 100% client-side.',
   },
   {
-    id: 'plan-explorer',
-    name: 'Plan Explorer',
+    id: 'postgres-explain',
+    name: 'PostgreSQL EXPLAIN Visualizer',
     category: 'Tools',
     type: 'ref',
     icon: 'git-branch',

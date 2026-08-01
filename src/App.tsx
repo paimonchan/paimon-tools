@@ -32,7 +32,7 @@ const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
   'diff-tool': DiffTool,
   'playground': PlaygroundTool,
   'text-delimiter': TextDelimiterTool,
-  'plan-explorer': ExplainTool,
+  'postgres-explain': ExplainTool,
 }
 
 function Shell() {

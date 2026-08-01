@@ -733,16 +733,16 @@ print(json.dumps(data, indent=2))</pre>
     ],
   },
 
-  'plan-explorer': {
-    title: 'PostgreSQL Plan Explorer - Visualize EXPLAIN Output Online | Paimon Tools',
+  'postgres-explain': {
+    title: 'PostgreSQL EXPLAIN Visualizer - Visualize EXPLAIN Output Online | Paimon Tools',
     description:
       'Free, private PostgreSQL EXPLAIN plan visualizer. Paste query plan output, see interactive tree with costs, rows, bottlenecks, and node details. 100% in your browser, no uploads, no sign-up.',
-    path: 'plan-explorer',
+    path: 'postgres-explain',
     ogImage: DEFAULT_OG_IMAGE,
-    ogImageAlt: 'Paimon Tools Plan Explorer - visualize PostgreSQL EXPLAIN plans as interactive trees',
-    h1: 'PostgreSQL Plan Explorer',
-    breadcrumb: 'Tools / Plan Explorer',
-    bodyHtml: `<h2>PostgreSQL Plan Explorer</h2>
+    ogImageAlt: 'Paimon Tools PostgreSQL EXPLAIN Visualizer - visualize PostgreSQL EXPLAIN plans as interactive trees',
+    h1: 'PostgreSQL EXPLAIN Visualizer',
+    breadcrumb: 'Tools / PostgreSQL EXPLAIN Visualizer',
+    bodyHtml: `<h2>PostgreSQL EXPLAIN Visualizer</h2>
 <p>Paste your PostgreSQL EXPLAIN output and get an interactive tree visualization. Each node shows cost, rows, and width — the bottleneck (highest cost node) is highlighted in red. Hover any node for details: actual time, buffers, loops, and annotations.</p>
 <h2>How to Use</h2>
 <ol>

@@ -79,7 +79,7 @@ commas, and comments are accepted.
 | [Combine Files](https://paimonchan.github.io/paimon-tools/combine-files/) | Merge multiple CSV/Excel files into one (append rows, union columns) |
 | [Diff Tool](https://paimonchan.github.io/paimon-tools/diff-tool/) | Compare two texts side-by-side with color-coded changes |
 | [Text Delimiter](https://paimonchan.github.io/paimon-tools/text-delimiter/) | Split/join text with custom delimiters, like delim.co |
-| [Plan Explorer](https://paimonchan.github.io/paimon-tools/plan-explorer/) | Visualize PostgreSQL `EXPLAIN` plans as a tree |
+| [PostgreSQL EXPLAIN Visualizer](https://paimonchan.github.io/paimon-tools/postgres-explain/) | Visualize PostgreSQL `EXPLAIN` plans as a tree |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
 ## 💻 Code Playground

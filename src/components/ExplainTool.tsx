@@ -1,5 +1,5 @@
 /**
- * ExplainTool — PostgreSQL Plan Explorer.
+ * ExplainTool — PostgreSQL EXPLAIN Visualizer.
  *
  * Lazy-loaded ref tool. Parses EXPLAIN output and renders interactive
  * views inspired by explain.dalibo.com (PEV2).
@@ -30,11 +30,11 @@ import { saveAs } from 'file-saver'
 
 // ── Constants ─────────────────────────────────────────
 
-const LS_KEY = 'plan-explorer-input'
-const LS_VIEW_KEY = 'plan-explorer-view'
-const LS_METRIC_KEY = 'plan-explorer-metric'
-const LS_TAB_KEY = 'plan-explorer-tab'
-const LS_TREE_METRIC_KEY = 'plan-explorer-tree-metric'
+const LS_KEY = 'postgres-explain-input'
+const LS_VIEW_KEY = 'postgres-explain-view'
+const LS_METRIC_KEY = 'postgres-explain-metric'
+const LS_TAB_KEY = 'postgres-explain-tab'
+const LS_TREE_METRIC_KEY = 'postgres-explain-tree-metric'
 const SAMPLE_PLAN = `Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)
   ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)
         Hash Cond: (a.id = b.a_id)
@@ -682,7 +682,7 @@ export default function ExplainTool() {
     const serializer = new XMLSerializer()
     const svgString = serializer.serializeToString(svgClone)
     const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-    saveAs(svgBlob, 'plan-explorer.svg')
+    saveAs(svgBlob, 'postgres-explain.svg')
     toast.push('SVG downloaded!', { variant: 'success' })
   }, [toast])
 
@@ -1251,7 +1251,7 @@ export default function ExplainTool() {
               <div className="flex items-center justify-between border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
                 <div className="flex items-center gap-1.5">
                   <GitBranch className="h-3.5 w-3.5 text-honey-400" />
-                  <span className="text-[11px] font-500 text-ink-200">Plan Explorer</span>
+                  <span className="text-[11px] font-500 text-ink-200">PostgreSQL EXPLAIN Visualizer</span>
                 </div>
                 <div className="flex items-center gap-0.5">
                   <button onClick={handleSample} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Load sample plan"><Sparkles className="h-2.5 w-2.5" />Sample</button>
