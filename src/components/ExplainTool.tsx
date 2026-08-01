@@ -35,7 +35,6 @@ const LS_VIEW_KEY = 'plan-explorer-view'
 const LS_METRIC_KEY = 'plan-explorer-metric'
 const LS_TAB_KEY = 'plan-explorer-tab'
 const LS_TREE_METRIC_KEY = 'plan-explorer-tree-metric'
-const LS_LIVE_KEY = 'plan-explorer-live'
 const SAMPLE_PLAN = `Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)
   ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)
         Hash Cond: (a.id = b.a_id)
@@ -335,8 +334,11 @@ function getNodeKeyInfo(node: ExplainNode): string {
 function looksLikePlan(text: string): boolean {
   const trimmed = text.trim()
   if (!trimmed) return false
-  // Node line starts with optional "->" and has (cost=.. .. rows=.. width=..)
-  return /^(?:\s*(?:->\s*)?[\w\s]+\s*\(\s*cost=\d+\.\.\d+\s+rows=\d+\s+width=\d+\))/m.test(trimmed)
+  // A node line ends with the standard (cost=.. .. rows=.. width=..) marker.
+  // The label before it can contain anything (colons like "Gather Motion 2:1",
+  // dots, underscores, arrows, etc.) so match any chars up to the marker.
+  // Costs are decimals ("0.00..431.00") so use [\d.]+ for each range side.
+  return /^\s*(?:->\s*)?.*\(\s*cost=[\d.]+\.\.[\d.]+\s+rows=\d+\s+width=\d+\)/m.test(trimmed)
 }
 
 // ── Component ─────────────────────────────────────────
@@ -360,7 +362,7 @@ export default function ExplainTool() {
   const [queryStatus, setQueryStatus] = useState<'hidden' | 'auto' | 'manual'>('hidden')
   const [inputCollapsed, setInputCollapsed] = useState(false)
   const [analyzed, setAnalyzed] = useState(false)
-  const [livePreview, setLivePreview] = useState(() => loadPersisted(LS_LIVE_KEY, 'off') === 'on')
+  const [viewNonce, setViewNonce] = useState(0)
   const [treeMetric, setTreeMetric] = useState<TreeMetric>(() => (loadPersisted(LS_TREE_METRIC_KEY, 'none') as TreeMetric))
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -547,6 +549,7 @@ export default function ExplainTool() {
       setPlan(result)
       setError(null)
       setStatus('ok')
+      setViewNonce(n => n + 1)
       setDurationMs(elapsed)
       setSelectedNode(null)
       setCollapsedIds(new Set())
@@ -594,28 +597,20 @@ export default function ExplainTool() {
     const text = e.target.value
     setInputText(text)
     savePersisted(LS_KEY, text)
+    // Mark dirty so the user knows to re-analyze
+    setAnalyzed(false)
+    // Un-collapse so the user can edit
+    setInputCollapsed(false)
     // If input becomes empty, clear the rendered plan
     if (!text.trim()) {
-      setAnalyzed(false)
-      setInputCollapsed(false)
       setPlan(null)
       setError(null)
       setStatus('empty')
       setDurationMs(null)
       setSelectedNode(null)
       setCollapsedIds(new Set())
-      return
     }
-    if (livePreview) {
-      // Live mode: parse instantly, keep pane open while editing
-      parseInput(text)
-      setAnalyzed(true)
-    } else {
-      // Manual mode: mark dirty, user clicks Analyze
-      setAnalyzed(false)
-      setInputCollapsed(false)
-    }
-  }, [livePreview, parseInput])
+  }, [])
 
   // ── Sample ──────────────────────────────────────────
 
@@ -729,14 +724,6 @@ export default function ExplainTool() {
   const handleTreeMetric = useCallback((m: TreeMetric) => {
     setTreeMetric(m)
     savePersisted(LS_TREE_METRIC_KEY, m)
-  }, [])
-
-  const handleToggleLive = useCallback(() => {
-    setLivePreview(prev => {
-      const next = !prev
-      savePersisted(LS_LIVE_KEY, next ? 'on' : 'off')
-      return next
-    })
   }, [])
 
   // ── Collapse / Select ───────────────────────────────
@@ -1255,17 +1242,6 @@ export default function ExplainTool() {
                   <span className="text-[11px] font-500 text-ink-200">Plan Explorer</span>
                 </div>
                 <div className="flex items-center gap-0.5">
-                  {/* Live preview toggle */}
-                  <button
-                    onClick={handleToggleLive}
-                    title={livePreview ? 'Live preview ON — auto-parse on paste' : 'Live preview OFF — parse via Analyze button'}
-                    className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors ${
-                      livePreview ? 'bg-honey-500/20 text-honey-300' : 'text-ink-400 hover:bg-ink-800 hover:text-ink-200'
-                    }`}
-                  >
-                    <Zap className="h-2.5 w-2.5" />
-                    <span className={livePreview ? '' : 'text-ink-600'}>Live</span>
-                  </button>
                   <button onClick={handleSample} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Load sample plan"><Sparkles className="h-2.5 w-2.5" />Sample</button>
                   <button onClick={handleClear} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Clear (Esc)"><Eraser className="h-2.5 w-2.5" />Clear</button>
                   {/* Hide button — always visible when there's input */}
@@ -1286,12 +1262,12 @@ export default function ExplainTool() {
                   analyzed ? (
                     <span className="flex items-center gap-1 text-[9px] text-green-400">
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
-                      {livePreview ? 'Live' : 'Analyzed'} · {plan?.summary.nodeCount ?? 0} nodes
+                      Analyzed · {plan?.summary.nodeCount ?? 0} nodes
                       {!plan && <span className="text-red-400">· failed</span>}
                     </span>
                   ) : looksLikePlan(inputText) ? (
                     <span className="flex items-center gap-1 text-[9px] text-honey-300">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-honey-400" />
+                      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-honey-400" />
                       Plan detected — click Analyze
                     </span>
                   ) : (
@@ -1304,9 +1280,6 @@ export default function ExplainTool() {
                   <span className="text-[9px] text-ink-600">Paste EXPLAIN output</span>
                 )}
                 <span className="flex items-center gap-2">
-                  {livePreview && !analyzed && (
-                    <span className="text-[9px] text-honey-300">⚡ live</span>
-                  )}
                   {inputText.trim().length > 0 && (
                     <span className="text-[9px] text-ink-600">{inputText.length.toLocaleString()} chars</span>
                   )}
@@ -1321,7 +1294,7 @@ export default function ExplainTool() {
                 <button
                   onClick={handleAnalyze}
                   disabled={!inputText.trim()}
-                  className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-600 transition-colors ${
+                  className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-600 transition-all duration-150 active:scale-95 ${
                     inputText.trim() && looksLikePlan(inputText)
                       ? 'bg-honey-500 text-ink-950 hover:bg-honey-400'
                       : 'bg-ink-700 text-ink-300 hover:bg-ink-600'
@@ -1340,7 +1313,7 @@ export default function ExplainTool() {
         <div className="relative flex min-h-0 flex-1 flex-col border-t border-ink-800 md:border-l md:border-t-0">
           {/* Header bar — execution/planning time + IO */}
           {plan && (
-            <div className="flex items-center gap-3 border-b border-ink-800 bg-ink-900/80 px-3 py-1 text-[10px] text-ink-400">
+            <div key={viewNonce} className="animate-fade-in flex items-center gap-3 border-b border-ink-800 bg-ink-900/80 px-3 py-1 text-[10px] text-ink-400">
               {plan.summary.executionTime != null && (
                 <span className="flex items-center gap-1">
                   <Zap className="h-2.5 w-2.5 text-green-500" />
@@ -1439,7 +1412,7 @@ export default function ExplainTool() {
               {/* ── Empty / Error states ── */}
               {!plan?.tree && !error && (
                 <div className="flex h-full items-center justify-center p-6">
-                  <div className="text-center text-sm text-ink-500">
+                  <div className="animate-fade-in text-center text-sm text-ink-500">
                     <GitBranch className="mx-auto mb-3 h-10 w-10 text-ink-700" />
                     <p className="mb-2">Paste EXPLAIN output on the left</p>
                     <p className="text-xs text-ink-600">See interactive tree, grid, and stats</p>
@@ -1448,13 +1421,13 @@ export default function ExplainTool() {
               )}
               {error && (
                 <div className="flex h-full items-center justify-center p-6">
-                  <div className="max-w-md rounded-lg border border-red-800/40 bg-red-900/20 px-4 py-3 text-sm text-red-300">{error}</div>
+                  <div className="animate-scale-in max-w-md rounded-lg border border-red-800/40 bg-red-900/20 px-4 py-3 text-sm text-red-300">{error}</div>
                 </div>
               )}
 
               {/* ── PLAN TAB ── */}
               {plan?.tree && activeTab === 'plan' && viewMode === 'table' && (
-                <div className="divide-y divide-ink-800/50">
+                <div key={viewNonce} className="animate-slide-up divide-y divide-ink-800/50">
                   <div className="flex items-center gap-2 px-2 py-1 text-[9px] font-500 text-ink-500 uppercase tracking-wider">
                     <span className="w-6 text-center">#</span>
                     <span className="flex-1">Node</span>
@@ -1526,12 +1499,12 @@ export default function ExplainTool() {
 
               {/* D3 Tree View */}
               {plan?.tree && activeTab === 'plan' && viewMode === 'tree' && (
-                <svg ref={svgRef} width="100%" height="100%" style={{ display: 'block', minHeight: '450px' }} />
+                <svg key={viewNonce} ref={svgRef} width="100%" height="100%" style={{ display: 'block', minHeight: '450px' }} className="animate-fade-in" />
               )}
 
               {/* ── GRID TAB ── */}
               {plan?.tree && activeTab === 'grid' && (
-                <div className="overflow-x-auto">
+                <div className="animate-fade-in overflow-x-auto">
                   <table className="w-full text-[10px] font-mono">
                     <thead>
                       {/* Top header row: group headers */}
@@ -1619,12 +1592,12 @@ export default function ExplainTool() {
 
               {/* ── RAW TAB ── */}
               {plan?.tree && activeTab === 'raw' && (
-                <pre className="overflow-auto p-4 text-[11px] leading-relaxed text-ink-300 font-mono whitespace-pre-wrap">{inputText}</pre>
+                <pre className="animate-fade-in overflow-auto p-4 text-[11px] leading-relaxed text-ink-300 font-mono whitespace-pre-wrap">{inputText}</pre>
               )}
 
               {/* ── QUERY TAB ── */}
               {plan?.tree && activeTab === 'query' && (
-                <div className="p-4">
+                <div className="animate-fade-in p-4">
                   {queryStatus === 'hidden' ? (
                     <div className="flex flex-col items-center justify-center gap-3 py-12 text-ink-500">
                       <Terminal className="h-8 w-8 text-ink-700" />
@@ -1665,7 +1638,7 @@ export default function ExplainTool() {
 
               {/* ── STATS TAB ── */}
               {plan?.tree && activeTab === 'stats' && (
-                <div className="flex flex-col gap-4 p-3">
+                <div className="animate-fade-in flex flex-col gap-4 p-3">
                   {/* Table stats */}
                   {statsByTable.length > 0 && (
                     <div>
