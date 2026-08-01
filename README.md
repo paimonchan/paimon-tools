@@ -43,7 +43,7 @@ and discarded when you close the tab.
 
 ## 🧰 Tools
 
-**19 tools** across three categories, plus a multi-language code playground.
+**19 tools** across four categories, plus a multi-language code playground.
 
 ### 🔄 Convert
 
@@ -79,8 +79,15 @@ commas, and comments are accepted.
 | [Combine Files](https://paimonchan.github.io/paimon-tools/combine-files/) | Merge multiple CSV/Excel files into one (append rows, union columns) |
 | [Diff Tool](https://paimonchan.github.io/paimon-tools/diff-tool/) | Compare two texts side-by-side with color-coded changes |
 | [Text Delimiter](https://paimonchan.github.io/paimon-tools/text-delimiter/) | Split/join text with custom delimiters, like delim.co |
-| [PostgreSQL EXPLAIN Visualizer](https://paimonchan.github.io/paimon-tools/postgres-explain/) | Visualize PostgreSQL `EXPLAIN` plans as a tree |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
+
+### 🗄️ Database
+
+| Tool | What it does |
+|------|--------------|
+| [PostgreSQL EXPLAIN Visualizer](https://paimonchan.github.io/paimon-tools/postgres-explain/) | Visualize PostgreSQL `EXPLAIN` plans as a tree |
+
+> More database tools planned — MySQL EXPLAIN is next on the list.
 
 ## 💻 Code Playground
 
