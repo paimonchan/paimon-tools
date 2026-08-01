@@ -22,6 +22,8 @@ export interface ExplainNode {
   children: ExplainNode[]
   cost: Cost
   rows: number
+  /** Planner's row estimate (from the cost line). `rows` holds actual rows when ANALYZE is present. */
+  plannedRows: number
   width: number
   actualTime?: ActualTime
   loops?: number
@@ -113,10 +115,20 @@ function detectNodeType(label: string): NodeType {
 // ── Line regex ────────────────────────────────────────
 
 // Matches: "  ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)"
-const NODE_LINE_RE = /^(\s*)(?:->\s*)?([\w\s]+?)\s*\(cost=([\d.]+)\.\.([\d.]+)\s+rows=(\d+)\s+width=(\d+)\)/
+// Label may contain parens/quotes: "Function Scan on jsonb_path_query_first(x)",
+// "Custom Scan (TidScan) on t", 'Seq Scan on "Order Items"'.
+// Non-greedy label + lookahead for " (cost=" ensures we stop at the cost group.
+const NODE_LINE_RE = /^(\s*)(?:->\s*)?(.+?)\s*\(cost=([\d.]+)\.\.([\d.]+)\s+rows=(\d+)\s+width=(\d+)\)/
 
-// Matches EXPLAIN ANALYZE actual time: "  Actual Time: 0.123..12.345  Rows: 1000  Loops: 1"
+// Matches EXPLAIN ANALYZE actual time: "  Actual Time: 0.123..12.345  Rows: 1000  Loops: 1"  (PG ≤ 9.x)
 const ACTUAL_TIME_RE = /Actual\s*(?:Time|time):\s*([\d.]+)\.\.([\d.]+)\s+Rows:\s*(\d+)\s+Loops:\s*(\d+)/i
+
+// Matches inline actual time in modern PG (10+):
+//   "  ->  Seq Scan on a  (cost=0.00..32.60 rows=2260 width=8) (actual time=0.011..0.012 rows=10 loops=1)"
+const INLINE_ACTUAL_RE = /\(actual\s+time=([\d.]+)\.\.([\d.]+)\s+rows=(\d+)\s+loops=(\d+)\)/i
+
+// Matches "never executed" nodes: "  (actual time=never executed rows=0 loops=0)"
+const NEVER_EXECUTED_RE = /\(actual\s+time=never\s+executed\s+rows=(\d+)\s+loops=(\d+)\)/i
 
 // Matches buffer info line: "  Buffers: shared hit=123 read=45 written=0 temp read=12 temp written=3"
 const BUFFERS_LINE_RE = /^\s*Buffers:\s*(.*)$/i
@@ -184,6 +196,7 @@ interface RawNode {
   type: NodeType
   cost: Cost
   rows: number
+  plannedRows: number
   width: number
   actualTime?: ActualTime
   loops?: number
@@ -198,15 +211,33 @@ function parseNodeLine(line: string): RawNode | null {
   const indent = m[1]
   const depth = Math.floor(indent.length / 2)
   const label = m[2].trim()
-  return {
+  const node: RawNode = {
     depth,
     label,
     type: detectNodeType(label),
     cost: { startup: parseFloat(m[3]), total: parseFloat(m[4]) },
     rows: parseInt(m[5], 10),
+    plannedRows: parseInt(m[5], 10),
     width: parseInt(m[6], 10),
     annotations: [],
   }
+
+  // Modern PG (10+): inline actual stats in the same line:
+  //   "  ->  Seq Scan on a  (cost=..) (actual time=0.011..0.012 rows=10 loops=1)"
+  const neverMatch = line.match(NEVER_EXECUTED_RE)
+  if (neverMatch) {
+    node.loops = parseInt(neverMatch[2] || '0', 10)
+    node.annotations.push('actual time=never executed')
+  } else {
+    const inline = line.match(INLINE_ACTUAL_RE)
+    if (inline) {
+      node.actualTime = { first: parseFloat(inline[1]), last: parseFloat(inline[2]) }
+      const rows = parseInt(inline[3], 10)
+      if (!isNaN(rows)) node.rows = rows
+      node.loops = parseInt(inline[4], 10)
+    }
+  }
+  return node
 }
 
 /**
@@ -337,6 +368,7 @@ function buildTree(rawNodes: RawNode[]): ExplainNode | null {
     children: [],
     cost: root.cost,
     rows: root.rows,
+    plannedRows: root.plannedRows,
     width: root.width,
     actualTime: root.actualTime,
     loops: root.loops,
@@ -364,6 +396,7 @@ function buildTree(rawNodes: RawNode[]): ExplainNode | null {
       children: [],
       cost: raw.cost,
       rows: raw.rows,
+      plannedRows: raw.plannedRows,
       width: raw.width,
       actualTime: raw.actualTime,
       loops: raw.loops,

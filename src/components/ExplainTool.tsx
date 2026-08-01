@@ -226,13 +226,9 @@ function getMetricValue(node: ExplainNode, metric: Metric): number {
     case 'rows': return node.rows
     case 'time': return node.actualTime?.last ?? node.cost.total
     case 'estimation': {
-      // Estimation quality: ratio of actual rows to planned rows
-      if (node.actualTime) {
-        const actualRows = node.rows
-        // We need planned rows - stored in cost startup
-        return node.details.cost ? 1 : 1
-      }
-      return 0
+      // Estimation quality: actual/planned rows ratio (1 = accurate)
+      const est = computeEstimation(node)
+      return est ? est.ratio : 0
     }
     case 'buffers': return node.buffers ? node.buffers.sharedHit + node.buffers.sharedRead : 0
     case 'io': return node.buffers ? node.buffers.sharedRead + node.buffers.tempRead : 0
@@ -245,7 +241,10 @@ function getMetricValue2(node: ExplainNode, metric: Metric): number {
     case 'cost': return node.rows
     case 'rows': return node.cost.total
     case 'time': return node.rows
-    case 'estimation': return node.cost.total
+    case 'estimation': {
+      // Secondary bar: planned rows (show planner estimate vs actual)
+      return node.plannedRows
+    }
     case 'buffers': return node.cost.total
     case 'io': return node.cost.total
   }
@@ -309,17 +308,18 @@ function extractIndexName(label: string): string | null {
   return null
 }
 
-// Compute estimation quality: actual/planned ratio
+// Compute estimation quality: actual/planned rows ratio.
+// > 1 = underestimated, < 1 = overestimated, ~1 = accurate.
 function computeEstimation(node: ExplainNode): { ratio: number; label: string } | null {
-  if (!node.actualTime) return null
-  // We need planned rows. Use the cost startup value as a heuristic,
-  // or extract from details
-  const planned = node.details.rows ? Number(node.details.rows) : null
-  // Since we can't easily get planned rows from the current parser,
-  // we'll use actual rows vs a heuristic
-  // The parser stores the actual rows in node.rows when actualTime is present
-  // and the planned rows are overwritten. Let's extract from the raw annotation.
-  return null
+  if (!node.actualTime || node.plannedRows <= 0) return null
+  const actual = node.rows
+  const ratio = actual / node.plannedRows
+  const label =
+    ratio > 10 ? 'badly underestimated' :
+    ratio > 2 ? 'underestimated' :
+    ratio < 0.1 ? 'badly overestimated' :
+    ratio < 0.5 ? 'overestimated' : 'accurate'
+  return { ratio, label }
 }
 
 // Get the key info line for a node (table name, join condition, sort key, etc.)
@@ -1116,10 +1116,17 @@ export default function ExplainTool() {
       html += `<div class="dr"><span class="dl">Timing</span><span style="color:#e4e0d6">${node.actualTime.first}..${node.actualTime.last} ms</span><span class="ml-2 text-[10px] text-ink-500">${pct}%</span></div>`
     }
 
-    // Rows
-    // The parser stores actual rows when EXPLAIN ANALYZE, planned rows otherwise
-    // We don't have both separately, so show what we have
-    html += `<div class="dr"><span class="dl">Rows</span><span style="color:#e4e0d6">${node.rows.toLocaleString()}</span></div>`
+    // Rows (planned vs actual)
+    if (node.actualTime && node.plannedRows > 0) {
+      html += `<div class="dr"><span class="dl">Rows</span><span style="color:#e4e0d6">${node.rows.toLocaleString()}</span><span style="color:#78716c;font-size:10px"> actual · planned ${node.plannedRows.toLocaleString()}</span></div>`
+      const est = computeEstimation(node)
+      if (est) {
+        const estColor = est.ratio > 2 || est.ratio < 0.5 ? '#ef4444' : '#22c55e'
+        html += `<div class="dr"><span class="dl">Estimation</span><span style="color:${estColor}">${est.ratio.toFixed(1)}× ${est.label}</span></div>`
+      }
+    } else {
+      html += `<div class="dr"><span class="dl">Rows</span><span style="color:#e4e0d6">${node.rows.toLocaleString()}</span></div>`
+    }
     if (node.actualTime) {
       html += `<div class="dr"><span class="dl">Row Width</span><span style="color:#e4e0d6">${node.width} bytes</span></div>`
     }
@@ -1592,10 +1599,21 @@ export default function ExplainTool() {
                         const heapRead = row.node.buffers?.tempRead ?? 0
                         const sharedRead = row.node.buffers?.sharedRead ?? 0
                         const filterAnn = row.node.annotations.find(a => a.startsWith('Filter:'))
-                        const filterPct = filterAnn ? '8%' : ''
+                        // Estimate filter selectivity from "Rows Removed by Filter" when available
+                        let filterPct = ''
+                        if (filterAnn) {
+                          const removedAnn = row.node.annotations.find(a => a.startsWith('Rows Removed by Filter:'))
+                          if (removedAnn) {
+                            const removed = parseInt(removedAnn.replace(/^Rows Removed by Filter:\s*/, ''), 10)
+                            const total = removed + row.node.rows
+                            if (total > 0) filterPct = `${((removed / total) * 100).toFixed(0)}%`
+                          } else {
+                            filterPct = 'yes'
+                          }
+                        }
                         const hasHighCost = row.node.cost.total > (plan?.summary.totalCost || 1) * 0.3
                         // Estimation quality: actual rows / planned rows
-                        const plannedRows = row.node.details.rows ? Number(row.node.details.rows) : null
+                        const plannedRows = row.node.plannedRows
                         const actualRows = row.node.rows
                         let estimStr = ''
                         if (row.node.actualTime && plannedRows && plannedRows > 0) {
