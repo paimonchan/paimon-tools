@@ -35,6 +35,7 @@ const LS_VIEW_KEY = 'plan-explorer-view'
 const LS_METRIC_KEY = 'plan-explorer-metric'
 const LS_TAB_KEY = 'plan-explorer-tab'
 const LS_TREE_METRIC_KEY = 'plan-explorer-tree-metric'
+const LS_LIVE_KEY = 'plan-explorer-live'
 const SAMPLE_PLAN = `Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)
   ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)
         Hash Cond: (a.id = b.a_id)
@@ -359,6 +360,7 @@ export default function ExplainTool() {
   const [queryStatus, setQueryStatus] = useState<'hidden' | 'auto' | 'manual'>('hidden')
   const [inputCollapsed, setInputCollapsed] = useState(false)
   const [analyzed, setAnalyzed] = useState(false)
+  const [livePreview, setLivePreview] = useState(() => loadPersisted(LS_LIVE_KEY, 'off') === 'on')
   const [treeMetric, setTreeMetric] = useState<TreeMetric>(() => (loadPersisted(LS_TREE_METRIC_KEY, 'none') as TreeMetric))
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -592,20 +594,28 @@ export default function ExplainTool() {
     const text = e.target.value
     setInputText(text)
     savePersisted(LS_KEY, text)
-    // Mark dirty so the user knows to re-analyze
-    setAnalyzed(false)
-    // Un-collapse so the user can edit
-    setInputCollapsed(false)
     // If input becomes empty, clear the rendered plan
     if (!text.trim()) {
+      setAnalyzed(false)
+      setInputCollapsed(false)
       setPlan(null)
       setError(null)
       setStatus('empty')
       setDurationMs(null)
       setSelectedNode(null)
       setCollapsedIds(new Set())
+      return
     }
-  }, [])
+    if (livePreview) {
+      // Live mode: parse instantly, keep pane open while editing
+      parseInput(text)
+      setAnalyzed(true)
+    } else {
+      // Manual mode: mark dirty, user clicks Analyze
+      setAnalyzed(false)
+      setInputCollapsed(false)
+    }
+  }, [livePreview, parseInput])
 
   // ── Sample ──────────────────────────────────────────
 
@@ -719,6 +729,14 @@ export default function ExplainTool() {
   const handleTreeMetric = useCallback((m: TreeMetric) => {
     setTreeMetric(m)
     savePersisted(LS_TREE_METRIC_KEY, m)
+  }, [])
+
+  const handleToggleLive = useCallback(() => {
+    setLivePreview(prev => {
+      const next = !prev
+      savePersisted(LS_LIVE_KEY, next ? 'on' : 'off')
+      return next
+    })
   }, [])
 
   // ── Collapse / Select ───────────────────────────────
@@ -1220,10 +1238,10 @@ export default function ExplainTool() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         {/* Input pane — auto-collapses when plan parsed */}
-        <div className={`flex min-h-0 flex-col border-r border-ink-800 transition-all duration-200 ${inputCollapsed && plan ? 'md:w-8 md:max-w-8' : 'md:w-1/4 md:max-w-sm'}`}>
-          {inputCollapsed && plan ? (
+        <div className={`flex min-h-0 flex-col border-r border-ink-800 transition-all duration-200 ${inputCollapsed ? 'md:w-8 md:max-w-8' : 'md:w-1/4 md:max-w-sm'}`}>
+          {inputCollapsed ? (
             /* Collapsed: thin strip */
-            <div className="flex flex-col items-center py-1 cursor-pointer" onClick={() => setInputCollapsed(false)} title="Expand input pane">
+            <div className="flex flex-col items-center py-1 cursor-pointer" onClick={() => setInputCollapsed(false)} title="Expand input pane (click)">
               <GitBranch className="h-4 w-4 text-honey-400 mb-0.5" />
               <span className="text-[8px] text-ink-500 writing-mode-vertical" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>Input</span>
               {!analyzed && <span className="mt-1 h-1.5 w-1.5 rounded-full bg-honey-400" title="Input changed — re-analyze" />}
@@ -1237,11 +1255,29 @@ export default function ExplainTool() {
                   <span className="text-[11px] font-500 text-ink-200">Plan Explorer</span>
                 </div>
                 <div className="flex items-center gap-0.5">
-                  {plan && (
-                    <button onClick={() => setInputCollapsed(true)} className="rounded px-1.5 py-0.5 text-[10px] text-ink-500 hover:bg-ink-800 hover:text-ink-200" title="Collapse input pane">◀</button>
-                  )}
+                  {/* Live preview toggle */}
+                  <button
+                    onClick={handleToggleLive}
+                    title={livePreview ? 'Live preview ON — auto-parse on paste' : 'Live preview OFF — parse via Analyze button'}
+                    className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors ${
+                      livePreview ? 'bg-honey-500/20 text-honey-300' : 'text-ink-400 hover:bg-ink-800 hover:text-ink-200'
+                    }`}
+                  >
+                    <Zap className="h-2.5 w-2.5" />
+                    <span className={livePreview ? '' : 'text-ink-600'}>Live</span>
+                  </button>
                   <button onClick={handleSample} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Load sample plan"><Sparkles className="h-2.5 w-2.5" />Sample</button>
                   <button onClick={handleClear} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Clear (Esc)"><Eraser className="h-2.5 w-2.5" />Clear</button>
+                  {/* Hide button — always visible when there's input */}
+                  {inputText.trim() && (
+                    <button
+                      onClick={() => setInputCollapsed(true)}
+                      className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200"
+                      title="Hide input pane"
+                    >
+                      ◀ Hide
+                    </button>
+                  )}
                 </div>
               </div>
               {/* Validation status line */}
@@ -1250,7 +1286,7 @@ export default function ExplainTool() {
                   analyzed ? (
                     <span className="flex items-center gap-1 text-[9px] text-green-400">
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
-                      Analyzed · {plan?.summary.nodeCount ?? 0} nodes
+                      {livePreview ? 'Live' : 'Analyzed'} · {plan?.summary.nodeCount ?? 0} nodes
                       {!plan && <span className="text-red-400">· failed</span>}
                     </span>
                   ) : looksLikePlan(inputText) ? (
@@ -1267,9 +1303,14 @@ export default function ExplainTool() {
                 ) : (
                   <span className="text-[9px] text-ink-600">Paste EXPLAIN output</span>
                 )}
-                {inputText.trim().length > 0 && (
-                  <span className="text-[9px] text-ink-600">{inputText.length.toLocaleString()} chars</span>
-                )}
+                <span className="flex items-center gap-2">
+                  {livePreview && !analyzed && (
+                    <span className="text-[9px] text-honey-300">⚡ live</span>
+                  )}
+                  {inputText.trim().length > 0 && (
+                    <span className="text-[9px] text-ink-600">{inputText.length.toLocaleString()} chars</span>
+                  )}
+                </span>
               </div>
               <textarea className="flex-1 resize-none border-0 bg-transparent p-3 font-mono text-[12px] leading-relaxed text-ink-200 outline-none placeholder:text-ink-600"
                 placeholder="Paste EXPLAIN output here, or drop a .plan file&#10;&#10;Example:&#10;Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)&#10;  ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)"
