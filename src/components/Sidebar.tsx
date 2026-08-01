@@ -93,7 +93,7 @@ export default function Sidebar({ activeId, onSelect, onOpenPalette, open, onClo
                             active ? 'text-honey-300' : 'text-ink-500 group-hover:text-ink-300'
                           }`}
                         />
-                        <span className="truncate">{tool.name}</span>
+                        <span className="truncate">{tool.shortName ?? tool.name}</span>
                       </button>
                     </li>
                   )

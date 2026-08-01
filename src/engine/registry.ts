@@ -35,7 +35,9 @@ export type IconName =
 export interface ToolBase {
   id: ToolId
   name: string
-  category: 'Convert' | 'Format' | 'Tools'
+  /** Optional shorter label for tight UI (sidebar, palette). Falls back to `name`. */
+  shortName?: string
+  category: 'Convert' | 'Format' | 'Tools' | 'Database'
   icon: IconName
   keywords: string[]
   description: string
@@ -71,7 +73,7 @@ const SAMPLE = {
   uglyJson: `{"id":1,"name":"Paimon","role":"Guide","stats":{"hp":10164,"atk":311,"def":1234},"tags":["emergency","food","best"]}`,
 }
 // ── Categories ────────────────────────────────────────
-export const CATEGORIES = ['Convert', 'Format', 'Tools'] as const
+export const CATEGORIES = ['Convert', 'Format', 'Tools', 'Database'] as const
 // ── Tool registry ─────────────────────────────────────
 export const TOOLS: ToolDefinition[] = [
   {
@@ -327,7 +329,8 @@ export const TOOLS: ToolDefinition[] = [
   {
     id: 'postgres-explain',
     name: 'PostgreSQL EXPLAIN Visualizer',
-    category: 'Tools',
+    shortName: 'PG EXPLAIN',
+    category: 'Database',
     type: 'ref',
     icon: 'git-branch',
     keywords: ['explain', 'postgresql', 'postgres', 'query plan', 'database', 'sql explain', 'plan visualizer', 'performance', 'bottleneck'],

@@ -140,7 +140,7 @@ export default function CommandPalette({ open, onClose, onSelect, activeId }: Co
                     >
                       <Icon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-honey-300' : 'text-ink-400'}`} />
                       <span className="flex-1">
-                        <span className="font-500">{tool.name}</span>
+                        <span className="font-500">{tool.shortName ?? tool.name}</span>
                         <span className="ml-2 text-xs text-ink-500">{tool.description}</span>
                       </span>
                       {isActiveTool && (
@@ -179,7 +179,7 @@ function filterTools(query: string): ToolDefinition[] {
   if (!q) return TOOLS
   const scored: { t: ToolDefinition; score: number }[] = []
   for (const t of TOOLS) {
-    const hay = `${t.name} ${t.category} ${(t.keywords || []).join(' ')}`.toLowerCase()
+    const hay = `${t.name} ${t.shortName ?? ''} ${t.category} ${(t.keywords || []).join(' ')}`.toLowerCase()
     let score = 0
     if (t.name.toLowerCase().startsWith(q)) score += 100
     if (t.name.toLowerCase().includes(q)) score += 40
