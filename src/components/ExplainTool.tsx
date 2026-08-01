@@ -330,6 +330,14 @@ function getNodeKeyInfo(node: ExplainNode): string {
   return ''
 }
 
+// Cheap heuristic: does the text look like an EXPLAIN plan?
+function looksLikePlan(text: string): boolean {
+  const trimmed = text.trim()
+  if (!trimmed) return false
+  // Node line starts with optional "->" and has (cost=.. .. rows=.. width=..)
+  return /^(?:\s*(?:->\s*)?[\w\s]+\s*\(\s*cost=\d+\.\.\d+\s+rows=\d+\s+width=\d+\))/m.test(trimmed)
+}
+
 // ── Component ─────────────────────────────────────────
 
 export default function ExplainTool() {
@@ -350,6 +358,7 @@ export default function ExplainTool() {
   const [queryText, setQueryText] = useState('')
   const [queryStatus, setQueryStatus] = useState<'hidden' | 'auto' | 'manual'>('hidden')
   const [inputCollapsed, setInputCollapsed] = useState(false)
+  const [analyzed, setAnalyzed] = useState(false)
   const [treeMetric, setTreeMetric] = useState<TreeMetric>(() => (loadPersisted(LS_TREE_METRIC_KEY, 'none') as TreeMetric))
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -539,7 +548,6 @@ export default function ExplainTool() {
       setDurationMs(elapsed)
       setSelectedNode(null)
       setCollapsedIds(new Set())
-      setInputCollapsed(true)
 
       // Try to extract SQL query from input
       // Look for lines before EXPLAIN keyword
@@ -564,14 +572,40 @@ export default function ExplainTool() {
     }
   }, [toast])
 
+  // ── Analyze (manual trigger) ────────────────────────
+
+  const handleAnalyze = useCallback(() => {
+    const trimmed = inputText.trim()
+    if (!trimmed) return
+    if (trimmed.length > INPUT_SIZE_LIMIT) {
+      toast.push(`Input too large — max ${INPUT_SIZE_LIMIT.toLocaleString()} chars`, { variant: 'error' })
+      return
+    }
+    parseInput(trimmed)
+    setAnalyzed(true)
+    setInputCollapsed(true)
+  }, [inputText, parseInput, toast])
+
   // ── Input change ────────────────────────────────────
 
   const handleInputChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value
     setInputText(text)
     savePersisted(LS_KEY, text)
-    parseInput(text)
-  }, [parseInput])
+    // Mark dirty so the user knows to re-analyze
+    setAnalyzed(false)
+    // Un-collapse so the user can edit
+    setInputCollapsed(false)
+    // If input becomes empty, clear the rendered plan
+    if (!text.trim()) {
+      setPlan(null)
+      setError(null)
+      setStatus('empty')
+      setDurationMs(null)
+      setSelectedNode(null)
+      setCollapsedIds(new Set())
+    }
+  }, [])
 
   // ── Sample ──────────────────────────────────────────
 
@@ -579,6 +613,8 @@ export default function ExplainTool() {
     setInputText(SAMPLE_PLAN)
     savePersisted(LS_KEY, SAMPLE_PLAN)
     parseInput(SAMPLE_PLAN)
+    setAnalyzed(true)
+    setInputCollapsed(true)
   }, [parseInput])
 
   // ── Clear ───────────────────────────────────────────
@@ -594,6 +630,7 @@ export default function ExplainTool() {
     setCollapsedIds(new Set())
     setQueryText('')
     setInputCollapsed(false)
+    setAnalyzed(false)
   }, [])
 
   // ── Share ───────────────────────────────────────────
@@ -654,6 +691,8 @@ export default function ExplainTool() {
       setInputText(shared)
       savePersisted(LS_KEY, shared)
       parseInput(shared)
+      setAnalyzed(true)
+      setInputCollapsed(true)
       window.history.replaceState(null, '', window.location.pathname)
     }
   }, [parseInput])
@@ -989,12 +1028,13 @@ export default function ExplainTool() {
       if (m && e.shiftKey && e.key === 'c') { e.preventDefault(); handleShare(); return }
       if (m && e.key === 's') { e.preventDefault(); handleDownloadSvg(); return }
       if (m && e.shiftKey && e.key === 't') { e.preventDefault(); handleCopyText(); return }
+      if (m && e.key === 'Enter') { e.preventDefault(); handleAnalyze(); return }
       if (e.key === 'Escape' && inputText) { e.preventDefault(); handleClear(); return }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputText])
+  }, [inputText, handleAnalyze])
 
   // ── Drag & drop ─────────────────────────────────────
 
@@ -1006,7 +1046,13 @@ export default function ExplainTool() {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const text = ev.target?.result as string
-      if (text) { setInputText(text); savePersisted(LS_KEY, text); parseInput(text) }
+      if (text) {
+        setInputText(text)
+        savePersisted(LS_KEY, text)
+        parseInput(text)
+        setAnalyzed(true)
+        setInputCollapsed(true)
+      }
     }
     reader.readAsText(file)
   }, [parseInput])
@@ -1180,6 +1226,7 @@ export default function ExplainTool() {
             <div className="flex flex-col items-center py-1 cursor-pointer" onClick={() => setInputCollapsed(false)} title="Expand input pane">
               <GitBranch className="h-4 w-4 text-honey-400 mb-0.5" />
               <span className="text-[8px] text-ink-500 writing-mode-vertical" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>Input</span>
+              {!analyzed && <span className="mt-1 h-1.5 w-1.5 rounded-full bg-honey-400" title="Input changed — re-analyze" />}
             </div>
           ) : (
             /* Expanded: full input pane */
@@ -1197,10 +1244,53 @@ export default function ExplainTool() {
                   <button onClick={handleClear} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Clear (Esc)"><Eraser className="h-2.5 w-2.5" />Clear</button>
                 </div>
               </div>
+              {/* Validation status line */}
+              <div className="flex items-center justify-between border-b border-ink-800 bg-ink-900/40 px-3 py-1">
+                {inputText.trim() ? (
+                  analyzed ? (
+                    <span className="flex items-center gap-1 text-[9px] text-green-400">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
+                      Analyzed · {plan?.summary.nodeCount ?? 0} nodes
+                      {!plan && <span className="text-red-400">· failed</span>}
+                    </span>
+                  ) : looksLikePlan(inputText) ? (
+                    <span className="flex items-center gap-1 text-[9px] text-honey-300">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-honey-400" />
+                      Plan detected — click Analyze
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[9px] text-red-400">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-400" />
+                      Not a valid plan
+                    </span>
+                  )
+                ) : (
+                  <span className="text-[9px] text-ink-600">Paste EXPLAIN output</span>
+                )}
+                {inputText.trim().length > 0 && (
+                  <span className="text-[9px] text-ink-600">{inputText.length.toLocaleString()} chars</span>
+                )}
+              </div>
               <textarea className="flex-1 resize-none border-0 bg-transparent p-3 font-mono text-[12px] leading-relaxed text-ink-200 outline-none placeholder:text-ink-600"
                 placeholder="Paste EXPLAIN output here, or drop a .plan file&#10;&#10;Example:&#10;Gather Motion 2:1  (cost=0.00..431.00 rows=1 width=48)&#10;  ->  Hash Join  (cost=0.00..431.00 rows=1 width=48)"
                 value={inputText} onChange={handleInputChange} onDragOver={handleDragOver} onDrop={handleDrop} spellCheck={false}
               />
+              {/* Analyze button */}
+              <div className="border-t border-ink-800 bg-ink-900/60 px-3 py-2">
+                <button
+                  onClick={handleAnalyze}
+                  disabled={!inputText.trim()}
+                  className={`flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-600 transition-colors ${
+                    inputText.trim() && looksLikePlan(inputText)
+                      ? 'bg-honey-500 text-ink-950 hover:bg-honey-400'
+                      : 'bg-ink-700 text-ink-300 hover:bg-ink-600'
+                  } disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  <Zap className="h-3 w-3" />
+                  {analyzed ? 'Re-analyze' : 'Analyze'}
+                  <span className="ml-1 rounded bg-ink-950/30 px-1 py-0.5 text-[8px] font-400">⌘↵</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
