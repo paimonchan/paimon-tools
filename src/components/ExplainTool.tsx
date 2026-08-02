@@ -390,6 +390,18 @@ export default function ExplainTool() {
 
   const svgRef = useRef<SVGSVGElement>(null)
   const treeContainerRef = useRef<HTMLDivElement>(null)
+  // Live refs for the D3 effect so selection changes don't rebuild the tree
+  // (rebuilding resets zoom/pan and feels like the view "resizes itself").
+  const selectedNodeRef = useRef<ExplainNode | null>(null)
+  const d3NodesRef = useRef<d3Selection.Selection<SVGGElement, d3Hierarchy.HierarchyNode<ExplainNode>, SVGGElement, unknown> | null>(null)
+  const maxNodeIdRef = useRef('')
+  const applyHighlightRef = useRef<(() => void) | null>(null)
+  selectedNodeRef.current = selectedNode
+
+  // Selection changes (from table rows too) update strokes without rebuilding.
+  useEffect(() => {
+    applyHighlightRef.current?.()
+  }, [selectedNode])
 
   // ── Flattened rows for table view ───────────────────
 
@@ -877,6 +889,23 @@ export default function ExplainTool() {
     root.each((d: HierarchyNode<ExplainNode>) => {
       if (d.data.cost.total > maxCost) { maxCost = d.data.cost.total; maxNodeId = (d.data as any)._id || '' }
     })
+    maxNodeIdRef.current = maxNodeId
+
+    // Imperative selection highlight — updates strokes WITHOUT rebuilding the
+    // tree, so zoom/pan position is preserved on node click.
+    function applySelectionHighlight() {
+      const sel = selectedNodeRef.current
+      if (!d3NodesRef.current) return
+      d3NodesRef.current.select('rect')
+        .attr('stroke', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
+          if (d.data === sel) return '#e7ac34'
+          if ((d.data as any)._id === maxNodeIdRef.current) return '#ef4444'
+          return '#1d1a16'
+        })
+        .attr('stroke-width', (d: d3Hierarchy.HierarchyNode<ExplainNode>) =>
+          d.data === sel || (d.data as any)._id === maxNodeIdRef.current ? 2.5 : 1.5)
+    }
+    applyHighlightRef.current = applySelectionHighlight
 
     // Find max metric value for tree coloring
     function getTreeMetricValue(node: ExplainNode): number {
@@ -927,12 +956,12 @@ export default function ExplainTool() {
         return baseColor + hex
       })
       .attr('stroke', (d: d3Hierarchy.HierarchyNode<ExplainNode>) => {
-        if (d.data === selectedNode) return '#e7ac34'
-        if ((d.data as any)._id === maxNodeId) return '#ef4444'
+        if (d.data === selectedNodeRef.current) return '#e7ac34'
+        if ((d.data as any)._id === maxNodeIdRef.current) return '#ef4444'
         return '#1d1a16'
       })
       .attr('stroke-width', (d: d3Hierarchy.HierarchyNode<ExplainNode>) =>
-        d.data === selectedNode || (d.data as any)._id === maxNodeId ? 2.5 : 1.5)
+        d.data === selectedNodeRef.current || (d.data as any)._id === maxNodeIdRef.current ? 2.5 : 1.5)
 
     // Node name (bold, top-left)
     node.append('text')
@@ -992,6 +1021,9 @@ export default function ExplainTool() {
       .attr('font-size', '9px').attr('fill', '#78716c').attr('text-anchor', 'middle')
       .text((d: d3Hierarchy.HierarchyNode<ExplainNode>) => collapsedIds.has((d.data as any)._id) ? '▶' : '▼')
 
+    // Keep a live handle for imperative selection highlight updates
+    d3NodesRef.current = node
+
     // Click on block → select; click on collapse indicator → toggle collapse
     node.on('click', function (event: MouseEvent, d: d3Hierarchy.HierarchyNode<ExplainNode>) {
       const target = event.target as SVGElement
@@ -1007,15 +1039,19 @@ export default function ExplainTool() {
           return n
         })
       } else {
-        // Select only (with auto-expand ancestors)
+        // Select only (with auto-expand ancestors) — highlight imperatively
+        // so the tree is NOT rebuilt and zoom/pan position is kept.
         const id = (d.data as any)._id
-        setSelectedNode(d.data === selectedNode ? null : d.data)
+        const next = d.data === selectedNodeRef.current ? null : d.data
+        selectedNodeRef.current = next
+        setSelectedNode(next)
+        applySelectionHighlight()
         const ancestors = getAncestorIds(id)
         if (ancestors.length > 0) {
           setCollapsedIds(prev => {
-            const next = new Set(prev)
-            for (const aid of ancestors) next.delete(aid)
-            return next
+            const nextSet = new Set(prev)
+            for (const aid of ancestors) nextSet.delete(aid)
+            return nextSet
           })
         }
       }
@@ -1047,14 +1083,15 @@ export default function ExplainTool() {
       tooltip.style('left', `${event.offsetX + 15}px`).style('top', `${event.offsetY - 10}px`)
     })
     node.on('mouseleave', function (this: SVGGElement, _e: MouseEvent, d: d3Hierarchy.HierarchyNode<ExplainNode>) {
+      const sel = selectedNodeRef.current
       d3Selection.select(this).select('rect')
-        .attr('stroke', d.data === selectedNode ? '#e7ac34' : (d.data as any)._id === maxNodeId ? '#ef4444' : '#1d1a16')
-        .attr('stroke-width', d.data === selectedNode || (d.data as any)._id === maxNodeId ? 2.5 : 1.5)
+        .attr('stroke', d.data === sel ? '#e7ac34' : (d.data as any)._id === maxNodeIdRef.current ? '#ef4444' : '#1d1a16')
+        .attr('stroke-width', d.data === sel || (d.data as any)._id === maxNodeIdRef.current ? 2.5 : 1.5)
       tooltip.style('display', 'none')
     })
 
     return () => { tooltip.remove() }
-  }, [plan, viewMode, selectedNode, collapsedIds, treeMetric, getAncestorIds])
+  }, [plan, viewMode, collapsedIds, treeMetric, getAncestorIds])
 
   // ── Keyboard shortcuts ──────────────────────────────
 
@@ -1293,7 +1330,7 @@ export default function ExplainTool() {
               <div className="flex items-center justify-between border-b border-ink-800 bg-ink-900/60 px-3 py-1.5">
                 <div className="flex items-center gap-1.5">
                   <GitBranch className="h-3.5 w-3.5 text-honey-400" />
-                  <span className="text-[11px] font-500 text-ink-200">PostgreSQL EXPLAIN Visualizer</span>
+                  <span className="text-[11px] font-500 uppercase tracking-wider text-ink-400">Input</span>
                 </div>
                 <div className="flex items-center gap-0.5">
                   <button onClick={handleSample} className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-ink-400 hover:bg-ink-800 hover:text-ink-200" title="Load sample plan"><Sparkles className="h-2.5 w-2.5" />Sample</button>
@@ -1393,7 +1430,7 @@ export default function ExplainTool() {
           )}
 
           {/* Tab bar */}
-          <div className="flex items-center justify-between border-b border-ink-800 bg-ink-900/60 px-1">
+          <div className="flex flex-wrap items-center justify-between gap-y-1 border-b border-ink-800 bg-ink-900/60 px-1">
             <div className="flex items-center">
               {TABS.map(tab => {
                 const Icon = TAB_ICONS[tab]

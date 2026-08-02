@@ -266,45 +266,47 @@ export function parseExplain(text: string): ExplainPlan {
     if (node) {
       currentRaw = node
       rawNodes.push(node)
-      // Check for annotations on the next line
-      if (i + 1 < lines.length) {
+      // Consume ALL consecutive annotation lines below the node
+      // (Filter, Rows Removed, Hash Cond, Buffers, I/O Timings, ...).
+      // Only a single line was consumed before — Buffers after a Filter
+      // line was silently dropped, so buffer/IO stats never showed.
+      while (i + 1 < lines.length) {
         const nextLine = lines[i + 1]
         const nextTrimmed = nextLine.trim()
-        // Check if next line is an annotation (not a node, not a summary)
-        if (nextTrimmed && !nextTrimmed.match(NODE_LINE_RE) && !nextTrimmed.match(PLANNING_TIME_RE) && !nextTrimmed.match(EXECUTION_TIME_RE)) {
-          // Check for actual time, buffers, or other annotations
-          const actualMatch = nextLine.match(ACTUAL_TIME_RE)
-          if (actualMatch) {
-            node.actualTime = { first: parseFloat(actualMatch[1]), last: parseFloat(actualMatch[2]) }
-            const rows = parseInt(actualMatch[3], 10)
-            if (!isNaN(rows)) node.rows = rows
-            node.loops = parseInt(actualMatch[4], 10)
-            i++ // consume
-            continue
-          }
-          const bufferMatch = parseBuffers(nextLine)
-          if (bufferMatch) {
-            node.buffers = bufferMatch
-            i++ // consume
-            continue
-          }
-          // Check for I/O timings (track_io_timing): "  I/O Timings: read=12.345 write=6.789"
-          const ioMatch = nextLine.match(IO_TIMINGS_RE)
-          if (ioMatch) {
-            node.ioTimings = {
-              read: parseFloat(ioMatch[1] || '0'),
-              write: parseFloat(ioMatch[2] || '0'),
-            }
-            i++ // consume
-            continue
-          }
-          // Check if it's a multi-line annotation
-          const annotMatch = nextLine.match(ANNOTATION_RE)
-          if (annotMatch && !nextLine.includes('->')) {
-            node.annotations.push(nextTrimmed)
-            i++ // consume
-          }
+        if (!nextTrimmed) break
+        if (nextTrimmed.match(NODE_LINE_RE)) break
+        if (nextTrimmed.match(PLANNING_TIME_RE) || nextTrimmed.match(EXECUTION_TIME_RE)) break
+        if (nextLine.includes('->') && !nextLine.trim().startsWith('->')) break
+
+        let consumed = false
+        const actualMatch = nextLine.match(ACTUAL_TIME_RE)
+        if (actualMatch) {
+          node.actualTime = { first: parseFloat(actualMatch[1]), last: parseFloat(actualMatch[2]) }
+          const rows = parseInt(actualMatch[3], 10)
+          if (!isNaN(rows)) node.rows = rows
+          node.loops = parseInt(actualMatch[4], 10)
+          consumed = true
         }
+        const bufferMatch = parseBuffers(nextLine)
+        if (bufferMatch) {
+          node.buffers = bufferMatch
+          consumed = true
+        }
+        const ioMatch = nextLine.match(IO_TIMINGS_RE)
+        if (ioMatch) {
+          node.ioTimings = {
+            read: parseFloat(ioMatch[1] || '0'),
+            write: parseFloat(ioMatch[2] || '0'),
+          }
+          consumed = true
+        }
+        const annotMatch = nextLine.match(ANNOTATION_RE)
+        if (annotMatch && !nextLine.includes('->') && !consumed) {
+          node.annotations.push(nextTrimmed)
+          consumed = true
+        }
+        if (!consumed) break
+        i++ // consume this line
       }
       continue
     }
