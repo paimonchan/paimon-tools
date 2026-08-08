@@ -2,7 +2,7 @@
  * video-slice.ts — pure logic for the Video Slicer tool.
  *
  * Zero React, zero DOM, zero browser API. Only pure functions for time
- * formatting, range validation, and filename derivation. The mediabunny
+ * formatting, range validation, and filename derivation. The ffmpeg.wasm
  * integration lives in lib/video-media.ts (browser I/O).
  */
 
