@@ -72,6 +72,7 @@ export default function VideoSlicerTool() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
+  const [trimPhase, setTrimPhase] = useState<'loading' | 'slicing'>('loading')
 
   // Trim range (seconds). Default [0, 0]; resolved against duration once loaded.
   const [start, setStart] = useState(0)
@@ -245,7 +246,14 @@ export default function VideoSlicerTool() {
     setProgress(0)
     try {
       const { trimVideo, downloadBlob } = await import('../lib/video-media')
-      const result = await trimVideo(file, range.start, range.end, (p) => setProgress(p))
+      setTrimPhase('loading')
+      const result = await trimVideo(
+        file,
+        range.start,
+        range.end,
+        (p) => setProgress(p),
+        (phase) => setTrimPhase(phase),
+      )
       const filename = makeSliceFilename(file.name, range.start, range.end)
       downloadBlob(result.blob, filename)
       setStatus('ok')
@@ -510,10 +518,7 @@ export default function VideoSlicerTool() {
                   }`}
                 >
                   {processing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Slicing… {progress > 0 ? `${Math.round(progress * 100)}%` : ''}
-                    </>
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
@@ -521,9 +526,23 @@ export default function VideoSlicerTool() {
                     </>
                   )}
                 </button>
-                <div className="hidden text-[11px] text-emerald-400/80 sm:flex sm:items-center sm:gap-1">
-                  <Scissors className="h-3 w-3" />
-                  {isLossless ? 'lossless' : ''}
+                <div className="hidden h-5 items-center gap-1.5 sm:flex sm:items-center">
+                  {processing ? (
+                    trimPhase === 'loading' ? (
+                      <span className="text-[11px] text-ink-400">
+                        Preparing ffmpeg engine… <Loader2 className="inline h-3 w-3 animate-spin" />
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-honey-400">
+                        Slicing… {Math.round(progress * 100)}%
+                      </span>
+                    )
+                  ) : (
+                    <span className="hidden text-[11px] text-emerald-400/80 sm:flex sm:items-center sm:gap-1">
+                      <Scissors className="h-3 w-3" />
+                      {isLossless ? 'lossless' : ''}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

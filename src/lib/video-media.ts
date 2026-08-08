@@ -49,6 +49,9 @@ export interface TrimResult {
   durationMs: number // how long the trim took
 }
 
+/** Phase of the trim, so the UI can show a clear indicator during the wasm download. */
+export type TrimPhase = 'loading' | 'slicing'
+
 /** True when the browser can run ffmpeg.wasm (needs WebAssembly). */
 export function isVideoSlicerSupported(): boolean {
   return typeof WebAssembly !== 'undefined'
@@ -133,9 +136,15 @@ export async function trimVideo(
   start: number,
   end: number,
   onProgress?: (progress: number) => void,
+  onPhase?: (phase: TrimPhase) => void,
 ): Promise<TrimResult> {
   const started = performance.now()
+  onPhase?.('loading')
+
+  // Load (or get cached) ffmpeg core — this may download the ~30MB wasm on the
+  // first call. The UI shows a clear "preparing engine" state during this.
   const ffmpeg = await getFFmpeg()
+  onPhase?.('slicing')
 
   // Report progress from ffmpeg's progress events.
   const progressCb: ProgressEventCallback = ({ progress: p }) => {
