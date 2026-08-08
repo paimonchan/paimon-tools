@@ -26,6 +26,13 @@ import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { fetchFile, toBlobURL } from '@ffmpeg/util'
 import type { ProgressEventCallback } from '@ffmpeg/ffmpeg'
 
+// Core wasm/js as URL assets. Vite resolves these to the correct path in both
+// dev and the built site (including the `/paimon-tools/` subpath), so no
+// hardcoded absolute path is needed. The core is only fetched at runtime on
+// the first trim — never `modulepreload`'d, never in any initial bundle.
+import coreJsUrl from '../lib/ffmpeg-core/ffmpeg-core.js?url'
+import coreWasmUrl from '../lib/ffmpeg-core/ffmpeg-core.wasm?url'
+
 export interface VideoFileInfo {
   duration: number // seconds
   name: string
@@ -47,11 +54,9 @@ export function isVideoSlicerSupported(): boolean {
   return typeof WebAssembly !== 'undefined'
 }
 
-/** Paths to the ffmpeg core static assets (served from public/, fetched on demand).
- *  paimonchan.github.io is a user site served at the root, so absolute root paths
- *  work in both dev (localhost:5199/ffmpeg-core/) and prod (paimonchan.github.io/). */
-const CORE_JS = '/ffmpeg-core/ffmpeg-core.js'
-const CORE_WASM = '/ffmpeg-core/ffmpeg-core.wasm'
+/** Paths to the ffmpeg core assets — resolved by Vite to the correct URL. */
+const CORE_JS = coreJsUrl
+const CORE_WASM = coreWasmUrl
 
 let ffmpegPromise: Promise<FFmpeg> | null = null
 
