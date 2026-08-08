@@ -40,6 +40,8 @@ export const HOME_SEO = {
   <li><a href="hash-generator/">SHA-256 Hash</a> - generate SHA-256 checksum</li>
   <li><a href="combine-files/">Combine Files</a> - merge multiple CSV &amp; Excel files into one
   <li><a href="diff-tool/">Diff Tool</a> - compare two texts side by side
+  <li><a href="video-slice/">Video Slicer</a> - losslessly trim and cut MP4 videos
+  <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
 }
@@ -764,6 +766,39 @@ print(json.dumps(data, indent=2))</pre>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
 
+  'video-slice': {
+    title: 'Video Slicer - Lossless MP4 Trimmer Online | Paimon Tools',
+    description:
+      'Slice and trim MP4 videos losslessly in your browser, free. Set a start/end range and download a clip — stream-copied, no re-encode, no quality loss. 100% client-side, video never leaves your device, no sign-up.',
+    path: 'video-slice',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Slicer - losslessly trim and cut MP4 videos in your browser',
+    h1: 'Video Slicer - Lossless MP4 Trimmer',
+    breadcrumb: 'Tools / Video Slicer',
+    bodyHtml: `<h2>Video Slicer - Lossless MP4 Trimmer</h2>
+<p>Slice and trim MP4 videos losslessly, entirely in your browser. Set a start and end time, then download just that clip — the encoded samples in range are stream-copied (re-muxed) into a fresh MP4, so there is <strong>no re-encode and no quality loss</strong>. Your video never leaves your device.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4 video or click to browse</li>
+  <li>Preview the video and set the start (A) and end (B) points — via the sliders, timestamp inputs, or "set A / set B" from the current playback position</li>
+  <li>Optionally hit "Preview cut" to watch just the selected range</li>
+  <li>Click "Download slice" — the clip is trimmed losslessly and saved as MP4</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Lossless trimming</strong> — stream copy, no re-encode, no quality loss (unlike online editors that re-compress)</li>
+  <li>Instant slicing — copies only the samples in range, so short clips export near-instantly</li>
+  <li>Frame-accurate range control: sliders, timestamp inputs, or set from playback position</li>
+  <li>In-browser preview with play, pause, and cut-preview</li>
+  <li>100% client-side (WebCodecs) — your video is never uploaded anywhere</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Does it re-encode my video?</strong> No. Slicing uses stream copy — the original encoded frames are kept intact. There is no quality loss.</p>
+<p><strong>What formats are supported?</strong> MP4 (H.264/AAC) is fully supported for lossless slicing. Other formats may be added later.</p>
+<p><strong>Is my video uploaded?</strong> No. Everything runs locally in your browser via the WebCodecs API. Your video never leaves your device.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+  },
+
   '404': {
     title: 'Page Not Found - Paimon Tools',
     description: 'The page you are looking for does not exist. Browse our free JSON, CSV and Excel conversion tools, code playground, and developer utilities.',
@@ -988,6 +1023,8 @@ export function noscriptBodyFor(toolId) {
         <li><a href="${SITE_URL}/hash-generator/">SHA-256 hash generator</a></li>
         <li><a href="${SITE_URL}/combine-files/">Combine Files</a> - merge multiple CSV &amp; Excel files</li>
         <li><a href="${SITE_URL}/diff-tool/">Diff Tool</a> - compare two texts side by side</li>
+        <li><a href="${SITE_URL}/video-slice/">Video Slicer</a> - losslessly trim and cut MP4 videos</li>
+        <li><a href="${SITE_URL}/postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans</li>
         <li><a href="${SITE_URL}/code/">Code Playground</a> - run JavaScript, Python &amp; HTML</li>
       </ul>
       <p>Open-source and privacy-first. Enable JavaScript to use it.</p>`

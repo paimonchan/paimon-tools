@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -336,6 +336,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['explain', 'postgresql', 'postgres', 'query plan', 'database', 'sql explain', 'plan visualizer', 'performance', 'bottleneck'],
     description:
       'Visualize PostgreSQL EXPLAIN plans as interactive trees. Paste EXPLAIN output, see node costs, rows, and bottlenecks — 100% client-side, no uploads, no sign-up.',
+  },
+  {
+    id: 'video-slice',
+    name: 'Video Slicer',
+    shortName: 'Video Slicer',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'scissors',
+    keywords: ['video', 'slice', 'trim', 'cut', 'mp4', 'clip', 'lossless', 'video cutter', 'trim mp4', 'cut video', 'range'],
+    description:
+      'Slice and trim MP4 videos losslessly in your browser. Set a start/end range and download a clip — stream-copied, no re-encode, no quality loss. 100% client-side, video never leaves your device.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────
