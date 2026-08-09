@@ -15,6 +15,7 @@ import {
   Download,
   FileVideo,
   Loader2,
+  Pause,
   Play,
   Rewind,
   Scissors,
@@ -73,6 +74,7 @@ export default function VideoSlicerTool() {
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [trimPhase, setTrimPhase] = useState<'loading' | 'slicing'>('loading')
+  const [isPlaying, setIsPlaying] = useState(false)
 
   // Trim range (seconds). Default [0, 0]; resolved against duration once loaded.
   const [start, setStart] = useState(0)
@@ -391,6 +393,9 @@ export default function VideoSlicerTool() {
                 src={previewUrl ?? undefined}
                 className="max-h-[38vh] w-full object-contain"
                 controls={false}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
               />
             </div>
 
@@ -405,10 +410,11 @@ export default function VideoSlicerTool() {
               </button>
               <button
                 onClick={togglePlay}
-                title="Play / pause"
+                title={isPlaying ? 'Pause' : 'Play'}
                 className="flex items-center gap-1 rounded-md border border-ink-700 px-3 py-1 text-[11px] text-ink-200 hover:text-honey-300 transition-colors"
               >
-                <Play className="h-3 w-3" /> Play
+                {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {isPlaying ? 'Pause' : 'Play'}
               </button>
               <button
                 onClick={seekToEnd}
