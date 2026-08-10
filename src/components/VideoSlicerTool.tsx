@@ -224,13 +224,27 @@ export default function VideoSlicerTool() {
     if (v) v.currentTime = end - 0.05
   }
   const toggleCutPreview = () => {
-    setCutPreviewOpen((o) => {
-      const next = !o
-      const v = videoRef.current
-      if (v) v.currentTime = start
-      if (next) v?.play()
-      return next
-    })
+    const v = videoRef.current
+    const next = !cutPreviewOpen
+    if (v) v.currentTime = start
+    if (next) {
+      v?.play()
+    } else {
+      v?.pause()
+    }
+    setCutPreviewOpen(next)
+  }
+
+  // When previewing a cut, stop playback at the B (end) boundary so the user
+  // sees exactly the sliced range, not the whole video.
+  const handlePreviewTimeUpdate = () => {
+    if (!cutPreviewOpen) return
+    const v = videoRef.current
+    if (v && v.currentTime >= end) {
+      v.pause()
+      setCutPreviewOpen(false)
+      setIsPlaying(false)
+    }
   }
 
   // ── Lossless export ─────────────────────────────────
@@ -396,6 +410,7 @@ export default function VideoSlicerTool() {
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={() => setIsPlaying(false)}
+                onTimeUpdate={handlePreviewTimeUpdate}
               />
             </div>
 
