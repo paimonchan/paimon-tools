@@ -790,12 +790,12 @@ print(json.dumps(data, indent=2))</pre>
   <li>Instant slicing — copies only the samples in range, so short clips export near-instantly</li>
   <li>Frame-accurate range control: sliders, timestamp inputs, or set from playback position</li>
   <li>In-browser preview with play, pause, and cut-preview</li>
-  <li>100% client-side (WebCodecs) — your video is never uploaded anywhere</li>
+  <li>100% client-side (ffmpeg.wasm) — your video is never uploaded anywhere</li>
 </ul>
 <h2>FAQs</h2>
 <p><strong>Does it re-encode my video?</strong> No. Slicing uses stream copy — the original encoded frames are kept intact. There is no quality loss.</p>
-<p><strong>What formats are supported?</strong> MP4 (H.264/AAC) is fully supported for lossless slicing. Other formats may be added later.</p>
-<p><strong>Is my video uploaded?</strong> No. Everything runs locally in your browser via the WebCodecs API. Your video never leaves your device.</p>
+<p><strong>What formats are supported?</strong> MP4 and MOV (H.264/AAC) are supported for lossless slicing. Other formats may be added later.</p>
+<p><strong>Is my video uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`,
   },
 

@@ -293,7 +293,7 @@ export default function VideoSlicerTool() {
     handleFile(e.dataTransfer.files?.[0])
   }
 
-  // ── GPU note (WebCodecs) ────────────────────────────
+  // ── Lossless flag ──────────────────────────────────
   const isLossless = info ? true : false
 
   // ── Render ──────────────────────────────────────────
