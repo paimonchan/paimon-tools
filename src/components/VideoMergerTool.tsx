@@ -50,7 +50,22 @@ interface QueuedFile {
   mismatch: SpecMismatch[] | null
 }
 
-/** Same helper the slicer uses — imported from engine (pure). */
+/**
+ * Dynamic-import helper with a small retry. GitHub Pages swaps static assets
+ * during deployment (~40s window); a module fetch can transiently fail mid-swap
+ * even though the file is fine a second later. Retrying avoids surfacing a
+ * misleading "Failed to fetch dynamically imported module" to the user.
+ */
+async function loadVideoMedia() {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await import('../lib/video-media')
+    } catch (err) {
+      if (attempt >= 2) throw err
+      await new Promise((r) => setTimeout(r, 800 * attempt))
+    }
+  }
+}
 
 // ── Component ─────────────────────────────────────────
 
@@ -97,7 +112,7 @@ export default function VideoMergerTool() {
 
       // Probe every new file's full spec (loads ffmpeg core lazily if needed).
       try {
-        const { probeMergeSpecs } = await import('../lib/video-media')
+        const { probeMergeSpecs } = await loadVideoMedia()
         setMergePhase('probing')
         const newFiles = [...files]
         const startIdx = newFiles.length
@@ -210,7 +225,7 @@ export default function VideoMergerTool() {
     setError(null)
     setProgress(0)
     try {
-      const { mergeVideos, downloadBlob } = await import('../lib/video-media')
+      const { mergeVideos, downloadBlob } = await loadVideoMedia()
       const input = files.map((q, i) => ({
         file: q.file,
         fsName: sanitizeFsName(q.file.name, i),
