@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -347,6 +347,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'slice', 'trim', 'cut', 'mp4', 'clip', 'lossless', 'video cutter', 'trim mp4', 'cut video', 'range'],
     description:
       'Slice and trim MP4 videos losslessly in your browser. Set a start/end range and download a clip — stream-copied, no re-encode, no quality loss. 100% client-side, video never leaves your device.',
+  },
+  {
+    id: 'video-merge',
+    name: 'Video Merger',
+    shortName: 'Video Merger',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'merge',
+    keywords: ['video', 'merge', 'combine', 'join', 'mp4', 'concat', 'merge videos', 'combine mp4', 'join videos', 'video merger'],
+    description:
+      'Merge multiple MP4 videos into one file losslessly in your browser. Combine clips with matching resolution, frame rate & codec — stream-copied, no re-encode, no quality loss. 100% client-side.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

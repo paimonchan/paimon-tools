@@ -196,6 +196,202 @@ function formatTime(seconds: number): string {
   return `${pad(h)}:${pad(m)}:${sec.toFixed(3).padStart(6, '0')}`
 }
 
+// ── Video Merger (multi-file lossless concat) ──────────────────────────────
+
+import { sanitizeFsName } from '../engine/video-merge'
+import type { VideoSpec } from '../engine/video-merge'
+
+export interface MergeResult {
+  blob: Blob
+  size: number
+  durationMs: number
+}
+
+export type MergePhase = 'loading' | 'probing' | 'writing' | 'concatenating'
+
+/**
+ * Probe a file's full stream spec via ffmpeg `-i` (no output). Parses the
+ * stderr log to extract codec / pixel format / resolution / fps / rotation /
+ * audio codec / sample rate / channels. Returns null if the video stream
+ * can't be read, so callers can block rather than blindly concat.
+ *
+ * NOTE: this loads the ffmpeg core (the ~30MB wasm) if not already cached.
+ */
+async function probeSpec(
+  ffmpeg: FFmpeg,
+  file: File,
+  fsName: string,
+): Promise<VideoSpec | null> {
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+  await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+  const logLines: string[] = []
+  const onLog = ({ type, message }: { type: string; message: string }) => {
+    if (type === 'stderr' && message) logLines.push(message)
+  }
+  ffmpeg.on('log', onLog)
+  try {
+    // `-i` alone prints stream info then exits non-zero (no output) — expected.
+    await ffmpeg.exec(['-i', fsName])
+  } catch {
+    /* expected */
+  } finally {
+    ffmpeg.off('log', onLog)
+  }
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+
+  const text = logLines.join('\n')
+
+  // Isolate the video and audio stream lines for reliable parsing.
+  const videoLine = text.match(/Stream.*?: Video: .*/)![0] ?? ''
+  const audioLine = text.match(/Stream.*?: Audio: .*/)?.[0] ?? ''
+
+  // Video line: "... Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 640x360 [SAR ...], 68 kb/s, 30 fps"
+  const codecMatch = videoLine.match(/Video:\s*(\w+)/)
+  // Matches "...yuv420p(progressive), 640x360..." — tolerate optional comma/space.
+  const pixMatch = videoLine.match(/Video:.*?,\s*(\w+)(?:\([^)]*\))?[\s,]*(\d+)x(\d+)/)
+  const fpsMatch = videoLine.match(/,\s*(\d+(?:\/\d+)?)\s*fps/)
+
+  // Audio line: "... Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s"
+  const audioMatch = audioLine.match(/Audio:\s*(\w+)/)
+  const sampleRateMatch = audioLine.match(/(\d+)\s*Hz/)
+  const channelMatch =
+    audioLine.match(/(\d+)\s*channels?/) ||
+    audioLine.match(/Audio:.*?,\s*\d+\s*Hz,\s*\d+\s*,\s*(\d+)\s*channels?/) ||
+    audioLine.match(/Audio:.*?,\s*(?:stereo|mono)/)
+
+  // Rotation is usually carried in stream metadata following the video line.
+  const rotateMatch = text.match(/rotate\s*:\s*(-?\d+)/)
+  const rotation = rotateMatch ? Math.abs(Number(rotateMatch[1]) % 360) : 0
+
+  const codec = codecMatch?.[1]?.toLowerCase()
+  if (!codec || !pixMatch || !fpsMatch) return null
+
+  const [fpsNum, fpsDen] = parseFps(fpsMatch[1])
+  // Channel value is either a number ("2 channels") or a layout word ("stereo"/"mono").
+  const channelVal = channelMatch?.[1]?.toLowerCase()
+  const channels =
+    channelVal == null || /^\d+$/.test(channelVal) === false && channelVal !== 'mono'
+      ? 2
+      : channelVal === 'mono'
+        ? 1
+        : Number(channelVal)
+
+  return {
+    videoCodec: codec,
+    pixFmt: pixMatch[1],
+    width: Number(pixMatch[2]),
+    height: Number(pixMatch[3]),
+    fpsNum,
+    fpsDen,
+    rotation,
+    audioCodec: audioMatch?.[1]?.toLowerCase() || '',
+    sampleRate: sampleRateMatch ? Number(sampleRateMatch[1]) : 0,
+    channels,
+  }
+}
+
+function parseFps(raw: string | undefined): [number, number] {
+  if (!raw) return [0, 0]
+  if (raw.includes('/')) {
+    const [n, d] = raw.split('/')
+    return [Number(n) || 0, Number(d) || 0]
+  }
+  return [Number(raw) || 0, 1]
+}
+
+/**
+ * Probe the full stream spec of each file (loads the ffmpeg core lazily).
+ * Returns specs aligned to `files`; a null entry means that file's video
+ * stream couldn't be read.
+ */
+export async function probeMergeSpecs(
+  files: File[],
+  onPhase?: (phase: MergePhase) => void,
+): Promise<(VideoSpec | null)[]> {
+  const ffmpeg = await getFFmpeg()
+  onPhase?.('probing')
+  // ffmpeg.wasm can run only ONE exec at a time and shares a single log
+  // handler, so probes MUST be sequential (never Promise.all).
+  const specs: (VideoSpec | null)[] = []
+  for (let i = 0; i < files.length; i++) {
+    specs.push(await probeSpec(ffmpeg, files[i], sanitizeFsName(files[i].name, i)))
+  }
+  return specs
+}
+
+/**
+ * Losslessly concatenate videos that have already been confirmed compatible
+ * (same spec). Builds a concat list in the FFmpeg memfs and runs
+ * `-f concat -safe 0 -i list.txt -c copy -fflags +genpts`.
+ *
+ * Assumes the caller has already called `probeMergeSpecs` (so the core is
+ * loaded) — this function refuses to start unless files are non-empty.
+ */
+export async function mergeVideos(
+  files: { file: File; fsName: string }[],
+  onProgress?: (progress: number) => void,
+  onPhase?: (phase: MergePhase) => void,
+): Promise<MergeResult> {
+  if (files.length === 0) {
+    throw new Error('No files to merge.')
+  }
+  const started = performance.now()
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+  onPhase?.('writing')
+
+  const inputNames: string[] = []
+
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    // 1. Write every file into the memfs (safe, flat, ASCII names).
+    for (const f of files) {
+      await ffmpeg.writeFile(f.fsName, await fetchFile(f.file))
+      inputNames.push(f.fsName)
+    }
+
+    // 2. Build the concat list (single-quoted file paths, one per line).
+    const listBody = inputNames.map((n) => `file '${n}'`).join('\n') + '\n'
+    await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(listBody))
+
+    // 3. Lossless concat: stream-copy, regenerate pts for continuity.
+    onPhase?.('concatenating')
+    await ffmpeg.exec([
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', 'concat_list.txt',
+      '-c', 'copy',
+      '-fflags', '+genpts',
+      'output.mp4',
+    ])
+
+    const data = await ffmpeg.readFile('output.mp4')
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    // Clean the memfs after (success or failure) so RAM doesn't leak.
+    await Promise.all(
+      [...inputNames, 'concat_list.txt', 'output.mp4'].map((n) =>
+        ffmpeg.deleteFile(n).catch(() => {}),
+      ),
+    )
+  }
+}
+
+
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

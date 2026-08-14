@@ -41,6 +41,7 @@ export const HOME_SEO = {
   <li><a href="combine-files/">Combine Files</a> - merge multiple CSV &amp; Excel files into one
   <li><a href="diff-tool/">Diff Tool</a> - compare two texts side by side
   <li><a href="video-slice/">Video Slicer</a> - losslessly trim and cut MP4 videos
+  <li><a href="video-merge/">Video Merger</a> - combine multiple MP4 videos into one
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -792,13 +793,47 @@ print(json.dumps(data, indent=2))</pre>
   <li>In-browser preview with play, pause, and cut-preview</li>
   <li>100% client-side (ffmpeg.wasm) — your video is never uploaded anywhere</li>
 </ul>
+<p><strong>Related:</strong> <a href="video-merge/">Video Merger</a> — combine multiple clips into one video.</p>
 <h2>FAQs</h2>
 <p><strong>Does it re-encode my video?</strong> No. Slicing uses stream copy — the original encoded frames are kept intact. There is no quality loss.</p>
 <p><strong>What formats are supported?</strong> MP4 and MOV (H.264/AAC) are supported for lossless slicing. Other formats may be added later.</p>
 <p><strong>Is my video uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
-<p><a href="../">← Back to all Paimon Tools</a></p>`,
-  },
+<p><a href="../">← Back to all Paimon Tools</a></p>`},
 
+
+  'video-merge': {
+    title: 'Video Merger - Combine MP4 Videos Online, Lossless | Paimon Tools',
+    description:
+      'Merge multiple MP4 videos into one file losslessly in your browser, free. Combine clips with the same resolution, frame rate & codec — stream-copied, no re-encode, no quality loss. 100% client-side, videos never leave your device.',
+    path: 'video-merge',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Merger - combine several MP4 videos into one in your browser',
+    h1: 'Video Merger - Combine MP4 Videos Losslessly',
+    breadcrumb: 'Tools / Video Merger',
+    bodyHtml: `<h2>Video Merger - Combine MP4 Videos</h2>
+<p>Merge or combine several MP4 videos into a single file, entirely in your browser. When your clips share the same resolution, frame rate and codec, they are <strong>joined losslessly</strong> — the encoded streams are concatenated (stream copy, no re-encode), so there is <strong>no quality loss</strong>. Your videos never leave your device.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop 2 or more MP4/MOV videos, or click to browse (drag them into the order you want)</li>
+  <li>The tool reads each file's resolution, frame rate &amp; codec and shows them per clip</li>
+  <li>Use the up/down arrows to set the merge order and remove any unwanted clip</li>
+  <li>Click "Merge &amp; Download" — the clips are concatenated losslessly and saved as one MP4</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Lossless merging</strong> — stream concat, no re-encode, no quality loss when specs match</li>
+  <li>Per-clip spec badges (resolution · fps · codec) so you can see mismatches instantly</li>
+  <li>Mismatches are highlighted and block the merge — you're never surprised by a re-encode</li>
+  <li>Reorder clips with up/down arrows and remove any clip</li>
+  <li>100% client-side (ffmpeg.wasm) — your videos are never uploaded anywhere</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Does merging re-encode my videos?</strong> No. When your clips share the same resolution, frame rate &amp; codec, the tool concatenates the encoded streams losslessly — no quality loss.</p>
+<p><strong>Can I merge videos with different resolutions?</strong> Not losslessly. The tool checks each file's specs and blocks the merge with a clear message if they differ, so your output is never corrupt.</p>
+<p><strong>How much memory does it use?</strong> About twice your total file size (inputs + output) in your browser's memory. Very large batches may warn you first.</p>
+<p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your videos never leave your device.</p>
+<p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — trim or cut a clip before merging.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`},
   '404': {
     title: 'Page Not Found - Paimon Tools',
     description: 'The page you are looking for does not exist. Browse our free JSON, CSV and Excel conversion tools, code playground, and developer utilities.',
