@@ -43,7 +43,7 @@ and discarded when you close the tab.
 
 ## 🧰 Tools
 
-**20 tools** across five categories, plus a multi-language code playground.
+**21 tools** across five categories, plus a multi-language code playground.
 
 ### 🔄 Convert
 
@@ -80,6 +80,7 @@ commas, and comments are accepted.
 | [Diff Tool](https://paimonchan.github.io/paimon-tools/diff-tool/) | Compare two texts side-by-side with color-coded changes |
 | [Text Delimiter](https://paimonchan.github.io/paimon-tools/text-delimiter/) | Split/join text with custom delimiters, like delim.co |
 | [Video Slicer](https://paimonchan.github.io/paimon-tools/video-slice/) | Losslessly slice MP4 video (no re-encode, no quality loss) |
+| [Video Merger](https://paimonchan.github.io/paimon-tools/video-merge/) | Merge multiple MP4 videos into one, losslessly |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
 ### 🗄️ Database
@@ -132,7 +133,8 @@ src/
 │   │   ├── diff-engine.ts     Line diff engine
 │   │   ├── delimiter-tool.ts  Text delimiter engine
 │   │   ├── explain-parser.ts  PostgreSQL EXPLAIN plan parser
-│   │   └── video-slice.ts     Video slice range/validation logic
+│   │   ├── video-slice.ts     Video slice range/validation logic
+│   │   └── video-merge.ts     Video merge spec detection + concat logic
 │   ├── registry.ts            Tool definitions (config-driven, discriminated union)
 │   └── result.ts              Result<T> = Ok<T> | Err
 ├── playground/                Code playground (lazy-loaded route)
@@ -145,13 +147,13 @@ src/
 │   └── worker/sandbox-worker.ts   Isolated execution worker
 ├── components/                React UI (one default export per file)
 │   ├── ConversionTool.tsx     Generic converter workspace
-│   ├── PlaygroundTool / DiffTool / CombineFilesTool / VideoSlicerTool   Custom tool UIs
+│   ├── PlaygroundTool / DiffTool / CombineFilesTool / VideoSlicerTool / VideoMergerTool   Custom tool UIs
 │   ├── Panes / Sidebar / CommandPalette / …           Shared chrome
 ├── stores/                    Zustand state (theme + toast)
 ├── hooks/usePersistentState.ts   localStorage-backed state
 ├── lib/                       Browser I/O + adapters (no JSX)
 │   ├── files.ts / router.ts / makeFilename.ts / icon-map.ts
-│   ├── video-media.ts         Video inspect + ffmpeg.wasm lossless trim wrapper
+│   ├── video-media.ts         Video inspect + ffmpeg.wasm trim/merge wrapper
 │   ├── ffmpeg-core/           @ffmpeg/core wasm (Vite ?url, lazy runtime fetch)
 │   ├── playground-share.ts    URL share via lz-string
 │   └── seo.js                 Per-tool SEO metadata (plain JS, used by prerender)
@@ -214,7 +216,7 @@ up automatically — no UI changes.
 - **[CodeMirror 6](https://codemirror.net/)** — playground editor
 - **[esbuild-wasm](https://esbuild.github.io/)** — in-browser ESM bundler
 - **[lz-string](https://github.com/pieroxy/lz-string)** — URL share compression
-- **[ffmpeg.wasm](https://ffmpegwasm.netlify.app/)** — lossless Video Slicer (single-threaded core, lazy-loaded)
+- **[ffmpeg.wasm](https://ffmpegwasm.netlify.app/)** — lossless Video Slicer & Merger (single-threaded core, lazy-loaded)
 
 ## 🤝 Contributing
 
