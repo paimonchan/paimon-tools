@@ -43,6 +43,7 @@ export const HOME_SEO = {
   <li><a href="video-slice/">Video Slicer</a> - losslessly trim and cut MP4 videos
   <li><a href="video-merge/">Video Merger</a> - combine multiple MP4 videos into one
   <li><a href="video-audio-extract/">Video Audio Extractor</a> - extract or convert the audio from a video
+  <li><a href="video-audio-mix/">Video Audio Mixer</a> - add or replace the audio track on a video
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -866,7 +867,41 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>Why can't I get a lossless MP3?</strong> MP4 files don't carry an MP3 audio track — the original audio is usually AAC. To get an MP3 you must convert (re-encode) it, which changes the file but is still fast.</p>
 <p><strong>What formats can I export?</strong> M4A (lossless), MP3, Opus, and Vorbis/Ogg.</p>
 <p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
-<p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — trim a clip, and <a href="video-merge/">Video Merger</a> — combine clips into one.</p>
+<p><strong>Related:</strong> <a href="video-audio-mix/">Video Audio Mixer</a> — add music to a video, <a href="video-slice/">Video Slicer</a> — trim a clip.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`},
+  'video-audio-mix': {
+    title: 'Video Audio Mixer - Add Audio to Video Online | Paimon Tools',
+    description:
+      'Add or replace the audio track on an MP4 video in your browser, free. Mux an MP3, M4A, AAC, Opus or WAV file onto your video — the video stream is kept losslessly (never re-encoded). 100% client-side, no uploads.',
+    path: 'video-audio-mix',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Audio Mixer - add or replace the audio track on a video in your browser',
+    h1: 'Video Audio Mixer - Add Audio to Video',
+    breadcrumb: 'Tools / Video Audio Mixer',
+    bodyHtml: `<h2>Video Audio Mixer - Add or Replace Audio on a Video</h2>
+<p>Mux an audio track onto a video, entirely in your browser. Drop a video (MP4/MOV) and an audio file (MP3, M4A, AAC, Opus, WAV…), and choose the sound you want on it. The <strong>video stream is kept losslessly</strong> (stream-copied, never re-encoded) — perfect for adding background music or replacing a video's original sound. Everything runs on your device via ffmpeg.wasm, nothing is uploaded.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4/MOV video file</li>
+  <li>Drop an audio file (MP3, M4A, AAC, Opus, WAV…)</li>
+  <li>See the mode: if your audio is AAC it's muxed losslessly; otherwise it's converted to AAC so the video stays lossless</li>
+  <li>Click "Mix &amp; Download" — the combined MP4 is saved</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Video never re-encoded</strong> — the video stream is copied as-is, zero quality loss</li>
+  <li>Fully lossless mux when your audio is AAC/M4A (both streams copied)</li>
+  <li>Adds or replaces the audio on your video</li>
+  <li>Choose an AAC bitrate when converting a non-AAC audio file</li>
+  <li>100% client-side (ffmpeg.wasm) — your files are never uploaded anywhere</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Is my video re-encoded?</strong> No. The video stream is always stream-copied (-c:v copy), so the picture quality is identical. Only the incoming audio may be re-encoded to AAC for MP4 compatibility.</p>
+<p><strong>Can I replace the existing audio?</strong> Yes. The tool takes the video stream from your video file and the audio stream from your audio file, replacing whatever sound the video had.</p>
+<p><strong>What audio formats can I use?</strong> MP3, M4A, AAC, Opus, Vorbis/Ogg, WAV, FLAC and more. AAC/M4A input is muxed fully losslessly; other formats are converted to AAC.</p>
+<p><strong>What if video and audio are different lengths?</strong> The output is cut at the shorter of the two (-shortest), so the combined file stays in sync.</p>
+<p><strong>Are my files uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your files never leave your device.</p>
+<p><strong>Related:</strong> <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out, and <a href="video-merge/">Video Merger</a> — combine video clips.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`},
   '404': {
     title: 'Page Not Found - Paimon Tools',

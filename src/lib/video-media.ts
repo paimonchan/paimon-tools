@@ -476,6 +476,118 @@ export async function extractAudio(
   }
 }
 
+// ── Video Audio Mixer ─────────────────────────────────────────────────────
+
+export type MuxPhase = 'loading' | 'detecting' | 'muxing'
+
+export interface MuxResult {
+  blob: Blob
+  size: number
+  durationMs: number
+}
+
+export interface MuxInput {
+  video: File
+  audio: File
+}
+
+/**
+ * Detect the audio codec of a file (used to decide lossless-copy vs transcode).
+ * Returns the codec name lowercased, or null if unreadable / no audio.
+ * The audio file may be pure audio (no video stream), so we parse the audio
+ * line independently of any video stream.
+ */
+export async function detectAudioCodec(file: File): Promise<string | null> {
+  const ffmpeg = await getFFmpeg()
+  const fsName = 'detect_audio.bin'
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+  await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+  const logLines: string[] = []
+  const onLog = ({ type, message }: { type: string; message: string }) => {
+    if (type === 'stderr' && message) logLines.push(message)
+  }
+  ffmpeg.on('log', onLog)
+  try {
+    await ffmpeg.exec(['-i', fsName]) // errors (no output) — expected
+  } catch {
+    /* expected */
+  } finally {
+    ffmpeg.off('log', onLog)
+  }
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+
+  const audioLine = logLines.join('\n').match(/Stream.*?: Audio: .*/)?.[0] ?? ''
+  const match = audioLine.match(/Audio:\s*(\w+)/)
+  return match ? match[1].toLowerCase() : null
+}
+
+/**
+ * Mux an audio track onto a video, 100% client-side via ffmpeg.wasm.
+ *
+ * - audio codec copy-compatible (e.g. AAC): fully lossless
+ *   `-map 0:v -map 1:a -c:v copy -c:a copy -shortest`
+ * - otherwise: video preserved, audio transcoded to AAC
+ *   `-map 0:v -map 1:a -c:v copy -c:a aac -b:a <k>k -shortest`
+ *
+ * `-map` is explicit so ffmpeg always takes the video from source 0 and the
+ * audio from source 1 (never picks the wrong track from the video file).
+ */
+export async function muxAudioToVideo(
+  input: MuxInput,
+  opts: {
+    mode: 'copy' | 'transcode'
+    aacBitrateK?: number
+    onProgress?: (progress: number) => void
+    onPhase?: (phase: MuxPhase) => void
+  },
+): Promise<MuxResult> {
+  const { onProgress, onPhase, mode, aacBitrateK } = opts
+  const started = performance.now()
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+  onPhase?.('muxing')
+
+  const vName = 'mux_in_video.mp4'
+  const aName = 'mux_in_audio.bin'
+  const outName = 'mux_out.mp4'
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(vName, await fetchFile(input.video))
+    await ffmpeg.writeFile(aName, await fetchFile(input.audio))
+
+    const args = ['-i', vName, '-i', aName, '-map', '0:v', '-map', '1:a']
+    if (mode === 'copy') {
+      args.push('-c:v', 'copy', '-c:a', 'copy')
+    } else {
+      args.push('-c:v', 'copy', '-c:a', 'aac')
+      if (aacBitrateK) args.push('-b:a', `${aacBitrateK}k`)
+    }
+    args.push('-shortest', outName)
+
+    await ffmpeg.exec(args)
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all(
+      [vName, aName, outName].map((n) => ffmpeg.deleteFile(n).catch(() => {})),
+    )
+  }
+}
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

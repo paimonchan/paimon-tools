@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -369,6 +369,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'audio', 'extract', 'mp3', 'mp4 to mp3', 'extract audio', 'audio extractor', 'video to mp3', 'remove video keep audio', 'aac', 'opus'],
     description:
       'Extract the audio track from an MP4/MOV video in your browser. Keep it losslessly (stream-copied to M4A) or export as MP3, Opus, or Ogg. 100% client-side, nothing uploaded.',
+  },
+  {
+    id: 'video-audio-mix',
+    name: 'Video Audio Mixer',
+    shortName: 'Audio Mixer',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'clapperboard',
+    keywords: ['video', 'audio', 'mix', 'mux', 'add audio to video', 'replace audio', 'video audio mixer', 'attach music to video', 'add music', 'background music', 'soundtrack'],
+    description:
+      'Mux an audio track onto a video in your browser. Add or replace the sound on an MP4 with an MP3, M4A, AAC, Opus or WAV file — the video is kept losslessly (never re-encoded). 100% client-side.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────
