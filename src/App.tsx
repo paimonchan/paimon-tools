@@ -27,6 +27,7 @@ const TextDelimiterTool = lazy(() => import('./components/TextDelimiterTool'))
 const ExplainTool = lazy(() => import('./components/ExplainTool'))
 const VideoSlicerTool = lazy(() => import('./components/VideoSlicerTool'))
 const VideoMergerTool = lazy(() => import('./components/VideoMergerTool'))
+const VideoAudioExtractorTool = lazy(() => import('./components/VideoAudioExtractorTool'))
 
 // Registry pattern for ref tools — add new tools here, routing auto-works
 const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
@@ -37,6 +38,7 @@ const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
   'postgres-explain': ExplainTool,
   'video-slice': VideoSlicerTool,
   'video-merge': VideoMergerTool,
+  'video-audio-extract': VideoAudioExtractorTool,
 }
 
 function Shell() {

@@ -42,6 +42,7 @@ export const HOME_SEO = {
   <li><a href="diff-tool/">Diff Tool</a> - compare two texts side by side
   <li><a href="video-slice/">Video Slicer</a> - losslessly trim and cut MP4 videos
   <li><a href="video-merge/">Video Merger</a> - combine multiple MP4 videos into one
+  <li><a href="video-audio-extract/">Video Audio Extractor</a> - extract or convert the audio from a video
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -833,6 +834,39 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>How much memory does it use?</strong> About twice your total file size (inputs + output) in your browser's memory. Very large batches may warn you first.</p>
 <p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your videos never leave your device.</p>
 <p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — trim or cut a clip before merging.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`},
+  'video-audio-extract': {
+    title: 'Video Audio Extractor - Extract Audio from Video Online | Paimon Tools',
+    description:
+      'Extract the audio track from an MP4/MOV video in your browser, free. Keep it losslessly (stream-copied to M4A, no quality loss) or export as MP3, Opus, or Ogg. 100% client-side, no uploads.',
+    path: 'video-audio-extract',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Audio Extractor - extract or convert the audio from a video in your browser',
+    h1: 'Video Audio Extractor - Extract & Convert Audio',
+    breadcrumb: 'Tools / Video Audio Extractor',
+    bodyHtml: `<h2>Video Audio Extractor - Extract Audio from Video</h2>
+<p>Extract or convert the audio track from an MP4/MOV video, entirely in your browser. Choose <strong>lossless</strong> to keep the original audio exactly as-is (stream-copied to M4A, no re-encode, no quality loss), or <strong>convert</strong> to export as MP3, Opus, or Ogg — great for "video to MP3". Your video is never uploaded; everything runs on your device via ffmpeg.wasm.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4/MOV video that has an audio track, or click to browse</li>
+  <li>Pick an output: M4A (lossless, as-is) to keep the original quality, or MP3 / Opus / Ogg to convert</li>
+  <li>Choose a bitrate if you're converting (higher = bigger file but better quality)</li>
+  <li>Click "Extract Audio" — the audio is extracted and downloaded</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Lossless extract</strong> — stream copy, no re-encode, quality identical to the source</li>
+  <li>Convert to MP3, Opus, Vorbis/Ogg, or AAC/M4A at your chosen bitrate</li>
+  <li>Audio-only processing is fast in your browser — no large uploads</li>
+  <li>No account, no limits, no watermark</li>
+  <li>100% client-side (ffmpeg.wasm) — your video is never uploaded anywhere</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Does it re-encode my audio?</strong> Only if you choose a conversion format. The default "M4A (lossless, as-is)" stream-copies the original audio without re-encoding, so there is no quality loss.</p>
+<p><strong>Why can't I get a lossless MP3?</strong> MP4 files don't carry an MP3 audio track — the original audio is usually AAC. To get an MP3 you must convert (re-encode) it, which changes the file but is still fast.</p>
+<p><strong>What formats can I export?</strong> M4A (lossless), MP3, Opus, and Vorbis/Ogg.</p>
+<p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
+<p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — trim a clip, and <a href="video-merge/">Video Merger</a> — combine clips into one.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`},
   '404': {
     title: 'Page Not Found - Paimon Tools',

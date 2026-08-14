@@ -392,6 +392,90 @@ export async function mergeVideos(
 
 
 
+// ── Video Audio Extractor ───────────────────────────────────────────────
+
+export type AudioExtractPhase = 'loading' | 'extracting'
+
+export interface ExtractAudioResult {
+  blob: Blob
+  size: number
+  durationMs: number
+}
+
+export interface ExtractAudioOptions {
+  /** 'copy' = lossless stream copy (as-is); 'convert' = re-encode. */
+  mode: 'copy' | 'convert'
+  /** ffmpeg audio codec for convert mode (e.g. 'libmp3lame', 'aac'). */
+  codec?: string
+  /** Bitrate (kbps) for convert mode. */
+  bitrateK?: number
+  /** Output container `-f` hint, or undefined to infer from extension. */
+  container?: string
+  /** Output extension (no dot) — e.g. 'mp3', 'm4a', 'opus'. */
+  ext: string
+  onProgress?: (progress: number) => void
+  onPhase?: (phase: AudioExtractPhase) => void
+}
+
+/**
+ * Extract the audio track from a video, 100% client-side via ffmpeg.wasm.
+ *
+ * - mode 'copy': `-vn -c:a copy` → lossless, no re-encode, quality identical.
+ * - mode 'convert': `-vn -c:a <codec> -b:a <k>k` → re-encode to another format.
+ *
+ * `-vn` drops the video stream. Loads the ffmpeg core lazily if not already
+ * cached (the ~30MB wasm is only fetched when extraction is requested).
+ */
+export async function extractAudio(
+  file: File,
+  opts: ExtractAudioOptions,
+): Promise<ExtractAudioResult> {
+  const { onProgress, onPhase, mode, codec, bitrateK, container, ext } = opts
+  const started = performance.now()
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+  onPhase?.('extracting')
+
+  const fsName = 'input_extract.mp4'
+  const outName = `output_extract.${ext}`
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+    const args = ['-i', fsName, '-vn']
+    if (mode === 'copy') {
+      args.push('-c:a', 'copy')
+      if (container) args.push('-f', container)
+    } else {
+      args.push('-c:a', codec || 'aac')
+      if (bitrateK) args.push('-b:a', `${bitrateK}k`)
+      if (container) args.push('-f', container)
+    }
+    args.push(outName)
+
+    await ffmpeg.exec(args)
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'audio/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all(
+      [fsName, outName].map((n) => ffmpeg.deleteFile(n).catch(() => {})),
+    )
+  }
+}
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

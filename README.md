@@ -43,7 +43,7 @@ and discarded when you close the tab.
 
 ## 🧰 Tools
 
-**21 tools** across five categories, plus a multi-language code playground.
+**22 tools** across five categories, plus a multi-language code playground.
 
 ### 🔄 Convert
 
@@ -81,6 +81,7 @@ commas, and comments are accepted.
 | [Text Delimiter](https://paimonchan.github.io/paimon-tools/text-delimiter/) | Split/join text with custom delimiters, like delim.co |
 | [Video Slicer](https://paimonchan.github.io/paimon-tools/video-slice/) | Losslessly slice MP4 video (no re-encode, no quality loss) |
 | [Video Merger](https://paimonchan.github.io/paimon-tools/video-merge/) | Merge multiple MP4 videos into one, losslessly |
+| [Video Audio Extractor](https://paimonchan.github.io/paimon-tools/video-audio-extract/) | Extract or convert audio from a video (MP3/Opus/M4A) |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
 ### 🗄️ Database
@@ -134,7 +135,8 @@ src/
 │   │   ├── delimiter-tool.ts  Text delimiter engine
 │   │   ├── explain-parser.ts  PostgreSQL EXPLAIN plan parser
 │   │   ├── video-slice.ts     Video slice range/validation logic
-│   │   └── video-merge.ts     Video merge spec detection + concat logic
+│   │   ├── video-merge.ts     Video merge spec detection + concat logic
+│   │   └── video-audio.ts     Video audio extract modes + format presets
 │   ├── registry.ts            Tool definitions (config-driven, discriminated union)
 │   └── result.ts              Result<T> = Ok<T> | Err
 ├── playground/                Code playground (lazy-loaded route)
@@ -147,7 +149,7 @@ src/
 │   └── worker/sandbox-worker.ts   Isolated execution worker
 ├── components/                React UI (one default export per file)
 │   ├── ConversionTool.tsx     Generic converter workspace
-│   ├── PlaygroundTool / DiffTool / CombineFilesTool / VideoSlicerTool / VideoMergerTool   Custom tool UIs
+│   ├── PlaygroundTool / DiffTool / CombineFilesTool / VideoSlicerTool / VideoMergerTool / VideoAudioExtractorTool   Custom tool UIs
 │   ├── Panes / Sidebar / CommandPalette / …           Shared chrome
 ├── stores/                    Zustand state (theme + toast)
 ├── hooks/usePersistentState.ts   localStorage-backed state

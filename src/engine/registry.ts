@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -358,6 +358,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'merge', 'combine', 'join', 'mp4', 'concat', 'merge videos', 'combine mp4', 'join videos', 'video merger'],
     description:
       'Merge multiple MP4 videos into one file losslessly in your browser. Combine clips with matching resolution, frame rate & codec — stream-copied, no re-encode, no quality loss. 100% client-side.',
+  },
+  {
+    id: 'video-audio-extract',
+    name: 'Video Audio Extractor',
+    shortName: 'Audio Extractor',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'music',
+    keywords: ['video', 'audio', 'extract', 'mp3', 'mp4 to mp3', 'extract audio', 'audio extractor', 'video to mp3', 'remove video keep audio', 'aac', 'opus'],
+    description:
+      'Extract the audio track from an MP4/MOV video in your browser. Keep it losslessly (stream-copied to M4A) or export as MP3, Opus, or Ogg. 100% client-side, nothing uploaded.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────
