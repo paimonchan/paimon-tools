@@ -608,6 +608,7 @@ export default function VideoSlicerTool() {
       <StatusBar
         inputChars={info ? info.size : 0}
         outputChars={info ? Math.round(selectedSecs) : 0}
+        wasmLabel="ffmpeg.wasm"
         status={status === 'processing' ? 'processing' : !file ? 'empty' : error ? 'error' : 'ok'}
         error={error}
         durationMs={null}

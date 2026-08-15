@@ -330,6 +330,7 @@ export default function VideoMuterTool() {
       <StatusBar
         inputChars={file?.size ?? 0}
         outputChars={estimateBytes ?? 0}
+        wasmLabel="ffmpeg.wasm"
         status={status === 'processing' ? 'processing' : !file ? 'empty' : error ? 'error' : 'ok'}
         error={error}
         durationMs={null}

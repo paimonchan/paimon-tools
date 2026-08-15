@@ -26,6 +26,7 @@ import {
 
 import {
   checkCompatibility,
+  makeMergedFilename,
   sanitizeFsName,
 } from '../engine/video-merge'
 import type { SpecMismatch, VideoSpec } from '../engine/video-merge'
@@ -238,7 +239,7 @@ export default function VideoMergerTool() {
         (p) => setProgress(p),
         (phase) => setMergePhase(phase),
       )
-      const filename = `merged-${Date.now()}.mp4`
+      const filename = makeMergedFilename(files[0]?.file?.name ?? '', files.length)
       setResult({ blob: result.blob, filename })
       setStatus('ok')
       toast.push(`Merged ${files.length} videos · ${formatBytes(result.size)} · lossless — check preview`, {
@@ -528,6 +529,7 @@ export default function VideoMergerTool() {
       <StatusBar
         inputChars={totalSize}
         outputChars={files.length}
+        wasmLabel="ffmpeg.wasm"
         status={status === 'processing' ? 'processing' : files.length === 0 ? 'empty' : error ? 'error' : 'ok'}
         error={error}
         durationMs={null}

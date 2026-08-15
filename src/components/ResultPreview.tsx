@@ -88,7 +88,9 @@ export default function ResultPreview({
       {(kind === 'video' || kind === 'audio') && blob && filename && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
-            <div className="truncate text-xs text-ink-200">{filename}</div>
+            <div className="truncate max-w-full text-xs text-ink-200" title={filename}>
+              {filename}
+            </div>
             {hint ? <div className="text-[10px] text-ink-500">{hint}</div> : null}
           </div>
           <div className="flex flex-shrink-0 items-center gap-2">

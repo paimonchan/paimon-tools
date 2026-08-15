@@ -399,6 +399,7 @@ export default function VideoAudioExtractorTool() {
       <StatusBar
         inputChars={loaded ? loaded.size : 0}
         outputChars={loaded ? estSize : 0}
+        wasmLabel="ffmpeg.wasm"
         status={status === 'processing' ? 'processing' : !loaded ? 'empty' : error ? 'error' : 'ok'}
         error={error}
         durationMs={null}

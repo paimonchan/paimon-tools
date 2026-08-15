@@ -135,3 +135,15 @@ export function sanitizeFsName(original: string, idx: number): string {
   const base = (original || '').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_') || 'clip'
   return `clip_${String(idx).padStart(2, '0')}_${base}.mp4`
 }
+
+/**
+ * Default output filename for a merge. Derives from the FIRST input clip's base
+ * name (much more useful than the old generic `merged-<timestamp>.mp4`, and it
+ * stays stable across the Merger->Mixer chain). Falls back to `merged.mp4`.
+ */
+export function makeMergedFilename(firstInputName: string, count: number): string {
+  const safe = (firstInputName || '').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9._-]+/g, '_').trim()
+  const base = safe || 'merged'
+  const suffix = count > 2 ? `-${count}` : ''
+  return `${base}-merged${suffix}.mp4`
+}

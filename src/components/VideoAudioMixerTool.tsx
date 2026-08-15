@@ -349,8 +349,14 @@ export default function VideoAudioMixerTool() {
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-3">
-            {/* Two dropzones */}
-            <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Input */}
+            <div className="flex flex-1 flex-col">
+              <div className="mb-1.5 flex items-center gap-2 px-1">
+                <span className="text-[10px] font-500 uppercase tracking-wider text-ink-500">
+                  Input
+                </span>
+              </div>
+              <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
               {dropzone(
                 'video', 'Drop video file', 'MP4/MOV · the video track is kept as-is (never re-encoded).',
                 ACCEPT_VIDEO, videoInputRef, video, onSelectVideo,
@@ -361,6 +367,7 @@ export default function VideoAudioMixerTool() {
                 ACCEPT_AUDIO, audioInputRef, audio, onSelectAudio,
                 <Music className="h-4 w-4 text-honey-400" />,
               )}
+            </div>
             </div>
 
             {/* Mode + bitrate */}
@@ -465,6 +472,7 @@ export default function VideoAudioMixerTool() {
       <StatusBar
         inputChars={(video?.size ?? 0) + (audio?.file?.size ?? 0)}
         outputChars={estimate?.sizeBytes ?? 0}
+        wasmLabel="ffmpeg.wasm"
         status={status === 'processing' ? 'processing' : !video && !audio ? 'empty' : error ? 'error' : 'ok'}
         error={error}
         durationMs={null}
