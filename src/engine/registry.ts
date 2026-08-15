@@ -37,7 +37,7 @@ export interface ToolBase {
   name: string
   /** Optional shorter label for tight UI (sidebar, palette). Falls back to `name`. */
   shortName?: string
-  category: 'Convert' | 'Format' | 'Tools' | 'Database'
+  category: 'Convert' | 'Format' | 'Video' | 'Tools' | 'Database'
   icon: IconName
   keywords: string[]
   description: string
@@ -73,7 +73,7 @@ const SAMPLE = {
   uglyJson: `{"id":1,"name":"Paimon","role":"Guide","stats":{"hp":10164,"atk":311,"def":1234},"tags":["emergency","food","best"]}`,
 }
 // ── Categories ────────────────────────────────────────
-export const CATEGORIES = ['Convert', 'Format', 'Tools', 'Database'] as const
+export const CATEGORIES = ['Convert', 'Format', 'Video', 'Tools', 'Database'] as const
 // ── Tool registry ─────────────────────────────────────
 export const TOOLS: ToolDefinition[] = [
   {
@@ -341,7 +341,7 @@ export const TOOLS: ToolDefinition[] = [
     id: 'video-slice',
     name: 'Video Slicer',
     shortName: 'Video Slicer',
-    category: 'Tools',
+    category: 'Video',
     type: 'ref',
     icon: 'scissors',
     keywords: ['video', 'slice', 'trim', 'cut', 'mp4', 'clip', 'lossless', 'video cutter', 'trim mp4', 'cut video', 'range'],
@@ -352,7 +352,7 @@ export const TOOLS: ToolDefinition[] = [
     id: 'video-merge',
     name: 'Video Merger',
     shortName: 'Video Merger',
-    category: 'Tools',
+    category: 'Video',
     type: 'ref',
     icon: 'merge',
     keywords: ['video', 'merge', 'combine', 'join', 'mp4', 'concat', 'merge videos', 'combine mp4', 'join videos', 'video merger'],
@@ -363,7 +363,7 @@ export const TOOLS: ToolDefinition[] = [
     id: 'video-audio-extract',
     name: 'Video Audio Extractor',
     shortName: 'Audio Extractor',
-    category: 'Tools',
+    category: 'Video',
     type: 'ref',
     icon: 'music',
     keywords: ['video', 'audio', 'extract', 'mp3', 'mp4 to mp3', 'extract audio', 'audio extractor', 'video to mp3', 'remove video keep audio', 'aac', 'opus'],
@@ -374,7 +374,7 @@ export const TOOLS: ToolDefinition[] = [
     id: 'video-audio-mix',
     name: 'Video Audio Mixer',
     shortName: 'Audio Mixer',
-    category: 'Tools',
+    category: 'Video',
     type: 'ref',
     icon: 'clapperboard',
     keywords: ['video', 'audio', 'mix', 'mux', 'add audio to video', 'replace audio', 'video audio mixer', 'attach music to video', 'add music', 'background music', 'soundtrack'],
@@ -385,7 +385,7 @@ export const TOOLS: ToolDefinition[] = [
     id: 'video-mute',
     name: 'Video Muter',
     shortName: 'Video Muter',
-    category: 'Tools',
+    category: 'Video',
     type: 'ref',
     icon: 'volume-x',
     keywords: ['video', 'mute', 'remove audio from video', 'remove sound from video', 'video without sound', 'strip audio', 'silent video', 'mute video', 'delete audio track', 'video no audio'],

@@ -64,11 +64,21 @@ and discarded when you close the tab.
 
 | Tool | What it does |
 |------|--------------|
-| [JSON Formatter](https://paimonchan.github.io/paimon-tools/json-formatter/) | Validate & pretty-print (2/4 spaces or tab) |
-| [JSON Minifier](https://paimonchan.github.io/paimon-tools/json-minifier/) | Strip whitespace, validate syntax |
+| [JSON Formatter](https://paimonchan.github.io/paimon-tools/json-formatter/) | Format / pretty-print JSON with adjustable indentation |
+| [JSON Minifier](https://paimonchan.github.io/paimon-tools/json-minifier/) | Minify JSON to the smallest size |
 
 Both JSON tools support **Lenient mode** (JSON5) — single quotes, trailing
 commas, and comments are accepted.
+
+### 🎬 Media
+
+| Tool | What it does |
+|------|--------------|
+| [Video Slicer](https://paimonchan.github.io/paimon-tools/video-slice/) | Losslessly slice MP4 video (no re-encode, no quality loss) |
+| [Video Merger](https://paimonchan.github.io/paimon-tools/video-merge/) | Merge multiple MP4 videos into one, losslessly |
+| [Video Audio Extractor](https://paimonchan.github.io/paimon-tools/video-audio-extract/) | Extract or convert audio from a video (MP3/Opus/M4A) |
+| [Video Audio Mixer](https://paimonchan.github.io/paimon-tools/video-audio-mix/) | Add or replace the audio track on a video |
+| [Video Muter](https://paimonchan.github.io/paimon-tools/video-mute/) | Remove the audio track from a video, keep video lossless |
 
 ### 🛠️ Utilities
 
@@ -79,11 +89,6 @@ commas, and comments are accepted.
 | [Combine Files](https://paimonchan.github.io/paimon-tools/combine-files/) | Merge multiple CSV/Excel files into one (append rows, union columns) |
 | [Diff Tool](https://paimonchan.github.io/paimon-tools/diff-tool/) | Compare two texts side-by-side with color-coded changes |
 | [Text Delimiter](https://paimonchan.github.io/paimon-tools/text-delimiter/) | Split/join text with custom delimiters, like delim.co |
-| [Video Slicer](https://paimonchan.github.io/paimon-tools/video-slice/) | Losslessly slice MP4 video (no re-encode, no quality loss) |
-| [Video Merger](https://paimonchan.github.io/paimon-tools/video-merge/) | Merge multiple MP4 videos into one, losslessly |
-| [Video Audio Extractor](https://paimonchan.github.io/paimon-tools/video-audio-extract/) | Extract or convert audio from a video (MP3/Opus/M4A) |
-| [Video Audio Mixer](https://paimonchan.github.io/paimon-tools/video-audio-mix/) | Add or replace the audio track on a video |
-| [Video Muter](https://paimonchan.github.io/paimon-tools/video-mute/) | Remove the audio track from a video, keep video lossless |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
 ### 🗄️ Database
