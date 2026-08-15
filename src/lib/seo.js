@@ -778,7 +778,7 @@ print(json.dumps(data, indent=2))</pre>
     ogImage: DEFAULT_OG_IMAGE,
     ogImageAlt: 'Paimon Tools Video Slicer - losslessly trim and cut MP4 videos in your browser',
     h1: 'Video Slicer - Lossless MP4 Trimmer',
-    breadcrumb: 'Tools / Video Slicer',
+    breadcrumb: 'Video / Video Slicer',
     bodyHtml: `<h2>Video Slicer - Lossless MP4 Trimmer</h2>
 <p>Slice and trim MP4 videos losslessly, entirely in your browser. Set a start and end time, then download just that clip — the encoded samples in range are stream-copied (re-muxed) into a fresh MP4, so there is <strong>no re-encode and no quality loss</strong>. Your video never leaves your device.</p>
 <h2>How to Use</h2>
@@ -812,7 +812,7 @@ print(json.dumps(data, indent=2))</pre>
     ogImage: DEFAULT_OG_IMAGE,
     ogImageAlt: 'Paimon Tools Video Merger - combine several MP4 videos into one in your browser',
     h1: 'Video Merger - Combine MP4 Videos Losslessly',
-    breadcrumb: 'Tools / Video Merger',
+    breadcrumb: 'Video / Video Merger',
     bodyHtml: `<h2>Video Merger - Combine MP4 Videos</h2>
 <p>Merge or combine several MP4 videos into a single file, entirely in your browser. When your clips share the same resolution, frame rate and codec, they are <strong>joined losslessly</strong> — the encoded streams are concatenated (stream copy, no re-encode), so there is <strong>no quality loss</strong>. Your videos never leave your device.</p>
 <h2>How to Use</h2>
@@ -845,7 +845,7 @@ print(json.dumps(data, indent=2))</pre>
     ogImage: DEFAULT_OG_IMAGE,
     ogImageAlt: 'Paimon Tools Video Audio Extractor - extract or convert the audio from a video in your browser',
     h1: 'Video Audio Extractor - Extract & Convert Audio',
-    breadcrumb: 'Tools / Video Audio Extractor',
+    breadcrumb: 'Video / Video Audio Extractor',
     bodyHtml: `<h2>Video Audio Extractor - Extract Audio from Video</h2>
 <p>Extract or convert the audio track from an MP4/MOV video, entirely in your browser. Choose <strong>lossless</strong> to keep the original audio exactly as-is (stream-copied to M4A, no re-encode, no quality loss), or <strong>convert</strong> to export as MP3, Opus, or Ogg — great for "video to MP3". Your video is never uploaded; everything runs on your device via ffmpeg.wasm.</p>
 <h2>How to Use</h2>
@@ -878,7 +878,7 @@ print(json.dumps(data, indent=2))</pre>
     ogImage: DEFAULT_OG_IMAGE,
     ogImageAlt: 'Paimon Tools Video Audio Mixer - add or replace the audio track on a video in your browser',
     h1: 'Video Audio Mixer - Add Audio to Video',
-    breadcrumb: 'Tools / Video Audio Mixer',
+    breadcrumb: 'Video / Video Audio Mixer',
     bodyHtml: `<h2>Video Audio Mixer - Add or Replace Audio on a Video</h2>
 <p>Mux an audio track onto a video, entirely in your browser. Drop a video (MP4/MOV) and an audio file (MP3, M4A, AAC, Opus, WAV…), and choose the sound you want on it. The <strong>video stream is kept losslessly</strong> (stream-copied, never re-encoded) — perfect for adding background music or replacing a video's original sound. Everything runs on your device via ffmpeg.wasm, nothing is uploaded.</p>
 <h2>How to Use</h2>
@@ -912,7 +912,7 @@ print(json.dumps(data, indent=2))</pre>
     ogImage: DEFAULT_OG_IMAGE,
     ogImageAlt: 'Paimon Tools Video Muter - remove the audio track from a video, keeping the video sharp',
     h1: 'Video Muter - Remove Audio from a Video',
-    breadcrumb: 'Tools / Video Muter',
+    breadcrumb: 'Video / Video Muter',
     bodyHtml: `<h2>Video Muter - Remove the Audio from a Video</h2>
 <p>Strip the audio track from an MP4/MOV video, entirely in your browser, keeping the picture quality <strong>identical</strong>. Unlike re-encoding (which degrades the video), this tool stream-copies the video as-is and simply drops the sound — so you get a clean silent video at the same quality, usually a smaller file. Everything runs on your device via ffmpeg.wasm, nothing is uploaded.</p>
 <h2>How to Use</h2>
