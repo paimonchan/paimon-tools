@@ -211,7 +211,7 @@ export default function VideoMuterTool() {
                   inputRef.current?.click()
                 }
               }}
-              className={`group flex min-h-[10rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 text-center transition-all ${
+              className={`flex flex-1 min-h-[10rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 text-center transition-all ${
                 file
                   ? 'border-ink-600 bg-ink-800/30'
                   : dragging
@@ -297,7 +297,7 @@ export default function VideoMuterTool() {
                   <>
                     <VolumeX className="h-4 w-4" />
                     {!file
-                      ? 'Drop a video first'
+                      ? 'Mute & Download'
                       : !hasAudio
                         ? 'Already silent'
                         : !isCodecOk

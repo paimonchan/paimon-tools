@@ -258,7 +258,7 @@ export default function VideoAudioExtractorTool() {
                 fileInputRef.current?.click()
               }
             }}
-            className={`m-1 flex h-[calc(100%-0.5rem)] min-h-[18rem] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-6 text-center transition-all ${
+            className={`flex flex-1 min-h-[18rem] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-6 text-center transition-all ${
               dragging
                 ? 'border-honey-400 bg-honey-400/5 scale-[1.01]'
                 : 'border-ink-700 hover:border-honey-500/50 hover:bg-ink-800/30'

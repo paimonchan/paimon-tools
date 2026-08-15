@@ -42,13 +42,17 @@ export default function StatusBar({ inputChars, outputChars, status, error, dura
         {status === 'ok' && durationMs != null && (
           <span className="hidden text-ink-500 sm:inline">{durationMs.toFixed(1)}ms</span>
         )}
-        <span>
-          in <span className="text-ink-200">{formatCount(inputChars)}</span>
-        </span>
-        <span className="text-ink-600">·</span>
-        <span>
-          out <span className="text-ink-200">{formatCount(outputChars)}</span>
-        </span>
+        {status !== 'empty' && (
+          <>
+            <span>
+              in <span className="text-ink-200">{formatCount(inputChars)}</span>
+            </span>
+            <span className="text-ink-600">·</span>
+            <span>
+              out <span className="text-ink-200">{formatCount(outputChars)}</span>
+            </span>
+          </>
+        )}
         <span className="hidden items-center gap-1 text-emerald-500/70 sm:flex">
           <Lock className="h-3 w-3" />
           on-device

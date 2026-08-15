@@ -242,7 +242,7 @@ export default function VideoAudioMixerTool() {
           inputRef.current?.click()
         }
       }}
-      className={`group flex min-h-[8.5rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 text-center transition-all ${
+      className={`group flex h-full min-h-[8.5rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 text-center transition-all ${
         file
           ? 'border-ink-600 bg-ink-800/30'
           : dragging === kind
@@ -345,7 +345,7 @@ export default function VideoAudioMixerTool() {
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             {/* Two dropzones */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
               {dropzone(
                 'video', 'Drop video file', 'MP4/MOV · the video track is kept as-is (never re-encoded).',
                 ACCEPT_VIDEO, videoInputRef, video, onSelectVideo,
