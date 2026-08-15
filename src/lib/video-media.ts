@@ -588,6 +588,96 @@ export async function muxAudioToVideo(
   }
 }
 
+// ── Video Muter (remove audio track) ──────────────────────────────────────
+
+/**
+ * Detect the video codec of a file (used to gate H.264-only in Video Muter).
+ * Returns lowercased codec name, or null if no video stream found.
+ * Uses ffmpeg `-i` parsing (same kernel as probeSpec).
+ */
+export async function detectVideoCodec(file: File): Promise<string | null> {
+  const ffmpeg = await getFFmpeg()
+  const fsName = 'detect_vid.bin'
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+  await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+  const logLines: string[] = []
+  const onLog = ({ type, message }: { type: string; message: string }) => {
+    if (type === 'stderr' && message) logLines.push(message)
+  }
+  ffmpeg.on('log', onLog)
+  try {
+    await ffmpeg.exec(['-i', fsName])
+  } catch {
+    /* expected — ffmpeg exits non-zero when listing streams */
+  } finally {
+    ffmpeg.off('log', onLog)
+  }
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+
+  const videoLine = logLines.join('\n').match(/Stream.*?: Video: .*/)?.[0] ?? ''
+  const match = videoLine.match(/Video:\s*(\w+)/)
+  return match ? match[1].toLowerCase() : null
+}
+
+export type MutePhase = 'loading' | 'muting'
+
+export interface MuteResult {
+  blob: Blob
+  size: number
+  durationMs: number
+}
+
+/**
+ * Remove the audio track from a video, keeping the video stream losslessly
+ * intact (stream-copied, never re-encoded).
+ *
+ *   ffmpeg -i in.mp4 -an -c:v copy out.mp4
+ *
+ * `-an` disables the audio recording, so the output has no audio stream at
+ * all (a silent video). Loads the ffmpeg core lazily if not already cached.
+ */
+export async function muteVideo(
+  file: File,
+  opts: {
+    onProgress?: (progress: number) => void
+    onPhase?: (phase: MutePhase) => void
+  } = {},
+): Promise<MuteResult> {
+  const { onProgress, onPhase } = opts
+  const started = performance.now()
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+  onPhase?.('muting')
+
+  const fsName = 'mute_in.mp4'
+  const outName = 'mute_out.mp4'
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(fsName, await fetchFile(file))
+    await ffmpeg.exec(['-i', fsName, '-an', '-c:v', 'copy', outName])
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all(
+      [fsName, outName].map((n) => ffmpeg.deleteFile(n).catch(() => {})),
+    )
+  }
+}
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

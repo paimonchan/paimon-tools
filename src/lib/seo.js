@@ -44,6 +44,7 @@ export const HOME_SEO = {
   <li><a href="video-merge/">Video Merger</a> - combine multiple MP4 videos into one
   <li><a href="video-audio-extract/">Video Audio Extractor</a> - extract or convert the audio from a video
   <li><a href="video-audio-mix/">Video Audio Mixer</a> - add or replace the audio track on a video
+  <li><a href="video-mute/">Video Muter</a> - remove the audio track from a video, keep the video lossless
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -901,7 +902,41 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>What audio formats can I use?</strong> MP3, M4A, AAC, Opus, Vorbis/Ogg, WAV, FLAC and more. AAC/M4A input is muxed fully losslessly; other formats are converted to AAC.</p>
 <p><strong>What if video and audio are different lengths?</strong> The output is cut at the shorter of the two (-shortest), so the combined file stays in sync.</p>
 <p><strong>Are my files uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your files never leave your device.</p>
-<p><strong>Related:</strong> <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out, and <a href="video-merge/">Video Merger</a> — combine video clips.</p>
+<p><strong>Related:</strong> <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out, <a href="video-mute/">Video Muter</a> — remove the sound, and <a href="video-merge/">Video Merger</a> — combine video clips.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`},
+  'video-mute': {
+    title: 'Video Muter - Remove Audio from Video Online, Lossless | Paimon Tools',
+    description:
+      'Remove the audio track from an MP4/MOV video in your browser, free. Strip the sound while keeping the video losslessly (stream-copied, never re-encoded) — a clean silent video. Supports H.264. 100% client-side, no uploads.',
+    path: 'video-mute',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Muter - remove the audio track from a video, keeping the video sharp',
+    h1: 'Video Muter - Remove Audio from a Video',
+    breadcrumb: 'Tools / Video Muter',
+    bodyHtml: `<h2>Video Muter - Remove the Audio from a Video</h2>
+<p>Strip the audio track from an MP4/MOV video, entirely in your browser, keeping the picture quality <strong>identical</strong>. Unlike re-encoding (which degrades the video), this tool stream-copies the video as-is and simply drops the sound — so you get a clean silent video at the same quality, usually a smaller file. Everything runs on your device via ffmpeg.wasm, nothing is uploaded.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4/MOV video (H.264) or click to browse</li>
+  <li>See the audio track status and the smaller output estimate</li>
+  <li>If the video has audio, click "Mute &amp; Download"</li>
+  <li>The silent video is saved with "-muted" appended to its name</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Video never re-encoded</strong> — the video stream is copied as-is, zero quality loss</li>
+  <li>Removes the audio track entirely (no silent empty track left behind)</li>
+  <li>Smaller file — the audio stream is stripped out</li>
+  <li>Handy before adding your own sound with the Video Audio Mixer</li>
+  <li>100% client-side (ffmpeg.wasm) — your video is never uploaded anywhere</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Is my video re-encoded?</strong> No. The video stream is stream-copied, so the picture quality is identical. Only the audio is removed.</p>
+<p><strong>What's the difference from the Audio Extractor?</strong> The Extractor pulls the audio <em>out</em> and gives it to you as a separate file; the Muter removes the audio from the video entirely so you get a silent video.</p>
+<p><strong>What if my video already has no audio?</strong> The tool detects this and disables the button — there is nothing to remove.</p>
+<p><strong>What formats does it support?</strong> H.264 video in MP4/MOV. Other video codecs are shown as unsupported rather than being silently re-encoded.</p>
+<p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
+<p><strong>Related:</strong> <a href="video-audio-mix/">Video Audio Mixer</a> — add your own sound after muting, and <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out instead.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`},
   '404': {
     title: 'Page Not Found - Paimon Tools',

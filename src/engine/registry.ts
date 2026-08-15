@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -380,6 +380,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'audio', 'mix', 'mux', 'add audio to video', 'replace audio', 'video audio mixer', 'attach music to video', 'add music', 'background music', 'soundtrack'],
     description:
       'Mux an audio track onto a video in your browser. Add or replace the sound on an MP4 with an MP3, M4A, AAC, Opus or WAV file — the video is kept losslessly (never re-encoded). 100% client-side.',
+  },
+  {
+    id: 'video-mute',
+    name: 'Video Muter',
+    shortName: 'Video Muter',
+    category: 'Tools',
+    type: 'ref',
+    icon: 'volume-x',
+    keywords: ['video', 'mute', 'remove audio from video', 'remove sound from video', 'video without sound', 'strip audio', 'silent video', 'mute video', 'delete audio track', 'video no audio'],
+    description:
+      'Remove the audio track from an MP4/MOV video in your browser. The video stream is kept losslessly (stream-copied, never re-encoded) — just a silent video. Supports H.264. 100% client-side, nothing uploaded.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

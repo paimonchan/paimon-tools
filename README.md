@@ -43,7 +43,7 @@ and discarded when you close the tab.
 
 ## 🧰 Tools
 
-**23 tools** across five categories, plus a multi-language code playground.
+**24 tools** across five categories, plus a multi-language code playground.
 
 ### 🔄 Convert
 
@@ -83,6 +83,7 @@ commas, and comments are accepted.
 | [Video Merger](https://paimonchan.github.io/paimon-tools/video-merge/) | Merge multiple MP4 videos into one, losslessly |
 | [Video Audio Extractor](https://paimonchan.github.io/paimon-tools/video-audio-extract/) | Extract or convert audio from a video (MP3/Opus/M4A) |
 | [Video Audio Mixer](https://paimonchan.github.io/paimon-tools/video-audio-mix/) | Add or replace the audio track on a video |
+| [Video Muter](https://paimonchan.github.io/paimon-tools/video-mute/) | Remove the audio track from a video, keep video lossless |
 | [Code Playground](https://paimonchan.github.io/paimon-tools/code/) | Run JS / TypeScript / Python / HTML in a sandboxed worker + iframe |
 
 ### 🗄️ Database
@@ -151,13 +152,13 @@ src/
 │   └── worker/sandbox-worker.ts   Isolated execution worker
 ├── components/                React UI (one default export per file)
 │   ├── ConversionTool.tsx     Generic converter workspace
-│   ├── PlaygroundTool / DiffTool / CombineFilesTool / VideoSlicerTool / VideoMergerTool / VideoAudioExtractorTool / VideoAudioMixerTool   Custom tool UIs
+│   ├── PlaygroundTool / DiffTool / CombineFilesTool / VideoSlicerTool / VideoMergerTool / VideoAudioExtractorTool / VideoAudioMixerTool / VideoMuterTool   Custom tool UIs
 │   ├── Panes / Sidebar / CommandPalette / …           Shared chrome
 ├── stores/                    Zustand state (theme + toast)
 ├── hooks/usePersistentState.ts   localStorage-backed state
 ├── lib/                       Browser I/O + adapters (no JSX)
 │   ├── files.ts / router.ts / makeFilename.ts / icon-map.ts
-│   ├── video-media.ts         Video inspect + ffmpeg.wasm trim/merge/extract/mux wrapper
+│   ├── video-media.ts         Video inspect + ffmpeg.wasm trim/merge/extract/mux/mute wrapper
 │   ├── ffmpeg-core/           @ffmpeg/core wasm (Vite ?url, lazy runtime fetch)
 │   ├── playground-share.ts    URL share via lz-string
 │   └── seo.js                 Per-tool SEO metadata (plain JS, used by prerender)
@@ -220,7 +221,7 @@ up automatically — no UI changes.
 - **[CodeMirror 6](https://codemirror.net/)** — playground editor
 - **[esbuild-wasm](https://esbuild.github.io/)** — in-browser ESM bundler
 - **[lz-string](https://github.com/pieroxy/lz-string)** — URL share compression
-- **[ffmpeg.wasm](https://ffmpegwasm.netlify.app/)** — lossless Video Slicer, Merger, Audio Extractor & Mixer (single-threaded core, lazy-loaded)
+- **[ffmpeg.wasm](https://ffmpegwasm.netlify.app/)** — lossless Video Slicer, Merger, Audio Extractor, Mixer & Muter (single-threaded core, lazy-loaded)
 
 ## 🤝 Contributing
 
