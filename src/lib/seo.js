@@ -45,6 +45,7 @@ export const HOME_SEO = {
   <li><a href="video-audio-extract/">Video Audio Extractor</a> - extract or convert the audio from a video
   <li><a href="video-audio-mix/">Video Audio Mixer</a> - add or replace the audio track on a video
   <li><a href="video-mute/">Video Muter</a> - remove the audio track from a video, keep the video lossless
+  <li><a href="video-frame-grabber/">Video Frame Grabber</a> - extract any frame from a video, or grab the last frame, as PNG or JPEG
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -938,6 +939,48 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
 <p><strong>Related:</strong> <a href="video-audio-mix/">Video Audio Mixer</a> — add your own sound after muting, and <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out instead.</p>
 <p><a href="../">← Back to all Paimon Tools</a></p>`},
+  'video-frame-grabber': {
+    title: 'Video Frame Grabber - Extract Frames & Get Last Frame Online | Paimon Tools',
+    description:
+      'Extract any frame from a video, or grab its very last frame — 100% in your browser, free, no upload, no ffmpeg, no servers. Save as PNG or JPEG. Instant and private.',
+    path: 'video-frame-grabber',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Frame Grabber - extract frames from a video, or grab the last frame',
+    h1: 'Video Frame Grabber - Extract Frames from a Video',
+    breadcrumb: 'Video / Video Frame Grabber',
+    bodyHtml: `<h2>Video Frame Grabber - Grab Any Frame, or the Last One</h2>
+<p>Pull any frame out of a video and save it as a PNG or JPEG image — entirely in your browser. Unlike most tools, this needs <strong>no ffmpeg and no upload</strong>: it captures the frame straight from the playing video using your browser's own canvas, so it's instant, private, and works 100% on your device. Scrub to any moment to preview its exact frame, or use the dedicated button to grab the very last frame of the video.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop a video (MP4, MOV, WEBM) or click to browse</li>
+  <li>Scrub the timeline to a moment — the live frame preview updates as you go</li>
+  <li>Choose PNG (lossless) or JPEG (smaller), and JPEG quality if needed</li>
+  <li>Click "Download frame @ time" for the current moment, or "Download last frame" for the final frame</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Extract any frame</strong> at any time — live preview before you save</li>
+  <li><strong>Download last frame</strong> with a single button</li>
+  <li><strong>No ffmpeg, no servers, no upload</strong> — captured by the browser's own canvas</li>
+  <li>PNG (lossless) or JPEG (compressed) with a quality slider</li>
+  <li>Great for video thumbnails, profile frames, or grabbing a moment from a review clip</li>
+  <li>100% client-side — your video never leaves your device</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Do I need to upload my video?</strong> No. Everything runs locally in your browser. Your video never leaves your device.</p>
+<p><strong>Does it use ffmpeg?</strong> No. This tool grabs the frame directly from the playing video via your browser's canvas — no ffmpeg, so it's instant, with no large engine to load.</p>
+<p><strong>Can I extract the exact last frame?</strong> Yes — the "Download last frame" button seeks to the end of the video and captures the final frame.</p>
+<p><strong>What image formats?</strong> PNG (lossless) and JPEG (with a quality slider for file size control).</p>
+<p><strong>What videos are supported?</strong> Any video your browser can play — MP4, MOV, WEBM and more.</p>
+<p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — trim a video into a clip, and <a href="video-merge/">Video Merger</a> — combine clips into one.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Do I need to upload my video?', a: 'No. Everything runs locally in your browser. Your video never leaves your device.' },
+      { q: 'Does it use ffmpeg?', a: 'No. This tool grabs the frame directly from the playing video via your browser\'s canvas — no ffmpeg, so it is instant.' },
+      { q: 'Can I extract the exact last frame?', a: 'Yes — the "Download last frame" button seeks to the end and captures the final frame.' },
+      { q: 'What image formats are supported?', a: 'PNG (lossless) and JPEG (with a quality slider for file size control).' },
+    ],
+  },
   '404': {
     title: 'Page Not Found - Paimon Tools',
     description: 'The page you are looking for does not exist. Browse our free JSON, CSV and Excel conversion tools, code playground, and developer utilities.',

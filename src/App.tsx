@@ -30,6 +30,7 @@ const VideoMergerTool = lazy(() => import('./components/VideoMergerTool'))
 const VideoAudioExtractorTool = lazy(() => import('./components/VideoAudioExtractorTool'))
 const VideoAudioMixerTool = lazy(() => import('./components/VideoAudioMixerTool'))
 const VideoMuterTool = lazy(() => import('./components/VideoMuterTool'))
+const VideoFrameGrabberTool = lazy(() => import('./components/VideoFrameGrabberTool'))
 
 // Registry pattern for ref tools — add new tools here, routing auto-works
 const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
@@ -43,6 +44,7 @@ const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
   'video-audio-extract': VideoAudioExtractorTool,
   'video-audio-mix': VideoAudioMixerTool,
   'video-mute': VideoMuterTool,
+  'video-frame-grabber': VideoFrameGrabberTool,
 }
 
 function Shell() {

@@ -14,7 +14,7 @@ import { Download, FileAudio, Loader2 } from 'lucide-react'
 import { formatBytes } from '../engine/video-slice'
 import { downloadBlob } from '../lib/video-media'
 
-type ResultPreviewKind = 'video' | 'audio' | 'loading'
+type ResultPreviewKind = 'video' | 'audio' | 'image' | 'loading'
 
 interface ResultPreviewProps {
   kind: ResultPreviewKind
@@ -60,7 +60,7 @@ export default function ResultPreview({
   return (
     <div className="flex flex-col gap-2">
       <div className="overflow-hidden rounded-lg border border-ink-700 bg-ink-900/40">
-        {kind === 'loading' || kind === 'audio' && !blob ? (
+        {kind === 'loading' || ((kind === 'audio' || kind === 'image') && !blob) ? (
           <div className="flex h-32 flex-col items-center justify-center gap-2 text-center">
             <Loader2 className="h-5 w-5 animate-spin text-honey-400" />
             <span className="text-xs text-ink-400">{phaseLabel}</span>
@@ -72,6 +72,12 @@ export default function ResultPreview({
             playsInline
             className="max-h-[38vh] w-full bg-black object-contain"
             preload="metadata"
+          />
+        ) : kind === 'image' && url ? (
+          <img
+            src={url}
+            alt="Extracted frame"
+            className="m-2 inline-block max-h-[38vh] max-w-full rounded object-contain"
           />
         ) : kind === 'audio' && url ? (
           <div className="flex h-20 flex-col items-center justify-center gap-2 px-4">
@@ -85,7 +91,7 @@ export default function ResultPreview({
         )}
       </div>
 
-      {(kind === 'video' || kind === 'audio') && blob && filename && (
+      {(kind === 'video' || kind === 'audio' || kind === 'image') && blob && filename && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate max-w-full text-xs text-ink-200" title={filename}>

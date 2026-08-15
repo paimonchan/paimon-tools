@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -391,6 +391,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'mute', 'remove audio from video', 'remove sound from video', 'video without sound', 'strip audio', 'silent video', 'mute video', 'delete audio track', 'video no audio'],
     description:
       'Remove the audio track from an MP4/MOV video in your browser. The video stream is kept losslessly (stream-copied, never re-encoded) — just a silent video. Supports H.264. 100% client-side, nothing uploaded.',
+  },
+  {
+    id: 'video-frame-grabber',
+    name: 'Video Frame Grabber',
+    shortName: 'Frame Grabber',
+    category: 'Video',
+    type: 'ref',
+    icon: 'image',
+    keywords: ['video', 'frame', 'extract frame from video', 'video to image', 'get last frame of video', 'last frame', 'video thumbnail', 'video screenshot', 'frame grabber', 'video snapshot'],
+    description:
+      'Extract any frame from a video, or download its very last frame — 100% in your browser, no upload, no ffmpeg, no servers. Save as PNG or JPEG. Fully client-side and instant.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

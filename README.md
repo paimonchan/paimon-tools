@@ -79,6 +79,7 @@ commas, and comments are accepted.
 | [Video Audio Extractor](https://paimonchan.github.io/paimon-tools/video-audio-extract/) | Extract or convert audio from a video (MP3/Opus/M4A) |
 | [Video Audio Mixer](https://paimonchan.github.io/paimon-tools/video-audio-mix/) | Add or replace the audio track on a video |
 | [Video Muter](https://paimonchan.github.io/paimon-tools/video-mute/) | Remove the audio track from a video, keep video lossless |
+| [Video Frame Grabber](https://paimonchan.github.io/paimon-tools/video-frame-grabber/) | Extract any frame from a video, or grab the last one, as PNG/JPEG (no ffmpeg) |
 
 ### 🛠️ Utilities
 
