@@ -29,6 +29,7 @@ import {
 } from '../engine/video-audio-mux'
 import { useToast } from '../stores/toast-store'
 import StatusBar from './StatusBar'
+import ResultPreview from './ResultPreview'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -92,6 +93,7 @@ export default function VideoAudioMixerTool() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null)
   const [muxPhase, setMuxPhase] = useState<'loading' | 'detecting' | 'muxing'>('detecting')
   const [aacBitrateK, setAacBitrateK] = useState(192)
 
@@ -124,6 +126,7 @@ export default function VideoAudioMixerTool() {
       }
       setVideo({ file: f, duration: meta.duration, size: meta.size })
       setStatus('ok')
+      setResult(null)
       toast.push(`Video: ${meta.name}`, { variant: 'success' })
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -146,6 +149,7 @@ export default function VideoAudioMixerTool() {
       }
       setAudio({ file: f, codec, duration: await getAudioDuration(f), size: f.size })
       setStatus('ok')
+      setResult(null)
       toast.push(`Audio: ${f.name} (${codec})`, { variant: 'success' })
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -157,6 +161,7 @@ export default function VideoAudioMixerTool() {
     setVideo(null)
     setAudio(null)
     setStatus('idle')
+    setResult(null)
     setError(null)
     setProgress(0)
     toast.push('Cleared', { variant: 'info' })
@@ -182,7 +187,7 @@ export default function VideoAudioMixerTool() {
     setError(null)
     setProgress(0)
     try {
-      const { muxAudioToVideo, downloadBlob } = await loadVideoMedia()
+      const { muxAudioToVideo } = await loadVideoMedia()
       const result = await muxAudioToVideo(
         { video: video!.file, audio: audio!.file },
         {
@@ -193,12 +198,12 @@ export default function VideoAudioMixerTool() {
         },
       )
       const filename = makeMuxFilename(video!.file.name)
-      downloadBlob(result.blob, filename)
+      setResult({ blob: result.blob, filename })
       setStatus('ok')
       toast.push(
-        `Downloaded ${filename} · ${formatBytes(result.size)} · ${
+        `Muxed · ${formatBytes(result.size)} · ${
           isLosslessCopy ? 'lossless' : 'video preserved'
-        }`,
+        } — check preview`,
         { variant: 'success' },
       )
     } catch (err) {
@@ -434,12 +439,25 @@ export default function VideoAudioMixerTool() {
                     {!video && !audio
                       ? 'Add a video + audio to start'
                       : isLosslessCopy
-                        ? 'Mix & Download (lossless)'
-                        : 'Mix & Download'}
+                        ? 'Mix (lossless)'
+                        : 'Mix'}
                   </>
                 )}
               </button>
             </div>
+
+            {result ? (
+              <ResultPreview
+                key={result.filename + result.blob.size}
+                kind={processing ? 'loading' : 'video'}
+                blob={processing ? undefined : result.blob}
+                filename={result.filename}
+                phaseLabel={processing ? (muxPhase === 'loading' ? 'Preparing engine…' : muxPhase === 'detecting' ? 'Preparing engine…' : `Muxing… ${Math.round(progress)}%`) : undefined}
+                hint={isLosslessCopy ? 'Video + audio muxed losslessly.' : 'Video stream preserved, audio re-encoded to AAC.'}
+                reRunLabel="Mix again"
+                onReRun={() => { setResult(null); handleMix() }}
+              />
+            ) : null}
           </div>
         )}
       </div>

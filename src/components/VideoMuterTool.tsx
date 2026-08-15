@@ -13,6 +13,7 @@ import { Loader2, VolumeX, X } from 'lucide-react'
 import { formatBytes } from '../engine/video-slice'
 import { useToast } from '../stores/toast-store'
 import StatusBar from './StatusBar'
+import ResultPreview from './ResultPreview'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -49,6 +50,7 @@ export default function VideoMuterTool() {
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [mutePhase, setMutePhase] = useState<'loading' | 'muting'>('muting')
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -68,6 +70,7 @@ export default function VideoMuterTool() {
     }
     setStatus('processing')
     setError(null)
+    setResult(null)
     try {
       const { inspectVideo, detectVideoCodec } = await loadVideoMedia()
       const vi = await inspectVideo(f)
@@ -120,17 +123,18 @@ export default function VideoMuterTool() {
     setError(null)
     setProgress(0)
     try {
-      const { muteVideo, downloadBlob } = await loadVideoMedia()
+      const { muteVideo } = await loadVideoMedia()
       const result = await muteVideo(file, {
         onProgress: (p) => setProgress(p),
         onPhase: (ph) => setMutePhase(ph),
       })
       const dot = file.name.lastIndexOf('.')
       const base = dot > 0 ? file.name.slice(0, dot) : file.name
-      downloadBlob(result.blob, `${base}-muted.mp4`)
+      const filename = `${base}-muted.mp4`
+      setResult({ blob: result.blob, filename })
       setStatus('ok')
       toast.push(
-        `Downloaded ${base}-muted.mp4 · ${formatBytes(result.size)} · audio removed`,
+        `Muted · ${formatBytes(result.size)} · audio removed — check preview`,
         { variant: 'success' },
       )
     } catch (err) {
@@ -307,6 +311,18 @@ export default function VideoMuterTool() {
                 )}
               </button>
             </div>
+
+            {result ? (
+              <ResultPreview
+                kind={processing ? 'loading' : 'video'}
+                blob={processing ? undefined : result.blob}
+                filename={result.filename}
+                phaseLabel={processing ? (mutePhase === 'loading' ? 'Preparing engine…' : `Muting… ${Math.round(progress)}%`) : undefined}
+                hint="Video kept losslessly (stream-copied), audio removed."
+                reRunLabel="Mute again"
+                onReRun={() => { setResult(null); handleMute() }}
+              />
+            ) : null}
           </div>
         )}
       </div>

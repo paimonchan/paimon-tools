@@ -32,6 +32,7 @@ import type { SpecMismatch, VideoSpec } from '../engine/video-merge'
 import { formatBytes } from '../engine/video-slice'
 import { useToast } from '../stores/toast-store'
 import StatusBar from './StatusBar'
+import ResultPreview from './ResultPreview'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -77,6 +78,7 @@ export default function VideoMergerTool() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null)
   const [mergePhase, setMergePhase] = useState<MergePhase>('loading')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -129,6 +131,7 @@ export default function VideoMergerTool() {
         const all = [...newFiles, ...queued].filter((x) => x.spec !== null)
         const removed = (newFiles.length + queued.length) - all.length
         setFiles(all)
+        setResult(null)
 
         if (all.length < 2) {
           setStatus('ok')
@@ -225,7 +228,7 @@ export default function VideoMergerTool() {
     setError(null)
     setProgress(0)
     try {
-      const { mergeVideos, downloadBlob } = await loadVideoMedia()
+      const { mergeVideos } = await loadVideoMedia()
       const input = files.map((q, i) => ({
         file: q.file,
         fsName: sanitizeFsName(q.file.name, i),
@@ -236,9 +239,9 @@ export default function VideoMergerTool() {
         (phase) => setMergePhase(phase),
       )
       const filename = `merged-${Date.now()}.mp4`
-      downloadBlob(result.blob, filename)
+      setResult({ blob: result.blob, filename })
       setStatus('ok')
-      toast.push(`Merged ${files.length} videos · ${formatBytes(result.size)} · lossless`, {
+      toast.push(`Merged ${files.length} videos · ${formatBytes(result.size)} · lossless — check preview`, {
         variant: 'success',
       })
     } catch (err) {
@@ -256,6 +259,7 @@ export default function VideoMergerTool() {
     setStatus('idle')
     setError(null)
     setProbed(false)
+    setResult(null)
     setProgress(0)
     toast.push('Cleared', { variant: 'info' })
   }
@@ -501,9 +505,22 @@ export default function VideoMergerTool() {
                 ) : (
                   <Combine className="h-4 w-4" />
                 )}
-                {processing ? phaseLabel : isReady ? 'Merge & Download' : 'Merge'}
+                {processing ? phaseLabel : 'Merge'}
               </button>
             </div>
+
+            {result ? (
+              <ResultPreview
+                key={result.filename + result.blob.size}
+                kind={processing ? 'loading' : 'video'}
+                blob={processing ? undefined : result.blob}
+                filename={result.filename}
+                phaseLabel={processing ? (mergePhase === 'loading' ? 'Preparing engine…' : `Concatenating… ${Math.round(progress)}%`) : undefined}
+                hint="Clips concatenated losslessly (stream copy, no re-encode)."
+                reRunLabel="Merge again"
+                onReRun={() => { setResult(null); handleMerge() }}
+              />
+            ) : null}
           </div>
         )}
       </div>

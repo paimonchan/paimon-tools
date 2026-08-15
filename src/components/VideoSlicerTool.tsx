@@ -34,6 +34,7 @@ import {
 } from '../engine/video-slice'
 import { useToast } from '../stores/toast-store'
 import StatusBar from './StatusBar'
+import ResultPreview from './ResultPreview'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -92,6 +93,7 @@ export default function VideoSlicerTool() {
   const [progress, setProgress] = useState(0)
   const [trimPhase, setTrimPhase] = useState<'loading' | 'slicing'>('loading')
   const [isPlaying, setIsPlaying] = useState(false)
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null)
 
   // Trim range (seconds). Default [0, 0]; resolved against duration once loaded.
   const [start, setStart] = useState(0)
@@ -123,6 +125,7 @@ export default function VideoSlicerTool() {
       }
       setStatus('processing')
       setError(null)
+      setResult(null)
       setProcessing(true)
       try {
         const { inspectVideo } = await loadVideoMedia()
@@ -278,7 +281,7 @@ export default function VideoSlicerTool() {
     setError(null)
     setProgress(0)
     try {
-      const { trimVideo, downloadBlob } = await loadVideoMedia()
+      const { trimVideo } = await loadVideoMedia()
       setTrimPhase('loading')
       const result = await trimVideo(
         file,
@@ -288,9 +291,9 @@ export default function VideoSlicerTool() {
         (phase) => setTrimPhase(phase),
       )
       const filename = makeSliceFilename(file.name, range.start, range.end)
-      downloadBlob(result.blob, filename)
+      setResult({ blob: result.blob, filename })
       setStatus('ok')
-      toast.push(`Downloaded ${filename} · ${formatBytes(result.size)} · lossless`, {
+      toast.push(`Sliced · ${formatBytes(result.size)} · lossless — check preview`, {
         variant: 'success',
       })
     } catch (err) {
@@ -353,6 +356,7 @@ export default function VideoSlicerTool() {
               setInfo(null)
               if (previewUrl) URL.revokeObjectURL(previewUrl)
               setPreviewUrl(null)
+              setResult(null)
               setError(null)
               setStatus('idle')
               toast.push('Cleared', { variant: 'info' })
@@ -560,7 +564,7 @@ export default function VideoSlicerTool() {
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
-                      Download slice
+                      Slice
                     </>
                   )}
                 </button>
@@ -583,6 +587,19 @@ export default function VideoSlicerTool() {
                   )}
                 </div>
               </div>
+
+              {result ? (
+                <ResultPreview
+                  key={result.filename + result.blob.size}
+                  kind={processing ? 'loading' : 'video'}
+                  blob={processing ? undefined : result.blob}
+                  filename={result.filename}
+                  phaseLabel={processing ? (trimPhase === 'loading' ? 'Preparing engine…' : `Slicing… ${Math.round(progress * 100)}%`) : undefined}
+                  hint="Range is stream-copied losslessly (no re-encode)."
+                  reRunLabel="Slice again"
+                  onReRun={() => { setResult(null); handleExport() }}
+                />
+              ) : null}
             </div>
           </div>
         )}

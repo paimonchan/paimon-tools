@@ -31,6 +31,7 @@ import {
 } from '../engine/video-audio'
 import { useToast } from '../stores/toast-store'
 import StatusBar from './StatusBar'
+import ResultPreview from './ResultPreview'
 
 // ── Constants ─────────────────────────────────────────
 
@@ -67,6 +68,7 @@ export default function VideoAudioExtractorTool() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null)
   const [extractPhase, setExtractPhase] = useState<'loading' | 'extracting'>('loading')
 
   const [mode, setMode] = useState<'copy' | 'convert'>('copy')
@@ -104,6 +106,7 @@ export default function VideoAudioExtractorTool() {
           return
         }
         setLoaded({ file: f, duration: meta.duration, size: meta.size, hasAudio: meta.hasAudio })
+        setResult(null)
         setStatus('ok')
         toast.push(`${meta.name} loaded · audio track found`, { variant: 'success' })
       } catch (err) {
@@ -141,7 +144,7 @@ export default function VideoAudioExtractorTool() {
     setError(null)
     setProgress(0)
     try {
-      const { extractAudio, downloadBlob } = await loadVideoMedia()
+      const { extractAudio } = await loadVideoMedia()
       const result = await extractAudio(loaded.file, {
         mode,
         codec: mode === 'convert' ? fmt.codec ?? undefined : undefined,
@@ -152,9 +155,9 @@ export default function VideoAudioExtractorTool() {
         onPhase: (ph) => setExtractPhase(ph),
       })
       const filename = makeAudioFilename(loaded.file.name, fmt)
-      downloadBlob(result.blob, filename)
+      setResult({ blob: result.blob, filename })
       setStatus('ok')
-      toast.push(`Downloaded ${filename} · ${formatBytes(result.size)}`, {
+      toast.push(`Extracted ${filename} · ${formatBytes(result.size)} — check preview`, {
         variant: 'success',
       })
     } catch (err) {
@@ -169,6 +172,7 @@ export default function VideoAudioExtractorTool() {
 
   const clear = () => {
     setLoaded(null)
+    setResult(null)
     setStatus('idle')
     setError(null)
     setProgress(0)
@@ -359,11 +363,24 @@ export default function VideoAudioExtractorTool() {
                 ) : (
                   <>
                     <Download className="h-4 w-4" />
-                    Extract Audio · ~{formatBytes(estSize)}
+                    Extract Audio
                   </>
                 )}
               </button>
             </div>
+
+            {result ? (
+              <ResultPreview
+                key={result.filename + result.blob.size}
+                kind={processing ? 'loading' : 'audio'}
+                blob={processing ? undefined : result.blob}
+                filename={result.filename}
+                phaseLabel={processing ? (extractPhase === 'loading' ? 'Preparing engine…' : `Extracting… ${Math.round(progress)}%`) : undefined}
+                hint={isLossless ? 'Audio kept losslessly (stream-copied).' : `${fmt.label} re-encoded (${bitrate} kbps).`}
+                reRunLabel="Extract again"
+                onReRun={() => { setResult(null); handleExtract() }}
+              />
+            ) : null}
 
             {/* Summary */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-500">
