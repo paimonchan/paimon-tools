@@ -43,6 +43,25 @@ export function formatTime(seconds: number): string {
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
 }
 
+/**
+ * Format seconds as HH:MM:SS.mmm — preserves millisecond precision for ffmpeg.
+ * Negative/clamped to 0. Only adds time units that are non-zero (ffmpeg accepts
+ * partial forms like `SS.mmm` and `MM:SS.mmm` as well as full `HH:MM:SS.mmm`).
+ */
+export function formatTimeMs(seconds: number): string {
+  const total = Math.max(0, seconds)
+  const ms = Math.round((total % 1) * 1000)
+  const s = Math.floor(total)
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const msPart = ms > 0 ? `.${String(ms).padStart(3, '0')}` : ''
+  if (h > 0) return `${pad(h)}:${pad(m)}:${pad(sec)}${msPart}`
+  if (m > 0) return `${pad(m)}:${pad(sec)}${msPart}`
+  return `${sec}${msPart}`
+}
+
 /** Parse "MM:SS", "HH:MM:SS", or "123.5" (seconds) into seconds. Returns NaN on garbage. */
 export function parseTime(text: string): number {
   const t = text.trim()

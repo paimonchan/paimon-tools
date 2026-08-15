@@ -26,6 +26,7 @@ import {
 
 import {
   formatTime,
+  formatTimeMs,
   parseTime,
   validateRange,
   makeSliceFilename,
@@ -150,8 +151,8 @@ export default function VideoSlicerTool() {
         const e = persisted && typeof persisted.end === 'number' ? persisted.end : meta.duration
         setStart(Math.min(s, meta.duration))
         setEnd(Math.min(e, meta.duration))
-        setStartText(formatTime(Math.min(s, meta.duration)))
-        setEndText(formatTime(Math.min(e, meta.duration)))
+        setStartText(formatTimeMs(Math.min(s, meta.duration)))
+        setEndText(formatTimeMs(Math.min(e, meta.duration)))
         setStatus('ok')
         setError(null)
         toast.push(`${meta.name} loaded · ${formatBytes(meta.size)}`, { variant: 'success' })
@@ -173,12 +174,12 @@ export default function VideoSlicerTool() {
   const handleStartSlider = (v: number) => {
     const val = clipToDuration(v)
     setStart(val)
-    setStartText(formatTime(val))
+    setStartText(formatTimeMs(val))
   }
   const handleEndSlider = (v: number) => {
     const val = clipToDuration(v)
     setEnd(val)
-    setEndText(formatTime(val))
+    setEndText(formatTimeMs(val))
   }
 
   const handleStartTextChange = (t: string) => {
@@ -196,14 +197,14 @@ export default function VideoSlicerTool() {
     const t = videoRef.current?.currentTime ?? 0
     const val = clipToDuration(t)
     setStart(val)
-    setStartText(formatTime(val))
+    setStartText(formatTimeMs(val))
     toast.push(`Start set to ${formatTime(val)}`, { variant: 'info' })
   }
   const setEndFromCurrent = () => {
     const t = videoRef.current?.currentTime ?? 0
     const val = clipToDuration(t)
     setEnd(val)
-    setEndText(formatTime(val))
+    setEndText(formatTimeMs(val))
     toast.push(`End set to ${formatTime(val)}`, { variant: 'info' })
   }
 
@@ -221,7 +222,7 @@ export default function VideoSlicerTool() {
   useEffect(() => {
     if (info && start >= end && end > 0) {
       setEnd(Math.min(info.duration, start + 1))
-      setEndText(formatTime(Math.min(info.duration, start + 1)))
+      setEndText(formatTimeMs(Math.min(info.duration, start + 1)))
     }
   }, [start, end, info])
 
@@ -415,7 +416,10 @@ export default function VideoSlicerTool() {
             </div>
             <div className="max-w-xs text-xs text-ink-500">
               <strong className="text-emerald-400">Lossless</strong> — trims are stream-copied, no
-              re-encode, no quality loss. Handled 100% on your device.
+              re-encode, no quality loss. Time inputs accept millisecond precision
+              (e.g. <span className="font-mono text-ink-300">1:05.250</span>). Handled 100% on your
+              device. <span className="text-ink-600">Note: stream copy seeks to the nearest keyframe, so the
+              exact cut point may land a frame earlier.</span>
             </div>
           </div>
         ) : (
@@ -478,8 +482,8 @@ export default function VideoSlicerTool() {
               <div className="mb-1 flex items-center justify-between text-[11px] text-ink-500">
                 <span>Trim range</span>
                 <span className="font-mono text-ink-300">
-                  {formatTime(start)} — {formatTime(end)}
-                  {rangeValid && <span className="ml-2 text-honey-300">{formatTime(selectedSecs)}</span>}
+                  {formatTimeMs(start)} — {formatTimeMs(end)}
+                  {rangeValid && <span className="ml-2 text-honey-300">{formatTimeMs(selectedSecs)}</span>}
                 </span>
               </div>
 
@@ -489,9 +493,9 @@ export default function VideoSlicerTool() {
                 <input
                   type="range"
                   min={0}
-                  max={info ? Math.floor(info.duration) : 0}
-                  step={0.1}
-                  value={Math.floor(start)}
+                  max={info ? info.duration : 0}
+                  step={0.001}
+                  value={start}
                   onChange={(e) => handleStartSlider(Number(e.target.value))}
                   className="flex-1 accent-honey-400"
                 />
@@ -499,7 +503,7 @@ export default function VideoSlicerTool() {
                   type="text"
                   value={startText}
                   onChange={(e) => handleStartTextChange(e.target.value)}
-                  onBlur={() => setStartText(formatTime(start))}
+                  onBlur={() => setStartText(formatTimeMs(start))}
                   className="w-20 rounded border border-ink-700 bg-ink-900 px-1.5 py-0.5 font-mono text-[11px] text-ink-200 focus:border-honey-500/60 focus:outline-none"
                   aria-label="Start time"
                 />
@@ -518,9 +522,9 @@ export default function VideoSlicerTool() {
                 <input
                   type="range"
                   min={0}
-                  max={info ? Math.floor(info.duration) : 0}
-                  step={0.1}
-                  value={Math.floor(end)}
+                  max={info ? info.duration : 0}
+                  step={0.001}
+                  value={end}
                   onChange={(e) => handleEndSlider(Number(e.target.value))}
                   className="flex-1 accent-honey-400"
                 />
@@ -528,7 +532,7 @@ export default function VideoSlicerTool() {
                   type="text"
                   value={endText}
                   onChange={(e) => handleEndTextChange(e.target.value)}
-                  onBlur={() => setEndText(formatTime(end))}
+                  onBlur={() => setEndText(formatTimeMs(end))}
                   className="w-20 rounded border border-ink-700 bg-ink-900 px-1.5 py-0.5 font-mono text-[11px] text-ink-200 focus:border-honey-500/60 focus:outline-none"
                   aria-label="End time"
                 />
