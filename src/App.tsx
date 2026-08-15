@@ -5,7 +5,7 @@
  * <html>, and ToastContainer renders toast notifications from the Zustand store.
  */
 
-import { createElement, useEffect, useState, lazy, Suspense, type LazyExoticComponent, type ComponentType } from 'react'
+import { createElement, useEffect, useState, Suspense, type LazyExoticComponent, type ComponentType } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
 import CommandPalette from './components/CommandPalette'
@@ -19,18 +19,20 @@ import type { ToolId } from './engine/registry'
 import { toolIdFromLocation, pushTool, syncDocumentTitle } from './lib/router'
 import { ThemeEffect, useTheme } from './stores/theme-store'
 
-// Lazy imports
-const PlaygroundTool = lazy(() => import('./playground/PlaygroundTool'))
-const CombineFilesTool = lazy(() => import('./components/CombineFilesTool'))
-const DiffTool = lazy(() => import('./components/DiffTool'))
-const TextDelimiterTool = lazy(() => import('./components/TextDelimiterTool'))
-const ExplainTool = lazy(() => import('./components/ExplainTool'))
-const VideoSlicerTool = lazy(() => import('./components/VideoSlicerTool'))
-const VideoMergerTool = lazy(() => import('./components/VideoMergerTool'))
-const VideoAudioExtractorTool = lazy(() => import('./components/VideoAudioExtractorTool'))
-const VideoAudioMixerTool = lazy(() => import('./components/VideoAudioMixerTool'))
-const VideoMuterTool = lazy(() => import('./components/VideoMuterTool'))
-const VideoFrameGrabberTool = lazy(() => import('./components/VideoFrameGrabberTool'))
+// Lazy imports (with retry — GH Pages asset swap during deploy briefly 404s a
+// chunk; retry makes navigation resilient).
+import { lazyWithRetry } from './lib/lazyWithRetry'
+const PlaygroundTool = lazyWithRetry(() => import('./playground/PlaygroundTool'))
+const CombineFilesTool = lazyWithRetry(() => import('./components/CombineFilesTool'))
+const DiffTool = lazyWithRetry(() => import('./components/DiffTool'))
+const TextDelimiterTool = lazyWithRetry(() => import('./components/TextDelimiterTool'))
+const ExplainTool = lazyWithRetry(() => import('./components/ExplainTool'))
+const VideoSlicerTool = lazyWithRetry(() => import('./components/VideoSlicerTool'))
+const VideoMergerTool = lazyWithRetry(() => import('./components/VideoMergerTool'))
+const VideoAudioExtractorTool = lazyWithRetry(() => import('./components/VideoAudioExtractorTool'))
+const VideoAudioMixerTool = lazyWithRetry(() => import('./components/VideoAudioMixerTool'))
+const VideoMuterTool = lazyWithRetry(() => import('./components/VideoMuterTool'))
+const VideoFrameGrabberTool = lazyWithRetry(() => import('./components/VideoFrameGrabberTool'))
 
 // Registry pattern for ref tools — add new tools here, routing auto-works
 const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
