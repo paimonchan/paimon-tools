@@ -123,9 +123,7 @@ export default function VideoFrameGrabberTool() {
     const v = videoRef.current
     if (!v || !file) return
     setProcessing(true)
-    setStatus('processing')
     setError(null)
-    setResult(null)
     try {
       const blob =
         mode === 'last'
@@ -363,8 +361,8 @@ export default function VideoFrameGrabberTool() {
         {result && (
           <ResultPreview
             key={result.filename + result.blob.size}
-            kind={processing ? 'loading' : 'image'}
-            blob={processing ? undefined : result.blob}
+            kind="image"
+            blob={result.blob}
             filename={result.filename}
             hint={
               fmt === 'png'

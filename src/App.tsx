@@ -129,7 +129,7 @@ function Shell() {
         </div>
 
         {/* Workspace */}
-        <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6 md:pt-3">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 md:p-6 md:pt-3">
           {activeId.startsWith('playground-') ? (
             <Suspense
               fallback={
