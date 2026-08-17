@@ -226,6 +226,17 @@ export default function VideoSlicerTool() {
     }
   }, [start, end, info])
 
+  // Revoke the preview object URL on unmount so a loaded video's blob is
+  // released from memory when the user switches to another tool (not just on
+  // Clear / re-select). A useRef mirror avoids a stale-closure of `previewUrl`.
+  const previewUrlRef = useRef<string | null>(null)
+  useEffect(() => {
+    previewUrlRef.current = previewUrl
+  }, [previewUrl])
+  useEffect(() => () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+  }, [])
+
   // ── Preview controls ────────────────────────────────
   const togglePlay = () => {
     const v = videoRef.current

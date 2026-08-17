@@ -160,6 +160,17 @@ export default function VideoFrameGrabberTool() {
     toast.push('Cleared', { variant: 'info' })
   }
 
+  // Revoke the source object URL on unmount (switch tool) so the loaded video
+  // blob is released from memory — not just on re-select / clear. A useRef
+  // mirror avoids a stale closure of `srcUrl`.
+  const srcUrlRef = useRef<string | null>(null)
+  useEffect(() => {
+    srcUrlRef.current = srcUrl
+  }, [srcUrl])
+  useEffect(() => () => {
+    if (srcUrlRef.current) URL.revokeObjectURL(srcUrlRef.current)
+  }, [])
+
   // ── Derived ─────────────────────────────────────────
   const hasVideo = !!file && !!info && status === 'ok'
   const canGrab = hasVideo && !processing
