@@ -1205,7 +1205,7 @@ export function jsonLdFor(toolId) {
   }
 
   const seo = TOOL_SEO[toolId]
-  const result = {
+  const baseForTool = {
     ...base,
     name: seo.h1,
     url: `${SITE_URL}/${seo.path}/`,
@@ -1213,12 +1213,15 @@ export function jsonLdFor(toolId) {
     isPartOf: { '@type': 'WebApplication', name: 'Paimon Tools', url: `${SITE_URL}/` },
   }
 
+  const schemas = [baseForTool]
   const faqLd = faqLdFor(toolId)
-  if (faqLd) result.faq = faqLd
+  if (faqLd) schemas.push(faqLd)
   const howToLd = howToLdFor(toolId)
-  if (howToLd) result.howTo = howToLd
+  if (howToLd) schemas.push(howToLd)
 
-  return result
+  return schemas.length === 1
+    ? schemas[0]
+    : { '@context': 'https://schema.org', '@graph': schemas }
 }
 
 /** Crawlable noscript body for a tool (or home) page. */
