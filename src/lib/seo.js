@@ -852,6 +852,7 @@ print(json.dumps(data, indent=2))</pre>
   },
 
   'video-audio-extract': {
+    title: 'Video Audio Extractor - Extract Audio from Video Online | Paimon Tools',
     description:
       'Extract the audio track from an MP4/MOV video in your browser, free. Keep it losslessly (stream-copied to M4A, no quality loss) or export as MP3, Opus, or Ogg. 100% client-side, no uploads.',
     path: 'video-audio-extract',
@@ -892,6 +893,7 @@ print(json.dumps(data, indent=2))</pre>
   },
 
   'video-audio-mix': {
+    title: 'Video Audio Mixer - Add Audio to Video Online | Paimon Tools',
     description:
       'Add or replace the audio track on an MP4 video in your browser, free. Mux an MP3, M4A, AAC, Opus or WAV file onto your video — the video stream is kept losslessly (never re-encoded). 100% client-side, no uploads.',
     path: 'video-audio-mix',
@@ -934,6 +936,7 @@ print(json.dumps(data, indent=2))</pre>
   },
 
   'video-mute': {
+    title: 'Video Muter - Remove Audio from Video Online, Lossless | Paimon Tools',
     description:
       'Remove the audio track from an MP4/MOV video in your browser, free. Strip the sound while keeping the video losslessly (stream-copied, never re-encoded) — a clean silent video. Supports H.264. 100% client-side, no uploads.',
     path: 'video-mute',
@@ -976,6 +979,7 @@ print(json.dumps(data, indent=2))</pre>
   },
 
   'video-frame-grabber': {
+    title: 'Video Frame Grabber - Extract Frames & Get Last Frame Online | Paimon Tools',
     description:
       'Extract any frame from a video, or grab its very last frame — 100% in your browser, free, no upload, no ffmpeg, no servers. Save as PNG or JPEG. Instant and private.',
     path: 'video-frame-grabber',
