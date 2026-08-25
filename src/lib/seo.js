@@ -795,15 +795,20 @@ print(json.dumps(data, indent=2))</pre>
   <li>Instant slicing — copies only the samples in range, so short clips export near-instantly</li>
   <li>Frame-accurate range control: sliders, timestamp inputs, or set from playback position</li>
   <li>In-browser preview with play, pause, and cut-preview</li>
-  <li>100% client-side (ffmpeg.wasm) — your video is never uploaded anywhere</li>
-</ul>
-<p><strong>Related:</strong> <a href="video-merge/">Video Merger</a> — combine multiple clips into one video.</p>
-<h2>FAQs</h2>
-<p><strong>Does it re-encode my video?</strong> No. Slicing uses stream copy — the original encoded frames are kept intact. There is no quality loss.</p>
-<p><strong>What formats are supported?</strong> MP4 and MOV (H.264/AAC) are supported for lossless slicing. Other formats may be added later.</p>
-<p><strong>Is my video uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
-<p><a href="../">← Back to all Paimon Tools</a></p>`},
-
+    <li>100% client-side (ffmpeg.wasm) — your video is never uploaded anywhere</li>
+  </ul>
+  <p><strong>Related:</strong> <a href="video-merge/">Video Merger</a> — combine multiple clips into one video.</p>
+  <h2>FAQs</h2>
+  <p><strong>Does it re-encode my video?</strong> No. Slicing uses stream copy — the original encoded frames are kept intact. There is no quality loss.</p>
+  <p><strong>What formats are supported?</strong> MP4 and MOV (H.264/AAC) are supported for lossless slicing. Other formats may be added later.</p>
+  <p><strong>Is my video uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
+  <p><a href="../">← Back to all Paimon Tools</a></p>`,
+      faq: [
+        { q: 'Does it re-encode my video?', a: 'No. Slicing uses stream copy — the original encoded frames are kept intact. There is no quality loss.' },
+        { q: 'What formats are supported?', a: 'MP4 and MOV (H.264/AAC) are supported for lossless slicing. Other formats may be added later.' },
+        { q: 'Is my video uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.' },
+      ],
+  },
 
   'video-merge': {
     title: 'Video Merger - Combine MP4 Videos Online, Lossless | Paimon Tools',
@@ -837,9 +842,16 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>How much memory does it use?</strong> About twice your total file size (inputs + output) in your browser's memory. Very large batches may warn you first.</p>
 <p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your videos never leave your device.</p>
 <p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — trim or cut a clip before merging.</p>
-<p><a href="../">← Back to all Paimon Tools</a></p>`},
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Does merging re-encode my videos?', a: 'No. When your clips share the same resolution, frame rate and codec, the tool concatenates the encoded streams losslessly — no quality loss.' },
+      { q: 'Can I merge videos with different resolutions?', a: 'Not losslessly. The tool checks each file specs and blocks the merge with a clear message if they differ, so your output is never corrupt.' },
+      { q: 'How much memory does it use?', a: 'About twice your total file size (inputs + output) in your browser memory. Very large batches may warn you first.' },
+      { q: 'Are my videos uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your videos never leave your device.' },
+    ],
+  },
+
   'video-audio-extract': {
-    title: 'Video Audio Extractor - Extract Audio from Video Online | Paimon Tools',
     description:
       'Extract the audio track from an MP4/MOV video in your browser, free. Keep it losslessly (stream-copied to M4A, no quality loss) or export as MP3, Opus, or Ogg. 100% client-side, no uploads.',
     path: 'video-audio-extract',
@@ -870,9 +882,16 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>What formats can I export?</strong> M4A (lossless), MP3, Opus, and Vorbis/Ogg.</p>
 <p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
 <p><strong>Related:</strong> <a href="video-audio-mix/">Video Audio Mixer</a> — add music to a video, <a href="video-slice/">Video Slicer</a> — trim a clip.</p>
-<p><a href="../">← Back to all Paimon Tools</a></p>`},
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Does it re-encode my audio?', a: 'Only if you choose a conversion format. The default M4A (lossless, as-is) stream-copies the original audio without re-encoding, so there is no quality loss.' },
+      { q: 'Why can I not get a lossless MP3?', a: 'MP4 files do not carry an MP3 audio track — the original audio is usually AAC. To get an MP3 you must convert (re-encode) it, which changes the file but is still fast.' },
+      { q: 'What formats can I export?', a: 'M4A (lossless), MP3, Opus, and Vorbis/Ogg.' },
+      { q: 'Are my videos uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.' },
+    ],
+  },
+
   'video-audio-mix': {
-    title: 'Video Audio Mixer - Add Audio to Video Online | Paimon Tools',
     description:
       'Add or replace the audio track on an MP4 video in your browser, free. Mux an MP3, M4A, AAC, Opus or WAV file onto your video — the video stream is kept losslessly (never re-encoded). 100% client-side, no uploads.',
     path: 'video-audio-mix',
@@ -904,9 +923,17 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>What if video and audio are different lengths?</strong> The output is cut at the shorter of the two (-shortest), so the combined file stays in sync.</p>
 <p><strong>Are my files uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your files never leave your device.</p>
 <p><strong>Related:</strong> <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out, <a href="video-mute/">Video Muter</a> — remove the sound, and <a href="video-merge/">Video Merger</a> — combine video clips.</p>
-<p><a href="../">← Back to all Paimon Tools</a></p>`},
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Is my video re-encoded?', a: 'No. The video stream is always stream-copied (-c:v copy), so the picture quality is identical. Only the incoming audio may be re-encoded to AAC for MP4 compatibility.' },
+      { q: 'Can I replace the existing audio?', a: 'Yes. The tool takes the video stream from your video file and the audio stream from your audio file, replacing whatever sound the video had.' },
+      { q: 'What audio formats can I use?', a: 'MP3, M4A, AAC, Opus, Vorbis/Ogg, WAV, FLAC and more. AAC/M4A input is muxed fully losslessly; other formats are converted to AAC.' },
+      { q: 'What if video and audio are different lengths?', a: 'The output is cut at the shorter of the two (-shortest), so the combined file stays in sync.' },
+      { q: 'Are my files uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your files never leave your device.' },
+    ],
+  },
+
   'video-mute': {
-    title: 'Video Muter - Remove Audio from Video Online, Lossless | Paimon Tools',
     description:
       'Remove the audio track from an MP4/MOV video in your browser, free. Strip the sound while keeping the video losslessly (stream-copied, never re-encoded) — a clean silent video. Supports H.264. 100% client-side, no uploads.',
     path: 'video-mute',
@@ -938,9 +965,17 @@ print(json.dumps(data, indent=2))</pre>
 <p><strong>What formats does it support?</strong> H.264 video in MP4/MOV. Other video codecs are shown as unsupported rather than being silently re-encoded.</p>
 <p><strong>Are my videos uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.</p>
 <p><strong>Related:</strong> <a href="video-audio-mix/">Video Audio Mixer</a> — add your own sound after muting, and <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out instead.</p>
-<p><a href="../">← Back to all Paimon Tools</a></p>`},
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Is my video re-encoded?', a: 'No. The video stream is stream-copied, so the picture quality is identical. Only the audio is removed.' },
+      { q: 'What is the difference from the Audio Extractor?', a: 'The Extractor pulls the audio out and gives it to you as a separate file; the Muter removes the audio from the video entirely so you get a silent video.' },
+      { q: 'What if my video already has no audio?', a: 'The tool detects this and disables the button — there is nothing to remove.' },
+      { q: 'What formats does it support?', a: 'H.264 video in MP4/MOV. Other video codecs are shown as unsupported rather than being silently re-encoded.' },
+      { q: 'Are my videos uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your video never leaves your device.' },
+    ],
+  },
+
   'video-frame-grabber': {
-    title: 'Video Frame Grabber - Extract Frames & Get Last Frame Online | Paimon Tools',
     description:
       'Extract any frame from a video, or grab its very last frame — 100% in your browser, free, no upload, no ffmpeg, no servers. Save as PNG or JPEG. Instant and private.',
     path: 'video-frame-grabber',
