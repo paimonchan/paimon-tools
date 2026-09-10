@@ -12,13 +12,45 @@ export interface JsonOpts {
   lenient?: boolean
 }
 
+const PYTHON_HINTS: { re: RegExp; fix: string }[] = [
+  { re: /\bTrue\b/, fix: 'true' },
+  { re: /\bFalse\b/, fix: 'false' },
+  { re: /\bNone\b/, fix: 'null' },
+  { re: /\bNaN\b/, fix: 'null' },
+  { re: /\bInfinity\b/, fix: 'a very large number' },
+]
+
+/**
+ * Re-throw a JSON parse failure with an actionable hint when the text contains
+ * Python-style literals (True/False/None/NaN/Infinity) — the most common
+ * paste mistake. Passes through any other error message unchanged.
+ */
+function hintPythonLiterals(text: string, original: Error): never {
+  const hits = PYTHON_HINTS.filter((h) => h.re.test(text))
+  if (hits.length > 0) {
+    const suggestions = hits.map((h) => `\`${h.fix}\``).join(', ')
+    const found = hits.map((h) => h.re.source.replace(/\\b/g, '')).join(', ')
+    throw new Error(
+      `Looks like Python-style values (${found}), which are not valid JSON. ` +
+        `Replace them with ${suggestions}.` +
+        `\n\nOriginal error: ${original.message}`,
+    )
+  }
+  throw original
+}
+
 /**
  * Parse a JSON string. In lenient mode (JSON5) it accepts single quotes,
  * trailing commas, comments, and unquoted keys.
  */
 export function parseJson(text: string, { lenient = false }: JsonOpts = {}): unknown {
-  if (lenient) return JSON5.parse(text)
-  return JSON.parse(text)
+  try {
+    if (lenient) return JSON5.parse(text)
+    return JSON.parse(text)
+  } catch (err) {
+    const message = err instanceof Error ? err : new Error(String(err))
+    return hintPythonLiterals(text, message)
+  }
 }
 
 /**
