@@ -484,11 +484,40 @@ export interface MuxResult {
   blob: Blob
   size: number
   durationMs: number
+  /** True when mix mode actually blended the video's own audio track. */
+  mixedOriginalAudio: boolean
 }
 
 export interface MuxInput {
   video: File
   audio: File
+}
+
+/**
+ * Probe a file already written to the ffmpeg MEMFS and return the audio codec
+ * (lowercased) or null when it has no audio stream. `-i` with no output makes
+ * ffmpeg error out, but its stderr lists the streams — that's what we parse.
+ */
+async function probeAudioCodecFromMemfs(
+  ffmpeg: FFmpeg,
+  fsName: string,
+): Promise<string | null> {
+  const logLines: string[] = []
+  const onLog = ({ type, message }: { type: string; message: string }) => {
+    if (type === 'stderr' && message) logLines.push(message)
+  }
+  ffmpeg.on('log', onLog)
+  try {
+    await ffmpeg.exec(['-i', fsName]) // errors (no output) — expected
+  } catch {
+    /* expected */
+  } finally {
+    ffmpeg.off('log', onLog)
+  }
+
+  const audioLine = logLines.join('\n').match(/Stream.*?: Audio: .*/)?.[0] ?? ''
+  const match = audioLine.match(/Audio:\s*(\w+)/)
+  return match ? match[1].toLowerCase() : null
 }
 
 /**
@@ -502,47 +531,51 @@ export async function detectAudioCodec(file: File): Promise<string | null> {
   const fsName = 'detect_audio.bin'
   await ffmpeg.deleteFile(fsName).catch(() => {})
   await ffmpeg.writeFile(fsName, await fetchFile(file))
-
-  const logLines: string[] = []
-  const onLog = ({ type, message }: { type: string; message: string }) => {
-    if (type === 'stderr' && message) logLines.push(message)
-  }
-  ffmpeg.on('log', onLog)
   try {
-    await ffmpeg.exec(['-i', fsName]) // errors (no output) — expected
-  } catch {
-    /* expected */
+    return await probeAudioCodecFromMemfs(ffmpeg, fsName)
   } finally {
-    ffmpeg.off('log', onLog)
+    await ffmpeg.deleteFile(fsName).catch(() => {})
   }
-  await ffmpeg.deleteFile(fsName).catch(() => {})
-
-  const audioLine = logLines.join('\n').match(/Stream.*?: Audio: .*/)?.[0] ?? ''
-  const match = audioLine.match(/Audio:\s*(\w+)/)
-  return match ? match[1].toLowerCase() : null
 }
 
 /**
  * Mux an audio track onto a video, 100% client-side via ffmpeg.wasm.
  *
- * - audio codec copy-compatible (e.g. AAC): fully lossless
- *   `-map 0:v -map 1:a -c:v copy -c:a copy -shortest`
- * - otherwise: video preserved, audio transcoded to AAC
- *   `-map 0:v -map 1:a -c:v copy -c:a aac -b:a <k>k -shortest`
+ * Two layouts:
+ * - `replace` (default) — the incoming audio becomes the only audio track:
+ *   `-map 0:v -map 1:a -c:v copy -c:a copy|aac -shortest`
+ * - `mix` — the video's own audio is blended with the incoming track:
+ *   `[0:a]volume=<orig>[a0];[1:a]volume=<new>[a1];[a0][a1]amix=inputs=2:…[a]`
+ *   Mixing means the audio must be re-encoded to AAC (filters can't stream-copy).
+ *   If the video has no audio track, the incoming audio is added on its own.
  *
- * `-map` is explicit so ffmpeg always takes the video from source 0 and the
- * audio from source 1 (never picks the wrong track from the video file).
+ * The video stream is never re-encoded in either layout. `-map` is explicit so
+ * ffmpeg always takes the video from source 0 and the audio from source 1.
  */
 export async function muxAudioToVideo(
   input: MuxInput,
   opts: {
     mode: 'copy' | 'transcode'
+    /** 'replace' swaps the audio (default); 'mix' blends it with the original. */
+    layout?: 'replace' | 'mix'
     aacBitrateK?: number
+    /** Mix-mode volume for the video's original audio, 0..1 (default 1). */
+    originalVolume?: number
+    /** Mix-mode volume for the incoming audio, 0..1 (default 0.5). */
+    newVolume?: number
     onProgress?: (progress: number) => void
     onPhase?: (phase: MuxPhase) => void
   },
 ): Promise<MuxResult> {
-  const { onProgress, onPhase, mode, aacBitrateK } = opts
+  const {
+    onProgress,
+    onPhase,
+    mode,
+    aacBitrateK,
+    layout = 'replace',
+    originalVolume = 1,
+    newVolume = 0.5,
+  } = opts
   const started = performance.now()
   onPhase?.('loading')
   const ffmpeg = await getFFmpeg()
@@ -560,14 +593,49 @@ export async function muxAudioToVideo(
     await ffmpeg.writeFile(vName, await fetchFile(input.video))
     await ffmpeg.writeFile(aName, await fetchFile(input.audio))
 
-    const args = ['-i', vName, '-i', aName, '-map', '0:v', '-map', '1:a']
-    if (mode === 'copy') {
-      args.push('-c:v', 'copy', '-c:a', 'copy')
-    } else {
+    const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+    let args: string[]
+    let mixedOriginalAudio = false
+
+    if (layout === 'mix') {
+      onPhase?.('detecting')
+      const originalCodec = await probeAudioCodecFromMemfs(ffmpeg, vName)
+      onPhase?.('muxing')
+      const newVol = clamp01(newVolume)
+
+      if (originalCodec) {
+        // Blend original + incoming. normalize=0 keeps the chosen levels honest
+        // (amix would otherwise divide by the input count).
+        args = [
+          '-i', vName, '-i', aName,
+          '-filter_complex',
+          `[0:a]volume=${clamp01(originalVolume)}[a0];` +
+            `[1:a]volume=${newVol}[a1];` +
+            `[a0][a1]amix=inputs=2:duration=shortest:dropout_transition=0:normalize=0[a]`,
+          '-map', '0:v', '-map', '[a]',
+        ]
+        mixedOriginalAudio = true
+      } else {
+        // No audio in the video — just add the incoming track at the chosen volume.
+        args = [
+          '-i', vName, '-i', aName,
+          '-filter_complex', `[1:a]volume=${newVol}[a]`,
+          '-map', '0:v', '-map', '[a]',
+        ]
+      }
       args.push('-c:v', 'copy', '-c:a', 'aac')
       if (aacBitrateK) args.push('-b:a', `${aacBitrateK}k`)
+      args.push('-shortest', outName)
+    } else {
+      args = ['-i', vName, '-i', aName, '-map', '0:v', '-map', '1:a']
+      if (mode === 'copy') {
+        args.push('-c:v', 'copy', '-c:a', 'copy')
+      } else {
+        args.push('-c:v', 'copy', '-c:a', 'aac')
+        if (aacBitrateK) args.push('-b:a', `${aacBitrateK}k`)
+      }
+      args.push('-shortest', outName)
     }
-    args.push('-shortest', outName)
 
     await ffmpeg.exec(args)
 
@@ -579,6 +647,7 @@ export async function muxAudioToVideo(
       blob,
       size: blob.size,
       durationMs: performance.now() - started,
+      mixedOriginalAudio,
     }
   } finally {
     if (onProgress) ffmpeg.off('progress', progressCb)

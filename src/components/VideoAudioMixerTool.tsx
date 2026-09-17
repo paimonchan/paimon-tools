@@ -1,13 +1,14 @@
 /**
- * VideoAudioMixerTool - mux an audio track onto a video, in-browser.
+ * VideoAudioMixerTool - put an audio track onto a video, in-browser.
  *
  * Lazy-loaded ref tool. Uses ffmpeg.wasm (single-threaded core) to take a
- * video + an audio file and produce one MP4:
- *   - audio codec copy-compatible (AAC): fully lossless
- *     -map 0:v -map 1:a -c:v copy -c:a copy -shortest
- *   - otherwise: video preserved, audio transcoded to AAC
- *   -map 0:v -map 1:a -c:v copy -c:a aac -b:a k -shortest
- * The video stream is never re-encoded. 100% client-side.
+ * video + an audio file and produce one MP4. Two layouts:
+ *   - replace: the incoming audio becomes the only track
+ *       -map 0:v -map 1:a -c:v copy -c:a copy|aac -shortest
+ *   - mix: the video's own audio is blended with the incoming track
+ *       [0:a]volume=<orig>[a0];[1:a]volume=<new>[a1];[a0][a1]amix=inputs=2…[a]
+ *       (mixing re-encodes audio to AAC — filters can't stream-copy)
+ * The video stream is never re-encoded in either layout. 100% client-side.
  */
 
 import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
@@ -26,6 +27,7 @@ import {
   formatBytes,
   makeMuxFilename,
   resolveMuxMode,
+  type MuxLayout,
 } from '../engine/video-audio-mux'
 import { useToast } from '../stores/toast-store'
 import StatusBar from './StatusBar'
@@ -93,9 +95,16 @@ export default function VideoAudioMixerTool() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
-  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null)
+  const [result, setResult] = useState<{
+    blob: Blob
+    filename: string
+    mixedOriginalAudio: boolean
+  } | null>(null)
   const [muxPhase, setMuxPhase] = useState<'loading' | 'detecting' | 'muxing'>('detecting')
   const [aacBitrateK, setAacBitrateK] = useState(192)
+  const [layout, setLayout] = useState<MuxLayout>('replace')
+  const [originalVolume, setOriginalVolume] = useState(100)
+  const [newVolume, setNewVolume] = useState(50)
 
   const videoInputRef = useRef<HTMLInputElement>(null)
   const audioInputRef = useRef<HTMLInputElement>(null)
@@ -169,15 +178,20 @@ export default function VideoAudioMixerTool() {
 
   // ── Derived ─────────────────────────────────────────
   const detectedMode = audio ? resolveMuxMode(audio.codec) : 'transcode'
-  const isLosslessCopy = detectedMode === 'copy'
+  // Lossless stream-copy only applies to Replace — mixing always re-encodes audio.
+  const isLosslessCopy = layout === 'replace' && detectedMode === 'copy'
+  const audioIsTranscoded = layout === 'mix' || !isLosslessCopy
   const ready = !!video && !!audio && !processing
   const estimate = video && audio
-    ? estimateMux({
-        videoDurationSec: video.duration,
-        audioDurationSec: audio.duration,
-        videoSizeBytes: video.size,
-        audioSizeBytes: audio.size,
-      })
+    ? estimateMux(
+        {
+          videoDurationSec: video.duration,
+          audioDurationSec: audio.duration,
+          videoSizeBytes: video.size,
+          audioSizeBytes: audio.size,
+        },
+        { audioMode: isLosslessCopy ? 'copy' : 'transcode', aacBitrateK },
+      )
     : null
 
   const handleMix = async () => {
@@ -192,18 +206,31 @@ export default function VideoAudioMixerTool() {
         { video: video!.file, audio: audio!.file },
         {
           mode: isLosslessCopy ? 'copy' : 'transcode',
-          aacBitrateK: isLosslessCopy ? undefined : aacBitrateK,
+          layout,
+          aacBitrateK: audioIsTranscoded ? aacBitrateK : undefined,
+          originalVolume: originalVolume / 100,
+          newVolume: newVolume / 100,
           onProgress: (p) => setProgress(p),
           onPhase: (ph) => setMuxPhase(ph),
         },
       )
-      const filename = makeMuxFilename(video!.file.name)
-      setResult({ blob: result.blob, filename })
+      const filename = makeMuxFilename(video!.file.name, layout)
+      setResult({
+        blob: result.blob,
+        filename,
+        mixedOriginalAudio: result.mixedOriginalAudio,
+      })
       setStatus('ok')
+      const detail =
+        layout === 'mix'
+          ? result.mixedOriginalAudio
+            ? 'original + new audio'
+            : 'new audio added (video had none)'
+          : isLosslessCopy
+            ? 'lossless'
+            : 'video preserved'
       toast.push(
-        `Muxed · ${formatBytes(result.size)} · ${
-          isLosslessCopy ? 'lossless' : 'video preserved'
-        } — check preview`,
+        `${layout === 'mix' ? 'Mixed' : 'Replaced'} · ${formatBytes(result.size)} · ${detail} — check preview`,
         { variant: 'success' },
       )
     } catch (err) {
@@ -363,18 +390,54 @@ export default function VideoAudioMixerTool() {
                 <FileVideo className="h-4 w-4 text-honey-400" />,
               )}
               {dropzone(
-                'audio', 'Drop audio file', 'MP3, M4A, AAC, Opus, WAV… · added as the new sound.',
+                'audio', 'Drop audio file', 'MP3, M4A, AAC, Opus, WAV… · replaces or blends with the original.',
                 ACCEPT_AUDIO, audioInputRef, audio, onSelectAudio,
                 <Music className="h-4 w-4 text-honey-400" />,
               )}
             </div>
             </div>
 
-            {/* Mode + bitrate */}
+            {/* Mode + volumes + bitrate */}
             {audio && video && !processing && (
               <div className="rounded-lg border border-ink-800 bg-ink-900/40 p-3">
-                <div className="mb-2 text-[11px]">
-                  {isLosslessCopy ? (
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-500 uppercase tracking-wider text-ink-500">
+                    Audio mode
+                  </span>
+                  <div className="inline-flex rounded-md border border-ink-700 p-0.5">
+                    <button
+                      onClick={() => setLayout('replace')}
+                      title="Swap the video's audio for the file you dropped"
+                      className={`rounded px-2.5 py-1 text-[11px] font-500 transition-colors ${
+                        layout === 'replace'
+                          ? 'bg-honey-400/15 text-honey-200'
+                          : 'text-ink-400 hover:text-ink-200'
+                      }`}
+                    >
+                      Replace
+                    </button>
+                    <button
+                      onClick={() => setLayout('mix')}
+                      title="Keep the original sound and blend the new audio with it"
+                      className={`rounded px-2.5 py-1 text-[11px] font-500 transition-colors ${
+                        layout === 'mix'
+                          ? 'bg-honey-400/15 text-honey-200'
+                          : 'text-ink-400 hover:text-ink-200'
+                      }`}
+                    >
+                      Mix
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-[11px]">
+                  {layout === 'mix' ? (
+                    <span className="text-honey-300">
+                      <strong>Keeps the original sound</strong> — your video's own audio is blended
+                      with the new track at the levels below. Mixing needs the audio re-encoded to
+                      AAC; the video stays lossless.
+                    </span>
+                  ) : isLosslessCopy ? (
                     <span className="text-emerald-400">
                       <strong>Fully lossless</strong> — your audio ({audio.codec}) is copy-compatible
                       with MP4, so both video &amp; audio are preserved as-is. No re-encode.
@@ -387,8 +450,49 @@ export default function VideoAudioMixerTool() {
                     </span>
                   )}
                 </div>
-                {!isLosslessCopy && (
-                  <div className="flex flex-wrap items-center gap-2">
+
+                {layout === 'mix' && (
+                  <div className="mt-2.5 space-y-1.5">
+                    <label className="flex items-center gap-2 text-[11px] text-ink-400">
+                      <span className="w-28 shrink-0">Original audio</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={originalVolume}
+                        onChange={(e) => setOriginalVolume(Number(e.target.value))}
+                        className="h-1 flex-1 accent-honey-400"
+                      />
+                      <span className="w-10 shrink-0 text-right tabular-nums text-ink-300">
+                        {originalVolume}%
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 text-[11px] text-ink-400">
+                      <span className="w-28 shrink-0">New audio</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={newVolume}
+                        onChange={(e) => setNewVolume(Number(e.target.value))}
+                        className="h-1 flex-1 accent-honey-400"
+                      />
+                      <span className="w-10 shrink-0 text-right tabular-nums text-ink-300">
+                        {newVolume}%
+                      </span>
+                    </label>
+                    {originalVolume + newVolume > 100 && (
+                      <p className="text-[10px] text-amber-400/90">
+                        Combined levels above 100% can clip — lower one if the result sounds harsh.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {audioIsTranscoded && (
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
                     <label htmlFor="aac-bit" className="text-[11px] text-ink-500">
                       Audio AAC bitrate
                     </label>
@@ -445,9 +549,9 @@ export default function VideoAudioMixerTool() {
                     <Upload className="h-4 w-4" />
                     {!video && !audio
                       ? 'Add a video + audio to start'
-                      : isLosslessCopy
-                        ? 'Mix (lossless)'
-                        : 'Mix'}
+                      : layout === 'mix'
+                        ? 'Mix & Download'
+                        : 'Replace & Download'}
                   </>
                 )}
               </button>
@@ -460,8 +564,16 @@ export default function VideoAudioMixerTool() {
                 blob={processing ? undefined : result.blob}
                 filename={result.filename}
                 phaseLabel={processing ? (muxPhase === 'loading' ? 'Preparing engine…' : muxPhase === 'detecting' ? 'Preparing engine…' : `Muxing… ${Math.round(progress)}%`) : undefined}
-                hint={isLosslessCopy ? 'Video + audio muxed losslessly.' : 'Video stream preserved, audio re-encoded to AAC.'}
-                reRunLabel="Mix again"
+                hint={
+                  layout === 'mix'
+                    ? result.mixedOriginalAudio
+                      ? 'Original audio blended with the new track — video untouched.'
+                      : 'New audio added — the video had no audio track.'
+                    : isLosslessCopy
+                      ? 'Video + audio muxed losslessly.'
+                      : 'Video stream preserved, audio re-encoded to AAC.'
+                }
+                reRunLabel={layout === 'mix' ? 'Mix again' : 'Replace again'}
                 onReRun={() => { setResult(null); handleMix() }}
               />
             ) : null}

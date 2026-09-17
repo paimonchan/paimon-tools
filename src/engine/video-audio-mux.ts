@@ -8,6 +8,9 @@
 
 export type MuxAudioMode = 'copy' | 'transcode'
 
+/** How the incoming audio relates to the video's own audio track. */
+export type MuxLayout = 'replace' | 'mix'
+
 /** Audio codecs we can stream-copy into an MP4 with full confidence.
  * Restricted to AAC (the well-tested, universally-playable case). Other
  * formats (MP3, Opus, WAV, FLAC…) are transcoded to AAC so the video stays
@@ -43,17 +46,24 @@ export interface MuxEstimate {
 
 /**
  * Estimate the muxed output. Video stream is preserved (size ≈ video size);
- * audio is either copied (≈ audio size) or re-encoded to AAC (estimate).
- * Output duration = shortest of the two inputs.
+ * audio is either copied (≈ audio size) or re-encoded to AAC at the chosen
+ * bitrate. Output duration = shortest of the two inputs.
  */
-export function estimateMux(stats: MuxInputStats): MuxEstimate {
+export function estimateMux(
+  stats: MuxInputStats,
+  opts: { audioMode?: MuxAudioMode; aacBitrateK?: number } = {},
+): MuxEstimate {
   const shorter =
     stats.videoDurationSec <= stats.audioDurationSec ? 'video' : 'audio'
   const durationSec = Math.min(stats.videoDurationSec, stats.audioDurationSec)
 
-  // Conservatively estimate AAC output for a mono 44.1k stream at 128 kbps.
+  // Copied audio keeps its original size; re-encoded audio ≈ bitrate × duration.
   const audioOutBytes =
-    durationSec > 0 ? Math.round((128 * 1000 * durationSec) / 8) : 0
+    opts.audioMode === 'copy'
+      ? stats.audioSizeBytes
+      : durationSec > 0
+        ? Math.round(((opts.aacBitrateK ?? 128) * 1000 * durationSec) / 8)
+        : 0
   const sizeBytes = stats.videoSizeBytes + audioOutBytes
 
   return { shorter, durationSec, sizeBytes }
@@ -68,9 +78,13 @@ export function formatBytes(bytes: number): string {
   return `${val.toFixed(val >= 100 ? 0 : val >= 10 ? 1 : 2)} ${units[i]}`
 }
 
-/** Default output filename: "<video-base>-mixed.mp4". */
-export function makeMuxFilename(videoName: string): string {
+/**
+ * Output filename derived from the video: "<video-base>-mixed.mp4" when the
+ * audio was blended with the original, "<video-base>-replaced.mp4" when the
+ * original audio was swapped out. Keeps the name honest about what happened.
+ */
+export function makeMuxFilename(videoName: string, layout: MuxLayout = 'replace'): string {
   const dot = videoName.lastIndexOf('.')
   const base = dot > 0 ? videoName.slice(0, dot) : videoName
-  return `${base}-mixed.mp4`
+  return `${base}-${layout === 'mix' ? 'mixed' : 'replaced'}.mp4`
 }
