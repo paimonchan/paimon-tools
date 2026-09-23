@@ -747,6 +747,116 @@ export async function muteVideo(
   }
 }
 
+// ── Video Resizer (resolution downscale — the one re-encoding operation) ───
+
+export type ResizePhase = 'loading' | 'detecting' | 'encoding'
+
+/** How the source audio survived the resize. */
+export type ResizeAudioMode = 'copy' | 'aac' | 'none'
+
+export interface ResizeResult {
+  blob: Blob
+  size: number
+  durationMs: number
+  audioMode: ResizeAudioMode
+}
+
+/**
+ * Downscale a video to an explicit target size, re-encoding the picture.
+ *
+ * This is the only video operation in the app that cannot stream-copy: the
+ * frames have to be decoded, scaled and re-encoded with libx264. Everything
+ * else here remuxes untouched streams. The single-threaded wasm core makes it
+ * slow (roughly 2-3x the clip length at 720p on a weak machine), which is why
+ * callers must show progress and set expectations up front.
+ *
+ *   ffmpeg -i in.mp4 -vf scale=W:H -c:v libx264 -preset P -crf N \
+ *          -pix_fmt yuv420p [-c:a copy | -c:a aac | -an] \
+ *          -movflags +faststart out.mp4
+ *
+ * Audio is left alone when it's already AAC (stream-copied), converted to AAC
+ * when it isn't, and dropped when there was none. `+faststart` moves the moov
+ * atom to the front so the result plays while it downloads.
+ */
+export async function resizeVideo(
+  file: File,
+  opts: {
+    width: number
+    height: number
+    preset: string
+    crf: number
+    onProgress?: (progress: number) => void
+    onPhase?: (phase: ResizePhase) => void
+  },
+): Promise<ResizeResult> {
+  const { width, height, preset, crf, onProgress, onPhase } = opts
+  const started = performance.now()
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+
+  const fsName = 'resize_in.mp4'
+  const outName = 'resize_out.mp4'
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+    // Probe the source audio so we can copy it untouched when possible.
+    onPhase?.('detecting')
+    const audioCodec = await probeAudioCodecFromMemfs(ffmpeg, fsName)
+    let audioMode: ResizeAudioMode
+    let audioArgs: string[]
+    if (!audioCodec) {
+      audioMode = 'none'
+      audioArgs = ['-an']
+    } else if (audioCodec === 'aac') {
+      audioMode = 'copy'
+      audioArgs = ['-c:a', 'copy']
+    } else {
+      audioMode = 'aac'
+      audioArgs = ['-c:a', 'aac', '-b:a', '128k']
+    }
+
+    onPhase?.('encoding')
+    await ffmpeg.exec([
+      '-i',
+      fsName,
+      '-vf',
+      `scale=${width}:${height}`,
+      '-c:v',
+      'libx264',
+      '-preset',
+      preset,
+      '-crf',
+      String(crf),
+      '-pix_fmt',
+      'yuv420p',
+      ...audioArgs,
+      '-movflags',
+      '+faststart',
+      '-y',
+      outName,
+    ])
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+      audioMode,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all([fsName, outName].map((n) => ffmpeg.deleteFile(n).catch(() => {})))
+  }
+}
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

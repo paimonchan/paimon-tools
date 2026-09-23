@@ -46,6 +46,7 @@ export const HOME_SEO = {
   <li><a href="video-audio-mix/">Video Audio Mixer</a> - add, mix or replace the audio track on a video
   <li><a href="video-mute/">Video Muter</a> - remove the audio track from a video, keep the video lossless
   <li><a href="video-frame-grabber/">Video Frame Grabber</a> - extract any frame from a video, or grab the last frame, as PNG or JPEG
+  <li><a href="video-resize/">Video Resizer</a> - reduce a video's resolution to 720p, 480p or 360p for a much smaller file
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -1021,6 +1022,52 @@ print(json.dumps(data, indent=2))</pre>
       { q: 'Does it use ffmpeg?', a: 'No. This tool grabs the frame directly from the playing video via your browser\'s canvas — no ffmpeg, so it is instant.' },
       { q: 'Can I extract the exact last frame?', a: 'Yes — the "Download last frame" button seeks to the end and captures the final frame.' },
       { q: 'What image formats are supported?', a: 'PNG (lossless) and JPEG (with a quality slider for file size control).' },
+    ],
+  },
+  'video-resize': {
+    title: 'Video Resizer - Reduce Video Resolution Online (720p, 480p) | Paimon Tools',
+    description:
+      'Downscale a video to 1080p, 720p, 480p or 360p in your browser, free — great for shrinking a clip to fit a size limit. Re-encodes on your device, never uploaded, with an honest size and time estimate before you start.',
+    path: 'video-resize',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Resizer - reduce a video\u2019s resolution to 720p or 480p in your browser',
+    h1: 'Video Resizer - Reduce Video Resolution',
+    breadcrumb: 'Video / Video Resizer',
+    bodyHtml: `<h2>Video Resizer - Downscale a Video\u2019s Resolution</h2>
+<p>Shrink a video by lowering its resolution — 1080p, 720p, 480p or 360p — entirely in your browser. This is the tool to reach for when a clip is too big to send: drop it in, pick a resolution, and export a much smaller MP4. Unlike our other video tools, changing resolution means the picture has to be <strong>decoded and re-encoded</strong>, so it runs on your device via ffmpeg.wasm and takes noticeably longer than a trim or a mute. The tool tells you the estimated output size and time before you commit.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4/MOV video (or click to browse)</li>
+  <li>Pick a resolution — the output dimensions are shown as you choose</li>
+  <li>Pick a quality mode: Balanced (recommended), Smallest, or High quality</li>
+  <li>Check the estimated output size and time, then click "Resize"</li>
+  <li>Preview the result and download it</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Real resolution downscaling</strong> — 1080p, 720p, 480p and 360p presets that keep the source aspect ratio (vertical video included)</li>
+  <li><strong>Three quality modes</strong> — Balanced, Smallest, or High quality, mapping to sensible H.264 settings</li>
+  <li><strong>Never upscales</strong> — presets larger than your source are disabled, so the picture can only get sharper, never blurrier</li>
+  <li><strong>Honest estimates</strong> — estimated output size and encoding time before you start, with a progress bar and time remaining</li>
+  <li><strong>Audio preserved</strong> — AAC tracks are copied untouched; other formats are converted to AAC</li>
+  <li>Web-optimised output (faststart) and 100% client-side — your video is never uploaded</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Does this reduce the file size?</strong> Almost always, and often dramatically — a lower resolution means far less picture data to store. The exact saving depends on the footage and on the quality mode you pick.</p>
+<p><strong>Is it lossless?</strong> No, and no tool can be: changing the resolution requires re-encoding the picture. Our <a href="video-slice/">Video Slicer</a>, <a href="video-mute/">Video Muter</a>, and <a href="video-merge/">Video Merger</a> keep video lossless because they only remux streams.</p>
+<p><strong>Will it upscale my video?</strong> No. Resolution options larger than your source are disabled, so a small video never gets blown up.</p>
+<p><strong>Why is it slower than your other video tools?</strong> Because it re-encodes every frame rather than copying streams. Browsers on GitHub Pages can\u2019t use multi-threaded WebAssembly, so the encoder is single-threaded. On a normal laptop it usually takes a small multiple of the clip length — the tool shows you the estimate up front.</p>
+<p><strong>What happens to the audio?</strong> It is kept. An AAC audio track is copied as-is; anything else is converted to AAC so it fits the MP4 container.</p>
+<p><strong>Are my files uploaded?</strong> No. Everything runs locally in your browser. Your video never leaves your device.</p>
+<p><strong>Related:</strong> <a href="video-slice/">Video Slicer</a> — cut it shorter first, <a href="video-mute/">Video Muter</a> — drop the sound, and <a href="video-audio-extract/">Video Audio Extractor</a> — pull the audio out.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Does this reduce the file size?', a: 'Almost always, and often dramatically — a lower resolution means far less picture data to store. The exact saving depends on the footage and the quality mode you pick.' },
+      { q: 'Is it lossless?', a: 'No, and no tool can be: changing the resolution requires re-encoding the picture. Our Video Slicer, Video Muter and Video Merger keep video lossless because they only remux streams.' },
+      { q: 'Will it upscale my video?', a: 'No. Resolution options larger than your source are disabled, so a small video never gets blown up.' },
+      { q: 'Why is it slower than your other video tools?', a: 'Because it re-encodes every frame rather than copying streams. Browsers on GitHub Pages cannot use multi-threaded WebAssembly, so the encoder is single-threaded — the tool shows a time estimate before you start.' },
+      { q: 'What happens to the audio?', a: 'It is kept. An AAC track is copied as-is; anything else is converted to AAC so it fits the MP4 container.' },
+      { q: 'Are my files uploaded?', a: 'No. Everything runs locally in your browser. Your video never leaves your device.' },
     ],
   },
   '404': {

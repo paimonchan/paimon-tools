@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -402,6 +402,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'frame', 'extract frame from video', 'video to image', 'get last frame of video', 'last frame', 'video thumbnail', 'video screenshot', 'frame grabber', 'video snapshot'],
     description:
       'Extract any frame from a video, or download its very last frame — 100% in your browser, no upload, no ffmpeg, no servers. Save as PNG or JPEG. Fully client-side and instant.',
+  },
+  {
+    id: 'video-resize',
+    name: 'Video Resizer',
+    shortName: 'Video Resizer',
+    category: 'Video',
+    type: 'ref',
+    icon: 'scaling',
+    keywords: ['video', 'resize', 'resolution', 'downscale', 'shrink video', 'reduce video size', 'make video smaller', 'compress video', '720p', '480p', 'change video resolution', 'scale video', 'smaller video file'],
+    description:
+      'Downscale a video’s resolution to 1080p, 720p, 480p or 360p in your browser — great for shrinking a clip to fit a size limit. Re-encodes the video (never uploads it) with an honest size and time estimate up front. 100% client-side.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────
