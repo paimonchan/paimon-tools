@@ -857,6 +857,262 @@ export async function resizeVideo(
   }
 }
 
+// ── Image to Video (still image looped over an audio track) ────────────────
+
+export type ImageVideoPhase = 'image' | 'loading' | 'detecting' | 'encoding'
+
+/** How the audio track was handled on the way out. */
+export type ImageVideoAudioMode = 'copy' | 'aac' | 'none'
+
+export interface ComposedImage {
+  blob: Blob
+  width: number
+  height: number
+  /** Source dimensions as the browser sees them (EXIF already applied). */
+  sourceWidth: number
+  sourceHeight: number
+}
+
+/**
+ * Read an image's display dimensions without loading ffmpeg.
+ * EXIF orientation is applied, so a rotated phone photo reports the size the
+ * user actually sees (measured: 400x1200, where ffmpeg's raw read says 1200x400).
+ */
+export async function inspectImage(file: File): Promise<{ width: number; height: number }> {
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  try {
+    if (!bitmap.width || !bitmap.height) throw new Error('That image could not be read.')
+    return { width: bitmap.width, height: bitmap.height }
+  } finally {
+    bitmap.close()
+  }
+}
+
+/**
+ * Read an audio file's duration with a native <audio> element — no ffmpeg, so
+ * dropping a track stays instant. Returns 0 when the metadata never arrives.
+ */
+export async function inspectAudio(file: File): Promise<{ duration: number; size: number }> {
+  const url = URL.createObjectURL(file)
+  try {
+    const duration = await new Promise<number>((resolve) => {
+      const el = document.createElement('audio')
+      el.preload = 'metadata'
+      const done = (value: number) => {
+        el.onloadedmetadata = null
+        el.onerror = null
+        resolve(value)
+      }
+      el.onloadedmetadata = () => {
+        const d = el.duration
+        done(Number.isFinite(d) && d > 0 ? d : 0)
+      }
+      el.onerror = () => done(0)
+      el.src = url
+    })
+    return { duration, size: file.size }
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
+ * Draw an image onto a fixed-size canvas and hand back a PNG.
+ *
+ * Doing this in the browser rather than in ffmpeg buys three things that were
+ * each a verified failure otherwise:
+ *
+ * 1. EXIF rotation. Measured: ffmpeg reads a phone photo tagged orientation=6
+ *    as 1200x400 while every browser (and the user's photo app) shows it as
+ *    400x1200 — feeding the raw file to ffmpeg produces a sideways video.
+ *    `createImageBitmap(..., { imageOrientation: 'from-image' })` applies it.
+ * 2. Format reach. The wasm core cannot decode HEIC (the iPhone default) or
+ *    AVIF at all; the browser usually can, so normalising first widens what
+ *    the tool accepts.
+ * 3. Alpha and geometry. Transparent pixels are flattened onto the background
+ *    and the output is exactly the target size, so H.264 gets clean, even
+ *    dimensions with no scaling filters left to run during the encode.
+ */
+export async function composeImageToCanvas(
+  image: File,
+  opts: { width: number; height: number; fit: 'fit' | 'fill'; background?: string },
+): Promise<ComposedImage> {
+  const { width, height, fit, background = '#000000' } = opts
+  const bitmap = await createImageBitmap(image, { imageOrientation: 'from-image' })
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Could not create a drawing surface for the image.')
+
+    ctx.fillStyle = background
+    ctx.fillRect(0, 0, width, height)
+
+    const { computeDrawPlan } = await import('../engine/image-video')
+    const plan = computeDrawPlan(bitmap.width, bitmap.height, width, height, fit)
+    if (!plan) throw new Error('Could not work out how to fit that image.')
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(bitmap, plan.sx, plan.sy, plan.sw, plan.sh, plan.dx, plan.dy, plan.dw, plan.dh)
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    )
+    if (!blob) throw new Error('Could not export the prepared image.')
+
+    return {
+      blob,
+      width,
+      height,
+      sourceWidth: bitmap.width,
+      sourceHeight: bitmap.height,
+    }
+  } finally {
+    bitmap.close()
+  }
+}
+
+/**
+ * Turn one still image plus an audio track into an MP4.
+ *
+ *   ffmpeg -loop 1 -framerate F -i frame.png -i audio \
+ *          -c:v libx264 -preset veryfast -crf 23 -tune stillimage -r F \
+ *          -t <audio duration> -pix_fmt yuv420p [-c:a copy | -c:a aac] \
+ *          -movflags +faststart out.mp4
+ *
+ * Two deliberate choices, both from measurement:
+ *
+ * - The frame rate is low by default. A still image gains nothing from 30fps;
+ *   1-5fps is 5-21x faster for the same file size.
+ * - The duration is passed explicitly with `-t` instead of relying on
+ *   `-shortest`. At low frame rates `-shortest` produced a 44s file from a 30s
+ *   track; an explicit duration came out exact with 0.00s drift.
+ */
+export async function makeImageVideo(
+  opts: {
+    image: File
+    audio: File
+    audioDurationSec: number
+    width: number
+    height: number
+    fit: 'fit' | 'fill'
+    fps: number
+    onProgress?: (progress: number) => void
+    onPhase?: (phase: ImageVideoPhase) => void
+  },
+): Promise<{
+  blob: Blob
+  size: number
+  durationMs: number
+  audioMode: ImageVideoAudioMode
+  sourceWidth: number
+  sourceHeight: number
+}> {
+  const {
+    image,
+    audio,
+    audioDurationSec,
+    width,
+    height,
+    fit,
+    fps,
+    onProgress,
+    onPhase,
+  } = opts
+  const started = performance.now()
+
+  onPhase?.('image')
+  const composed = await composeImageToCanvas(image, { width, height, fit })
+
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+
+  const frameName = 'iv_frame.png'
+  const audioName = 'iv_audio.bin'
+  const outName = 'iv_out.mp4'
+
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(frameName, await fetchFile(composed.blob))
+    await ffmpeg.writeFile(audioName, await fetchFile(audio))
+
+    // Keep an AAC track untouched; convert anything else so it fits MP4.
+    onPhase?.('detecting')
+    let audioMode: ImageVideoAudioMode = 'copy'
+    let audioArgs: string[] = ['-c:a', 'copy']
+    try {
+      const codec = await detectAudioCodec(audio)
+      if (!codec) {
+        audioMode = 'none'
+        audioArgs = ['-an']
+      } else if (codec !== 'aac') {
+        audioMode = 'aac'
+        audioArgs = ['-c:a', 'aac', '-b:a', '128k']
+      }
+    } catch {
+      // Fall back to transcoding rather than failing the whole job.
+      audioMode = 'aac'
+      audioArgs = ['-c:a', 'aac', '-b:a', '128k']
+    }
+
+    onPhase?.('encoding')
+    const args = [
+      '-loop',
+      '1',
+      '-framerate',
+      String(fps),
+      '-i',
+      frameName,
+      '-i',
+      audioName,
+      '-c:v',
+      'libx264',
+      '-preset',
+      'veryfast',
+      '-crf',
+      '23',
+      '-tune',
+      'stillimage',
+      '-r',
+      String(fps),
+      '-t',
+      audioDurationSec.toFixed(3),
+      '-pix_fmt',
+      'yuv420p',
+      ...audioArgs,
+      '-movflags',
+      '+faststart',
+      '-y',
+      outName,
+    ]
+    await ffmpeg.exec(args)
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+      audioMode,
+      sourceWidth: composed.sourceWidth,
+      sourceHeight: composed.sourceHeight,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all(
+      [frameName, audioName, outName].map((n) => ffmpeg.deleteFile(n).catch(() => {})),
+    )
+  }
+}
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

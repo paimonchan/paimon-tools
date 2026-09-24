@@ -47,6 +47,7 @@ export const HOME_SEO = {
   <li><a href="video-mute/">Video Muter</a> - remove the audio track from a video, keep the video lossless
   <li><a href="video-frame-grabber/">Video Frame Grabber</a> - extract any frame from a video, or grab the last frame, as PNG or JPEG
   <li><a href="video-resize/">Video Resizer</a> - reduce a video's resolution to 720p, 480p or 360p for a much smaller file
+  <li><a href="image-to-video/">Image to Video</a> - turn a photo and an audio track into an MP4, with vertical presets for Reels and Shorts
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -1068,6 +1069,56 @@ print(json.dumps(data, indent=2))</pre>
       { q: 'Why is it slower than your other video tools?', a: 'Because it re-encodes every frame rather than copying streams. Browsers on GitHub Pages cannot use multi-threaded WebAssembly, so the encoder is single-threaded — the tool shows a time estimate before you start.' },
       { q: 'What happens to the audio?', a: 'It is kept. An AAC track is copied as-is; anything else is converted to AAC so it fits the MP4 container.' },
       { q: 'Are my files uploaded?', a: 'No. Everything runs locally in your browser. Your video never leaves your device.' },
+    ],
+  },
+  'image-to-video': {
+    title: 'Image to Video - Add Music to a Photo Online | Paimon Tools',
+    description:
+      'Turn a photo plus a music track into an MP4 in your browser, free. Pick resolution (including vertical for Reels and Shorts), framing and frame rate, then download the video. Upright photos even with EXIF rotation. 100% client-side, nothing uploaded.',
+    path: 'image-to-video',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Image to Video - turn a photo and an audio track into an MP4 in your browser',
+    h1: 'Image to Video - Turn a Photo and Music into a Video',
+    breadcrumb: 'Video / Image to Video',
+    bodyHtml: `<h2>Image to Video - Put Music Behind a Photo</h2>
+<p>Drop in a photo and an audio track, and get an MP4 back where the picture stays on screen for the whole song. Everything happens in your browser — no upload, no account, no watermark. Useful for cover-art videos, lyric backgrounds, a still frame with a voice-over, or just getting a picture onto a platform that only accepts video.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop a photo (PNG, JPEG, WebP, GIF…) or click to browse</li>
+  <li>Drop an audio track (MP3, M4A, WAV, Opus…) — its length sets the video length</li>
+  <li>Choose a resolution: 1080p, 720p, 480p, or vertical for Reels/Shorts</li>
+  <li>Choose framing — <strong>Fit</strong> shows the whole photo with bars, <strong>Fill</strong> crops it to the edges</li>
+  <li>Pick a frame rate, check the size and time estimate, then create</li>
+  <li>Preview the result and download it</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>The whole photo stays visible</strong> — pick Fit (letterboxed, nothing cropped) or Fill (edge to edge)</li>
+  <li><strong>Vertical presets</strong> for TikTok, Reels and Shorts, plus standard landscape sizes</li>
+  <li><strong>Photos come out upright</strong> — EXIF rotation from phone cameras is applied, so a portrait shot is not sideways</li>
+  <li><strong>Choose your frame rate</strong> — a still image doesn't need 30fps, and a lower rate is 5-21x faster with the same file size and the same picture</li>
+  <li>Audio is kept untouched when it is already AAC; other formats are converted</li>
+  <li>MP4 (H.264 + AAC) with faststart — plays everywhere, 100% client-side</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>How long is the video?</strong> Exactly as long as the audio track. Drop a 3-minute song, get a 3-minute video.</p>
+<p><strong>Can I add music to a photo for free?</strong> Yes — no account, no watermark, no upload. It runs on your device.</p>
+<p><strong>Will my photo come out sideways?</strong> No. Phone cameras often store a rotation tag instead of rotating the pixels; that tag is applied here, so the video matches what you see in your photo app.</p>
+<p><strong>Can I use an iPhone HEIC photo?</strong> In Safari, yes — the browser decodes it. In Chrome and Firefox, HEIC is not decodable, so export the photo as JPEG or PNG first. The tool tells you if it can't read a file.</p>
+<p><strong>Why is the frame rate an option, and why is it so low by default?</strong> The picture never changes, so extra frames carry no information — they only cost encoding time. Measured on a still image at 1080p: 30fps took 103 seconds for a 30-second video, while 5fps took 18 seconds and 1fps took 5 seconds, all producing roughly the same file size.</p>
+<p><strong>Can it animate the photo (zoom, pan, motion)?</strong> No — this tool keeps the image still for the length of the audio. Motion effects are not supported.</p>
+<p><strong>Are my files uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your photo and audio never leave your device.</p>
+<p><strong>Related:</strong> <a href="video-resize/">Video Resizer</a> — shrink the result, <a href="video-audio-mix/">Video Audio Mixer</a> — swap the sound on an existing video, and <a href="video-frame-grabber/">Video Frame Grabber</a> — pull a frame out of a video.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'How long is the video?', a: 'Exactly as long as the audio track. Drop a 3-minute song and you get a 3-minute video.' },
+      { q: 'Can I add music to a photo for free?', a: 'Yes — no account, no watermark, no upload. It runs entirely on your device.' },
+      { q: 'Will my photo come out sideways?', a: 'No. Phone cameras often store a rotation tag instead of rotating the pixels; that tag is applied here, so the video matches what you see in your photo app.' },
+      { q: 'Can I use an iPhone HEIC photo?', a: 'In Safari, yes — the browser decodes it. In Chrome and Firefox HEIC cannot be decoded, so export the photo as JPEG or PNG first. The tool tells you if it cannot read a file.' },
+      { q: 'Why is the frame rate an option, and why is it so low by default?', a: 'The picture never changes, so extra frames carry no information — they only cost encoding time. Measured on a still image at 1080p: 30fps took 103 seconds for a 30-second video, while 5fps took 18 seconds and 1fps took 5 seconds, at roughly the same file size.' },
+      { q: 'Can it animate the photo (zoom, pan, motion)?', a: 'No — this tool holds the image still for the length of the audio. Motion effects are not supported.' },
+      { q: 'What resolutions can I pick?', a: '1080p, 720p and 480p landscape, plus 1080p and 720p vertical for TikTok, Reels and Shorts.' },
+      { q: 'Are my files uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your photo and audio never leave your device.' },
     ],
   },
   '404': {

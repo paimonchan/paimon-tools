@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -413,6 +413,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'resize', 'resolution', 'downscale', 'shrink video', 'reduce video size', 'make video smaller', 'compress video', '720p', '480p', 'change video resolution', 'scale video', 'smaller video file'],
     description:
       'Downscale a video’s resolution to 1080p, 720p, 480p or 360p in your browser — great for shrinking a clip to fit a size limit. Re-encodes the video (never uploads it) with an honest size and time estimate up front. 100% client-side.',
+  },
+  {
+    id: 'image-to-video',
+    name: 'Image to Video',
+    shortName: 'Image to Video',
+    category: 'Video',
+    type: 'ref',
+    icon: 'image-play',
+    keywords: ['image to video', 'photo to video', 'picture to video', 'add music to photo', 'photo with music', 'still image video', 'make video from image', 'image music video', 'static video', 'slideshow single image', 'audio to video', 'cover art video', 'lyric video background'],
+    description:
+      'Turn a photo plus an audio track into an MP4 in your browser — the image is shown for the whole song. Pick resolution (including vertical for Reels/Shorts), framing (fit or fill) and frame rate. EXIF-rotated photos come out upright. 100% client-side, nothing uploaded.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

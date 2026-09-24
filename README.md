@@ -81,6 +81,7 @@ commas, and comments are accepted.
 | [Video Muter](https://paimonchan.github.io/paimon-tools/video-mute/) | Remove the audio track from a video, keep video lossless |
 | [Video Frame Grabber](https://paimonchan.github.io/paimon-tools/video-frame-grabber/) | Extract any frame from a video, or grab the last one, as PNG/JPEG (no ffmpeg) |
 | [Video Resizer](https://paimonchan.github.io/paimon-tools/video-resize/) | Reduce a video's resolution to 1080p/720p/480p/360p for a much smaller file |
+| [Image to Video](https://paimonchan.github.io/paimon-tools/image-to-video/) | Turn a photo plus an audio track into an MP4 (landscape or vertical) |
 
 ### 🛠️ Utilities
 
