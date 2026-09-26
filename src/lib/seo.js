@@ -48,6 +48,7 @@ export const HOME_SEO = {
   <li><a href="video-frame-grabber/">Video Frame Grabber</a> - extract any frame from a video, or grab the last frame, as PNG or JPEG
   <li><a href="video-resize/">Video Resizer</a> - reduce a video's resolution to 720p, 480p or 360p for a much smaller file
   <li><a href="image-to-video/">Image to Video</a> - turn a photo and an audio track into an MP4, with vertical presets for Reels and Shorts
+  <li><a href="music-video/">Music Video Builder</a> - loop a cover video under a playlist of songs and get the YouTube chapter list
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
 </ul>
 <p><em>100% client-side, open source, privacy-first. Enable JavaScript for the full interactive experience.</em></p>`,
@@ -1119,6 +1120,59 @@ print(json.dumps(data, indent=2))</pre>
       { q: 'Can it animate the photo (zoom, pan, motion)?', a: 'No — this tool holds the image still for the length of the audio. Motion effects are not supported.' },
       { q: 'What resolutions can I pick?', a: '1080p, 720p and 480p landscape, plus 1080p and 720p vertical for TikTok, Reels and Shorts.' },
       { q: 'Are my files uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your photo and audio never leave your device.' },
+    ],
+  },
+  'music-video': {
+    title: 'Music Video Builder - Loop a Cover + Playlist | Paimon Tools',
+    description:
+      'Turn a looping cover video plus a playlist of songs into one MP4 in your browser, and get a ready-to-paste YouTube chapter list so every track shows up on the progress bar. The cover is never re-encoded. 100% client-side, nothing uploaded.',
+    path: 'music-video',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Music Video Builder - a cover video looped under a playlist of songs',
+    h1: 'Music Video Builder - Turn a Playlist into One Music Video',
+    breadcrumb: 'Video / Music Video Builder',
+    bodyHtml: `<h2>Music Video Builder - One Cover, Many Songs, One File</h2>
+<p>Drop a cover video and a folder of music, and get a single MP4 back: the cover loops underneath while your tracks play in order, cut to the exact length of the playlist. Alongside the video you get a <strong>chapter list ready to paste into the YouTube description</strong>, so each song appears on the progress bar as its own segment. Nothing is uploaded — the whole job runs in your browser.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop your cover video — the clip that plays on repeat (MP4/H.264 works best)</li>
+  <li>Drop your music files — select several at once, or add them in batches</li>
+  <li>Arrange the order with the ▲▼ buttons; each row shows the timestamp it will get</li>
+  <li>Pick the audio quality, check the size estimate, then build</li>
+  <li>Copy the chapter list into your YouTube description at upload time</li>
+  <li>Preview the music video and download it</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>The cover is never re-encoded.</strong> It is copied and repeated, so looping costs no quality and almost no time — a long music video builds in seconds, not minutes</li>
+  <li><strong>Mixed audio formats are fine.</strong> MP3, M4A, WAV, Opus and FLAC can sit in the same playlist; each is normalised before being joined</li>
+  <li><strong>Chapter list generated from your playlist</strong>, formatted to YouTube's rules, with a Copy button</li>
+  <li><strong>Chapters embedded in the MP4 too</strong>, so VLC and other local players show the track markers</li>
+  <li><strong>Live warnings</strong> if YouTube would ignore part of your list — too few chapters, or a track under 10 seconds</li>
+  <li>MP4 (H.264 + AAC, faststart), 100% client-side</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>How do I get chapters on YouTube?</strong> Paste the generated list into your video's description in YouTube Studio. YouTube reads chapters from the description only — it does not read chapter data embedded in the file.</p>
+<p><strong>Why won't YouTube show my chapters?</strong> YouTube ignores a chapter list unless all four rules hold: the first timestamp is 00:00, there are at least three entries, they are in ascending order, and every chapter lasts at least 10 seconds. When a rule fails you get no error — the list just does nothing. This tool checks your playlist against those rules before you upload.</p>
+<p><strong>Does YouTube recognise the chapters stored in the MP4?</strong> No. Embedded chapters are useful in VLC and other local players, but YouTube's chapter feature only ever reads the description.</p>
+<p><strong>Is the cover video re-encoded?</strong> No. The video stream is copied, so the picture is byte-for-byte the same as your original file. Only the audio is re-encoded, because a playlist routinely mixes formats that cannot be joined otherwise.</p>
+<p><strong>What audio formats can I use?</strong> MP3, M4A/AAC, WAV, Opus, OGG and FLAC — mixed freely in one playlist.</p>
+<p><strong>How big will the file be?</strong> The video is copied, so the size is roughly your cover's bitrate multiplied by the total length. A 4-minute playlist under a 3 Mbit/s cover lands near 90 MB; a 40-minute one would be around 10x that, which is where the size warning appears. Shrinking the cover first with <a href="video-resize/">Video Resizer</a> is the cheapest fix.</p>
+<p><strong>Can I use any music?</strong> Only music you have the rights to. If you upload copyrighted songs, YouTube's Content ID may claim the video — which can mean ads on it, muting, or blocking in some countries — and that is outside any tool's control. Your own music or royalty-free tracks avoid the issue entirely.</p>
+<p><strong>My cover's loop looks jumpy.</strong> That is the cover clip, not the tool: if the first and last frames do not match, every repeat shows a visible jump. Trim a clean loop with <a href="video-slice/">Video Slicer</a> first.</p>
+<p><strong>Are my files uploaded?</strong> No. Everything runs locally in your browser via ffmpeg.wasm. Your video and music never leave your device.</p>
+<p><strong>Related:</strong> <a href="image-to-video/">Image to Video</a> — one photo instead of a cover clip, <a href="video-resize/">Video Resizer</a> — shrink the result, <a href="video-slice/">Video Slicer</a> — cut a clean loop first.</p>
+<p><a href="../">← Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'How do I get chapters on YouTube?', a: 'Paste the list this tool generates into your video description in YouTube Studio. YouTube only reads chapters from the description — it does not read chapter data embedded in the file.' },
+      { q: 'Why won\'t YouTube show my chapters?', a: 'YouTube silently ignores a chapter list unless all four rules hold: the first timestamp is 00:00, there are at least three entries, they are in ascending order, and each chapter lasts at least 10 seconds. This tool checks your playlist against those rules before you upload.' },
+      { q: 'Does YouTube recognise the chapters stored inside the MP4?', a: 'No. Embedded chapters are useful in VLC and other local players, but YouTube\'s chapter feature only ever reads the description text.' },
+      { q: 'Is the cover video re-encoded?', a: 'No. The video stream is copied, so the picture is identical to your original file. Only the audio is re-encoded, because a playlist routinely mixes formats that cannot be joined any other way.' },
+      { q: 'What audio formats can I use?', a: 'MP3, M4A/AAC, WAV, Opus, OGG and FLAC — mixed freely in one playlist.' },
+      { q: 'How big will the file be?', a: 'The video is copied, so the size is roughly your cover\'s bitrate multiplied by the total length. A 4-minute playlist under a 3 Mbit/s cover lands near 90 MB. Shrinking the cover first with Video Resizer is the cheapest fix.' },
+      { q: 'Can I use any music?', a: 'Only music you have the rights to. Uploading copyrighted songs can trigger a Content ID claim — ads on the video, muting, or blocking in some countries — which is outside any tool\'s control. Your own music or royalty-free tracks avoid the issue.' },
+      { q: 'My cover loop looks jumpy.', a: 'That is the cover clip rather than the tool: if its first and last frames do not match, each repeat shows a visible jump. Trim a clean loop with Video Slicer first.' },
+      { q: 'Are my files uploaded?', a: 'No. Everything runs locally in your browser via ffmpeg.wasm. Your video and music never leave your device.' },
     ],
   },
   '404': {

@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -424,6 +424,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['image to video', 'photo to video', 'picture to video', 'add music to photo', 'photo with music', 'still image video', 'make video from image', 'image music video', 'static video', 'slideshow single image', 'audio to video', 'cover art video', 'lyric video background'],
     description:
       'Turn a photo plus an audio track into an MP4 in your browser — the image is shown for the whole song. Pick resolution (including vertical for Reels/Shorts), framing (fit or fill) and frame rate. EXIF-rotated photos come out upright. 100% client-side, nothing uploaded.',
+  },
+  {
+    id: 'music-video',
+    name: 'Music Video Builder',
+    shortName: 'Music Video Builder',
+    category: 'Video',
+    type: 'ref',
+    icon: 'list-music',
+    keywords: ['music video', 'mv builder', 'loop video', 'cover loop', 'playlist to video', 'album video', 'add music to video', 'song list video', 'youtube chapters', 'chapter timestamps', 'video chapters', 'album cover video', 'full album video', 'music compilation video'],
+    description:
+      'Loop one cover video under a playlist of songs and get a single MP4, plus a ready-to-paste YouTube chapter list so each song shows up on the progress bar. The cover is never re-encoded. 100% client-side, nothing uploaded.',
   },
 ]
 // ── Lookup helpers ────────────────────────────────────

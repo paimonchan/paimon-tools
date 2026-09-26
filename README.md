@@ -82,6 +82,7 @@ commas, and comments are accepted.
 | [Video Frame Grabber](https://paimonchan.github.io/paimon-tools/video-frame-grabber/) | Extract any frame from a video, or grab the last one, as PNG/JPEG (no ffmpeg) |
 | [Video Resizer](https://paimonchan.github.io/paimon-tools/video-resize/) | Reduce a video's resolution to 1080p/720p/480p/360p for a much smaller file |
 | [Image to Video](https://paimonchan.github.io/paimon-tools/image-to-video/) | Turn a photo plus an audio track into an MP4 (landscape or vertical) |
+| [Music Video Builder](https://paimonchan.github.io/paimon-tools/music-video/) | Loop a cover video under a playlist of songs + YouTube chapter list |
 
 ### 🛠️ Utilities
 
