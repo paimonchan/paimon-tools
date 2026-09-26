@@ -21,6 +21,7 @@ import { Gauge, Loader2, X } from 'lucide-react'
 import { formatBytes } from '../engine/video-slice'
 import {
   FPS_SAVING_COPY,
+  defaultFpsTarget,
   estimateFpsSeconds,
   estimateFpsSize,
   formatFps,
@@ -147,12 +148,10 @@ export default function VideoFpsReducerTool() {
       setSourceFps(fps)
       setSourceFpsLabel(formatFps(spec.fpsNum, spec.fpsDen))
 
-      // Preselect the most common target — 30 fps if it is available, else the
-      // cinematic 24, else the largest rate below the source — so the typical
-      // case needs no clicks.
+      // Preselect half the source rate — what people mean by "reduce the frame
+      // rate" (120 → 60, 60 → 30), so the common case needs no clicks.
       const usable = usableFpsTargets(fps)
-      const preferred =
-        usable.find((t) => t.fps === 30) ?? usable.find((t) => t.fps === 24) ?? usable[0]
+      const preferred = defaultFpsTarget(fps, usable)
       setTargetFps(preferred ? preferred.fps : null)
       setStatus('ok')
       toast.push(`${vi.name} loaded · ${formatFps(spec.fpsNum, spec.fpsDen)}`, {

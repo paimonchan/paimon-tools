@@ -421,9 +421,9 @@ export const TOOLS: ToolDefinition[] = [
     category: 'Video',
     type: 'ref',
     icon: 'gauge',
-    keywords: ['fps', 'frame rate', 'reduce fps', 'lower fps', 'change fps', 'convert fps', '60 to 30 fps', '24 fps', 'cinematic', 'drop frames', 'framerate', 'frames per second', 'smoother playback', 'match frame rate', 'video lighter'],
+    keywords: ['fps', 'frame rate', 'reduce fps', 'lower fps', 'change fps', 'convert fps', '120 to 60 fps', '60 to 30 fps', '24 fps', 'cinematic', 'drop frames', 'reduce framerate', 'framerate', 'frames per second', 'smoother playback', 'match frame rate', 'video lighter'],
     description:
-      'Lower a video’s frame rate to 60, 50, 30, 25, 24, 15 or 10 fps in your browser — the length and the speed stay exactly the same. Handy for making a clip play lighter, for a cinematic 24, or for matching two clips so they can be merged losslessly. 100% client-side.',
+      'Lower a video’s frame rate to 120, 60, 50, 30, 25, 24, 15 or 10 fps in your browser — the length and the speed stay exactly the same, and the resolution is never touched. Handy for taking 120 fps gameplay down to 60, for making a clip play lighter, or for matching two clips so they can be merged losslessly. 100% client-side.',
   },
   {
     id: 'image-to-video',

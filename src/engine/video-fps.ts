@@ -26,6 +26,7 @@ export interface FpsTarget {
 
 /** Common deliverable frame rates, highest first. */
 export const FPS_TARGETS: FpsTarget[] = [
+  { id: '120', label: '120 fps', fps: 120, note: 'High-frame-rate — for a 240 fps source' },
   { id: '60', label: '60 fps', fps: 60, note: 'Smooth motion — gameplay, sport' },
   { id: '50', label: '50 fps', fps: 50, note: 'PAL smooth (Europe)' },
   { id: '30', label: '30 fps', fps: 30, note: 'Standard — the usual target' },
@@ -51,6 +52,28 @@ export function isTargetUsable(targetFps: number, sourceFps: number): boolean {
 /** Targets that would actually lower this source's rate. */
 export function usableFpsTargets(sourceFps: number): FpsTarget[] {
   return FPS_TARGETS.filter((t) => isTargetUsable(t.fps, sourceFps))
+}
+
+/**
+ * Which target to preselect: the one closest to HALF the source rate.
+ *
+ * Halving is what people mean by "reduce the frame rate" — 120 → 60, 60 → 30,
+ * 50 → 25 — so a tool that defaulted a 120 fps clip to 30 would look like it
+ * ignored the obvious answer. Nearest-to-half also absorbs NTSC drift: a 119.88
+ * source halves to 59.94, and 60 is still the closest preset.
+ *
+ * Ties go to the higher rate (the list is ordered highest-first and the
+ * comparison is strict), so 25 fps — whose half, 12.5, is not a preset — lands
+ * on 15 rather than 10. Halving by default is consistent and one click to undo.
+ */
+export function defaultFpsTarget(sourceFps: number, usable = usableFpsTargets(sourceFps)): FpsTarget | null {
+  if (usable.length === 0) return null
+  const half = sourceFps / 2
+  let best = usable[0]
+  for (const t of usable) {
+    if (Math.abs(t.fps - half) < Math.abs(best.fps - half)) best = t
+  }
+  return best
 }
 
 /**

@@ -1028,16 +1028,16 @@ print(json.dumps(data, indent=2))</pre>
     ],
   },
   'video-fps': {
-    title: 'Video FPS Reducer - Lower a Video\u2019s Frame Rate (60 to 30, 24 fps) | Paimon Tools',
+    title: 'Video FPS Reducer - Lower a Video\u2019s Frame Rate (120 to 60, 60 to 30) | Paimon Tools',
     description:
-      'Lower a video\u2019s frame rate to 60, 50, 30, 25, 24, 15 or 10 fps in your browser, free — the length and the speed stay exactly the same. Re-encodes on your device, never uploaded, with an honest size and time estimate before you start.',
+      'Lower a video\u2019s frame rate to 120, 60, 50, 30, 25, 24, 15 or 10 fps in your browser, free — the length, the speed and the resolution all stay exactly the same. Re-encodes on your device, never uploaded, with an honest size and time estimate before you start.',
     path: 'video-fps',
     ogImage: DEFAULT_OG_IMAGE,
-    ogImageAlt: 'Paimon Tools Video FPS Reducer - lower a video\u2019s frame rate in your browser',
+    ogImageAlt: 'Paimon Tools Video FPS Reducer - lower a video\u2019s frame rate to 60 or 30 fps in your browser',
     h1: 'Video FPS Reducer - Lower a Video\u2019s Frame Rate',
     breadcrumb: 'Video / Video FPS Reducer',
     bodyHtml: `<h2>Video FPS Reducer - Change a Video\u2019s Frame Rate</h2>
-<p>Drop a clip\u2019s frame rate to 60, 50, 30, 25, 24, 15 or 10 fps in your browser. Frames are dropped, so <strong>the length and the playback speed stay exactly the same</strong> \u2014 this is not slow motion. It\u2019s the tool for making a heavyweight clip play more easily on an old device, giving footage a 24 fps film feel, or bringing two clips onto the same rate so they can be <a href="video-merge/">merged losslessly</a>. Like the Video Resizer, the picture is decoded and re-encoded, so it runs on your device via ffmpeg.wasm and takes a moment.</p>
+<p>Drop a clip\u2019s frame rate to 120, 60, 50, 30, 25, 24, 15 or 10 fps in your browser \u2014 120 fps footage down to 60, or 60 down to 30. The resolution is never touched; only frames are removed. Frames are dropped, so <strong>the length and the playback speed stay exactly the same</strong> \u2014 this is not slow motion. It\u2019s the tool for making a heavyweight clip play more easily on an old device, giving footage a 24 fps film feel, or bringing two clips onto the same rate so they can be <a href="video-merge/">merged losslessly</a>. Like the Video Resizer, the picture is decoded and re-encoded, so it runs on your device via ffmpeg.wasm and takes a moment.</p>
 <h2>How to Use</h2>
 <ol>
   <li>Drop an MP4/MOV video (or click to browse)</li>
