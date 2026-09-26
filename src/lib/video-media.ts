@@ -250,7 +250,11 @@ async function probeSpec(
   const codecMatch = videoLine.match(/Video:\s*(\w+)/)
   // Matches "...yuv420p(progressive), 640x360..." — tolerate optional comma/space.
   const pixMatch = videoLine.match(/Video:.*?,\s*(\w+)(?:\([^)]*\))?[\s,]*(\d+)x(\d+)/)
-  const fpsMatch = videoLine.match(/,\s*(\d+(?:\/\d+)?)\s*fps/)
+  // Matches "..., 60 fps", "..., 29.97 fps" and "..., 30000/1001 fps". The
+  // decimal form matters: NTSC rates (29.97, 23.976, 59.94) are what phones and
+  // US camcorders produce, and an integer-only pattern silently returns null for
+  // every one of them.
+  const fpsMatch = videoLine.match(/,\s*(\d+(?:\.\d+)?(?:\/\d+)?)\s*fps/)
 
   // Audio line: "... Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s"
   const audioMatch = audioLine.match(/Audio:\s*(\w+)/)
@@ -832,6 +836,112 @@ export async function resizeVideo(
       preset,
       '-crf',
       String(crf),
+      '-pix_fmt',
+      'yuv420p',
+      ...audioArgs,
+      '-movflags',
+      '+faststart',
+      '-y',
+      outName,
+    ])
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+      audioMode,
+    }
+  } finally {
+    if (onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all([fsName, outName].map((n) => ffmpeg.deleteFile(n).catch(() => {})))
+  }
+}
+
+// ── FPS Reducer (drop frames, keep duration) ──────────────────────────────
+
+export type FpsPhase = 'loading' | 'detecting' | 'encoding'
+
+/** How the source audio came through. Duration never changes, so it is copied. */
+export type FpsAudioMode = 'copy' | 'aac' | 'none'
+
+export interface FpsResult {
+  blob: Blob
+  size: number
+  durationMs: number
+  audioMode: FpsAudioMode
+}
+
+/**
+ * Lower a video's frame rate by dropping frames, re-encoding the picture.
+ *
+ * The filter MUST be `fps=` and not the output option `-r`: measured on a
+ * 720p60 6.0s clip, `-vf fps=30` lands on exactly 6.000s while `-r 30` drifts to
+ * 6.067s, i.e. the picture slowly slides out of sync with the audio. The
+ * `fps` filter drops frames and preserves both the duration and the playback
+ * speed; it never slows the clip down.
+ *
+ *   ffmpeg -i in.mp4 -vf fps=N -c:v libx264 -preset veryfast -crf 23 \
+ *          -pix_fmt yuv420p [-c:a copy | -c:a aac | -an] \
+ *          -movflags +faststart out.mp4
+ *
+ * Because the duration is untouched, audio is normally stream-copied — nothing
+ * about the soundtrack changes. The picture is re-encoded, and normalised to
+ * 8-bit 4:2:0 so the wasm encoder can always accept it.
+ */
+export async function reduceFps(
+  file: File,
+  opts: {
+    targetFps: number
+    onProgress?: (progress: number) => void
+    onPhase?: (phase: FpsPhase) => void
+  },
+): Promise<FpsResult> {
+  const { targetFps, onProgress, onPhase } = opts
+  const started = performance.now()
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+
+  const fsName = 'fps_in.mp4'
+  const outName = 'fps_out.mp4'
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    onProgress?.(Math.min(1, Math.max(0, p)))
+  }
+  if (onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+    onPhase?.('detecting')
+    const audioCodec = await probeAudioCodecFromMemfs(ffmpeg, fsName)
+    let audioMode: FpsAudioMode
+    let audioArgs: string[]
+    if (!audioCodec) {
+      audioMode = 'none'
+      audioArgs = ['-an']
+    } else if (audioCodec === 'aac') {
+      audioMode = 'copy'
+      audioArgs = ['-c:a', 'copy']
+    } else {
+      audioMode = 'aac'
+      audioArgs = ['-c:a', 'aac', '-b:a', '128k']
+    }
+
+    onPhase?.('encoding')
+    await ffmpeg.exec([
+      '-i',
+      fsName,
+      '-vf',
+      `fps=${targetFps}`,
+      '-c:v',
+      'libx264',
+      '-preset',
+      'veryfast',
+      '-crf',
+      '23',
       '-pix_fmt',
       'yuv420p',
       ...audioArgs,

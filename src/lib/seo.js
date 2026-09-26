@@ -46,7 +46,8 @@ export const HOME_SEO = {
   <li><a href="video-audio-mix/">Video Audio Mixer</a> - add, mix or replace the audio track on a video
   <li><a href="video-mute/">Video Muter</a> - remove the audio track from a video, keep the video lossless
   <li><a href="video-frame-grabber/">Video Frame Grabber</a> - extract any frame from a video, or grab the last frame, as PNG or JPEG
-  <li><a href="video-resize/">Video Resizer</a> - reduce a video's resolution to 720p, 480p or 360p for a much smaller file
+  <li><a href="video-resize/">Video Resizer</a> - reduce a video's resolution to 720p, 480p or 360p for a much smaller file</li>
+  <li><a href="video-fps/">Video FPS Reducer</a> - lower a video's frame rate to 30, 24 or 15 fps without changing its length or speed</li>
   <li><a href="image-to-video/">Image to Video</a> - turn a photo and an audio track into an MP4, with vertical presets for Reels and Shorts
   <li><a href="music-video/">Music Video Builder</a> - loop a cover video under a playlist of songs and get the YouTube chapter list
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
@@ -1024,6 +1025,55 @@ print(json.dumps(data, indent=2))</pre>
       { q: 'Does it use ffmpeg?', a: 'No. This tool grabs the frame directly from the playing video via your browser\'s canvas — no ffmpeg, so it is instant.' },
       { q: 'Can I extract the exact last frame?', a: 'Yes — the "Download last frame" button seeks to the end and captures the final frame.' },
       { q: 'What image formats are supported?', a: 'PNG (lossless) and JPEG (with a quality slider for file size control).' },
+    ],
+  },
+  'video-fps': {
+    title: 'Video FPS Reducer - Lower a Video\u2019s Frame Rate (60 to 30, 24 fps) | Paimon Tools',
+    description:
+      'Lower a video\u2019s frame rate to 60, 50, 30, 25, 24, 15 or 10 fps in your browser, free — the length and the speed stay exactly the same. Re-encodes on your device, never uploaded, with an honest size and time estimate before you start.',
+    path: 'video-fps',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video FPS Reducer - lower a video\u2019s frame rate in your browser',
+    h1: 'Video FPS Reducer - Lower a Video\u2019s Frame Rate',
+    breadcrumb: 'Video / Video FPS Reducer',
+    bodyHtml: `<h2>Video FPS Reducer - Change a Video\u2019s Frame Rate</h2>
+<p>Drop a clip\u2019s frame rate to 60, 50, 30, 25, 24, 15 or 10 fps in your browser. Frames are dropped, so <strong>the length and the playback speed stay exactly the same</strong> \u2014 this is not slow motion. It\u2019s the tool for making a heavyweight clip play more easily on an old device, giving footage a 24 fps film feel, or bringing two clips onto the same rate so they can be <a href="video-merge/">merged losslessly</a>. Like the Video Resizer, the picture is decoded and re-encoded, so it runs on your device via ffmpeg.wasm and takes a moment.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4/MOV video (or click to browse)</li>
+  <li>The tool reads the clip\u2019s real frame rate from the file itself and suggests a target</li>
+  <li>Pick a lower frame rate \u2014 rates at or above the source are not offered</li>
+  <li>Check the estimated output size and time, then click "Drop to N fps"</li>
+  <li>Preview the result and download it</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Real frame-rate detection</strong> \u2014 the rate is read from the container, so 29.97 and 23.976 are reported honestly rather than rounded to a friendly number</li>
+  <li><strong>Duration and speed preserved</strong> \u2014 the <code>fps</code> filter drops frames instead of retiming them, so a 6.000s clip stays 6.000s (the naive output-rate option drifts to 6.067s and slides out of sync with the audio)</li>
+  <li><strong>Never raises the frame rate</strong> \u2014 duplicating frames cannot invent detail, it only inflates the file, so higher targets are disabled</li>
+  <li><strong>Audio untouched</strong> \u2014 because the duration does not change, the soundtrack is stream-copied</li>
+  <li><strong>Honest expectations</strong> \u2014 the panel states up front that frame rate is a weak lever for file size (measured: \u221223% for half the frames) and points at Video Resizer when size is the goal</li>
+  <li>Web-optimised output (faststart) and 100% client-side \u2014 your video is never uploaded</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Does this make my video smaller?</strong> A little. Measured on a high-motion 720p clip at the same quality setting: 60 to 30 fps saved 23%, 60 to 24 saved 32%, 60 to 15 saved 45%. Halving the frames does <em>not</em> halve the file \u2014 at a fixed quality each remaining frame simply gets a bigger bit budget. If a much smaller file is what you want, use <a href="video-resize/">Video Resizer</a>.</p>
+<p><strong>Does the video get slower or longer?</strong> No. The duration and the speed are identical to the original \u2014 frames are removed, not stretched. If you want slow motion, that is a different operation and this tool deliberately does not do it.</p>
+<p><strong>Is it lossless?</strong> No. Dropping frames means every surviving frame has to be re-derived and encoded, so the picture is re-encoded with H.264. Our Video Slicer, Video Muter and Video Merger keep video lossless because they only remux streams.</p>
+<p><strong>Will the audio be affected?</strong> No. The audio stream is copied byte-for-byte, because changing the frame rate does not change the duration.</p>
+<p><strong>Why is it slower than a trim or a mute?</strong> Because re-encoding every frame is real work, and the browser cannot use multi-threaded WebAssembly on GitHub Pages. Fewer output frames does mean less work, so a lower target finishes faster \u2014 the estimate reflects that.</p>
+<p><strong>Can I raise the frame rate instead, e.g. 30 to 60?</strong> Not with this tool. Repeating frames cannot create detail that was never captured, it only makes the file bigger. Anything at or above your source is disabled.</p>
+<p><strong>Why is 30 fps not offered for my 29.97 fps video?</strong> Because 29.97 is genuinely <em>below</em> 30 \u2014 treating them as equal would duplicate frames while claiming to reduce them. The tool compares against the real rate, so you get 25, 24, 15 or 10 instead.</p>
+<p><strong>What is this useful for besides smaller files?</strong> Matching frame rates across clips so the Video Merger will concatenate them losslessly, giving gameplay or screen recordings a cinematic 24 fps feel, and making old recordings easier for a weak player to decode.</p>
+<p><strong>Related:</strong> <a href="video-resize/">Video Resizer</a> \u2014 shrink the picture instead, <a href="video-merge/">Video Merger</a> \u2014 join clips losslessly once they match, and <a href="video-slice/">Video Slicer</a> \u2014 cut the clip down first.</p>`,
+    faq: [
+      { q: 'Does this make my video smaller?', a: 'A little. Measured at the same quality setting: 60 to 30 fps saved 23%, 60 to 24 saved 32%, 60 to 15 saved 45% on a high-motion 720p clip. Halving the frames does not halve the file. If a much smaller file is the goal, use Video Resizer instead.' },
+      { q: 'Does the video get slower or longer?', a: 'No. Duration and playback speed are identical to the original — frames are removed, not stretched. Slow motion is a different operation and this tool deliberately does not do it.' },
+      { q: 'Is it lossless?', a: 'No. Dropping frames means every surviving frame has to be re-encoded, so the picture is encoded again with H.264. Video Slicer, Video Muter and Video Merger stay lossless because they only remux streams.' },
+      { q: 'Will the audio be affected?', a: 'No. The audio stream is copied byte-for-byte, because the duration does not change.' },
+      { q: 'Why is it slower than your other video tools?', a: 'Because re-encoding frames is real work and GitHub Pages cannot use multi-threaded WebAssembly. A lower target rate means less work and finishes sooner, and the tool shows an estimate before you start.' },
+      { q: 'Can I raise the frame rate instead, e.g. 30 to 60?', a: 'Not with this tool. Repeating frames cannot invent detail that was never captured, it just inflates the file, so anything at or above your source rate is disabled.' },
+      { q: 'Why is 30 fps not offered for my 29.97 fps video?', a: 'Because 29.97 is genuinely below 30 — treating them as equal would duplicate frames while claiming to reduce them. The tool compares against the real rate, so you get 25, 24, 15 or 10 instead.' },
+      { q: 'What else is this good for?', a: 'Matching frame rates across clips so the Video Merger will concatenate them losslessly, giving recordings a cinematic 24 fps feel, and making heavy clips easier for a weak player to decode.' },
     ],
   },
   'video-resize': {

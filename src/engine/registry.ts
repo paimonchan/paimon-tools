@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -413,6 +413,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video', 'resize', 'resolution', 'downscale', 'shrink video', 'reduce video size', 'make video smaller', 'compress video', '720p', '480p', 'change video resolution', 'scale video', 'smaller video file'],
     description:
       'Downscale a video’s resolution to 1080p, 720p, 480p or 360p in your browser — great for shrinking a clip to fit a size limit. Re-encodes the video (never uploads it) with an honest size and time estimate up front. 100% client-side.',
+  },
+  {
+    id: 'video-fps',
+    name: 'Video FPS Reducer',
+    shortName: 'Video FPS Reducer',
+    category: 'Video',
+    type: 'ref',
+    icon: 'gauge',
+    keywords: ['fps', 'frame rate', 'reduce fps', 'lower fps', 'change fps', 'convert fps', '60 to 30 fps', '24 fps', 'cinematic', 'drop frames', 'framerate', 'frames per second', 'smoother playback', 'match frame rate', 'video lighter'],
+    description:
+      'Lower a video’s frame rate to 60, 50, 30, 25, 24, 15 or 10 fps in your browser — the length and the speed stay exactly the same. Handy for making a clip play lighter, for a cinematic 24, or for matching two clips so they can be merged losslessly. 100% client-side.',
   },
   {
     id: 'image-to-video',

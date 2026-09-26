@@ -105,6 +105,9 @@ const BITS_PER_PIXEL: Record<number, number> = {
   32: 0.018,
 }
 
+/** Shared with the FPS Reducer, which estimates at a fixed CRF. */
+export { BITS_PER_PIXEL }
+
 export interface SizeEstimate {
   low: number
   high: number
