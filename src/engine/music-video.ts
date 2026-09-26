@@ -39,9 +39,10 @@ export const DEFAULT_AUDIO_BITRATE = 192
 export const MIN_CHAPTERS = 3
 export const MIN_CHAPTER_SECONDS = 10
 
-/** ffmpeg holds inputs + output in MEMFS, so the projected output matters most. */
-export const MEMORY_SOFT_BYTES = 512 * 1024 * 1024
-export const MEMORY_HARD_BYTES = 1024 * 1024 * 1024
+/** ffmpeg holds inputs + output in MEMFS, so the peak is the sum of both. */
+export function estimatePeakMemory(inputBytes: number, outputBytes: number): number {
+  return inputBytes + outputBytes
+}
 
 /** Sum of every track's length — this is the music video's duration. */
 export function totalTrackSeconds(tracks: TrackInfo[]): number {
@@ -164,17 +165,6 @@ export function estimateMvSize(opts: {
   const audioBytes = (audioBitrateK * 1024 * totalSec) / 8
   const expected = videoBytes + audioBytes
   return { expected, low: expected * 0.85, high: expected * 1.25 }
-}
-
-/** Inputs + output all sit in MEMFS at once, so the peak is the sum. */
-export function estimatePeakMemory(inputBytes: number, outputBytes: number): number {
-  return inputBytes + outputBytes
-}
-
-export function memoryVerdict(peakBytes: number): 'ok' | 'warn' | 'block' {
-  if (peakBytes >= MEMORY_HARD_BYTES) return 'block'
-  if (peakBytes >= MEMORY_SOFT_BYTES) return 'warn'
-  return 'ok'
 }
 
 /** `cover-loop.mp4` → `cover-loop-mv.mp4`. */

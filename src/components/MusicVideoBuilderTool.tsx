@@ -24,7 +24,6 @@ import {
   estimateMvSize,
   estimatePeakMemory,
   formatStamp,
-  memoryVerdict,
   makeMvFilename,
   needsHourFormat,
   totalTrackSeconds,
@@ -115,10 +114,8 @@ export default function MusicVideoBuilderTool() {
         })
       : null
   const peakBytes = estimatePeakMemory(inputBytes, sizeEstimate?.expected ?? 0)
-  const memory = memoryVerdict(peakBytes)
 
-  const ready =
-    !!cover && !!coverMeta && tracks.length > 0 && totalSec > 0 && !processing && memory !== 'block'
+  const ready = !!cover && !!coverMeta && tracks.length > 0 && totalSec > 0 && !processing
 
   // ── Handlers ────────────────────────────────────────
   const onSelectCover = async (f: File | null | undefined) => {
@@ -560,43 +557,15 @@ export default function MusicVideoBuilderTool() {
                   </span>
                 </div>
               )}
-              <div className="text-ink-600">Process time is short — the video is never re-encoded.</div>
+              <div className="text-ink-600">
+                Process time is short — the video is never re-encoded. ≈
+                {formatBytes(peakBytes)} is held in memory at once while it builds.
+              </div>
             </div>
           ) : (
             <div className="text-[11px] text-ink-500">
               {cover ? 'Add your music tracks to set the length.' : 'Drop a cover video to begin.'}
             </div>
-          )}
-
-          {memory !== 'ok' && (
-            <p
-              className={`mt-2 rounded-md border px-2.5 py-1.5 text-[10px] leading-snug ${
-                memory === 'block'
-                  ? 'border-red-500/30 bg-red-500/10 text-red-300'
-                  : 'border-amber-500/25 bg-amber-500/10 text-amber-300'
-              }`}
-            >
-              {memory === 'block' ? (
-                <>
-                  <strong>Too large to build in the browser.</strong> This would need ≈
-                  {formatBytes(peakBytes)} of memory at once. Shrink the cover first with{' '}
-                  <a href="video-resize/" className="underline">
-                    Video Resizer
-                  </a>
-                  , or use fewer/shorter tracks.
-                </>
-              ) : (
-                <>
-                  <strong>Heavy:</strong> ≈{formatBytes(peakBytes)} held in memory at once (the app
-                  keeps inputs and output together). A weaker machine may struggle. Shrinking the
-                  cover with{' '}
-                  <a href="video-resize/" className="underline">
-                    Video Resizer
-                  </a>{' '}
-                  cuts this a lot.
-                </>
-              )}
-            </p>
           )}
         </div>
 
@@ -630,9 +599,7 @@ export default function MusicVideoBuilderTool() {
                   ? 'Build music video'
                   : !tracks.length
                     ? 'Add music tracks'
-                    : memory === 'block'
-                      ? 'Too large — shrink the cover first'
-                      : `Build ${formatTime(totalSec)} music video`}
+                    : `Build ${formatTime(totalSec)} music video`}
               </>
             )}
           </button>
