@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge' | 'chevrons-down-up'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -424,6 +424,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['fps', 'frame rate', 'reduce fps', 'lower fps', 'change fps', 'convert fps', '120 to 60 fps', '60 to 30 fps', '24 fps', 'cinematic', 'drop frames', 'reduce framerate', 'framerate', 'frames per second', 'smoother playback', 'match frame rate', 'video lighter'],
     description:
       'Lower a video’s frame rate to 120, 60, 50, 30, 25, 24, 15 or 10 fps in your browser — the length and the speed stay exactly the same, and the resolution is never touched. Handy for taking 120 fps gameplay down to 60, for making a clip play lighter, or for matching two clips so they can be merged losslessly. 100% client-side.',
+  },
+  {
+    id: 'video-compress',
+    name: 'Video Compressor',
+    shortName: 'Video Compressor',
+    category: 'Video',
+    type: 'ref',
+    icon: 'chevrons-down-up',
+    keywords: ['compress video', 'video compressor', 'reduce video size', 'shrink video', 'video under 25mb', 'whatsapp video size', 'email attachment video', 'target file size', 'video bitrate', 'make video smaller', 'video too large', 'compress mp4', 'smaller mp4', 'video size reducer', '25 mb video'],
+    description:
+      'Compress a video to a target size you name — 25 MB for an email, 16 MB for WhatsApp — with a real two-pass encode that lands under the limit instead of overshooting it. Going the other way works too: ask for a higher bitrate and it pads the stream up to hold that floor for a platform minimum. Runs on your device, never uploaded, and shows the plan before you start. 100% client-side.',
   },
   {
     id: 'image-to-video',

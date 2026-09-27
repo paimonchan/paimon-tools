@@ -1381,6 +1381,233 @@ export async function buildMusicVideo(opts: {
   }
 }
 
+// ── Video Compressor (two-pass, size-targeted) ─────────────────────────────
+
+export interface CompressProbe {
+  /** kbps the video stream actually carries, read from the container */
+  videoKbps: number
+  audioKbps: number
+  /** lowercase, or '' when there is no audio track */
+  audioCodec: string
+  hasAudio: boolean
+  fpsNum: number
+  fpsDen: number
+  width: number
+  height: number
+}
+
+export type CompressPhase = 'loading' | 'probing' | 'pass1' | 'pass2' | 'encoding'
+
+export interface CompressResult {
+  blob: Blob
+  size: number
+  durationMs: number
+  videoKbps: number
+  audioKbps: number
+  audioMode: 'copy' | 'aac' | 'none'
+  targetBytes: number
+  direction: 'down' | 'up'
+}
+
+/**
+ * Read what the compressor needs: the bitrate each stream already carries, the
+ * audio codec (copy vs re-encode) and the frame rate (time estimate). One `-i`
+ * exec, no output.
+ *
+ * Deliberately NOT part of probeMergeSpecs. VideoSpec is the contract the
+ * Merger's lossless concat is judged against — a wrong field there produces a
+ * broken file — and bitrates have no business in that comparison.
+ */
+export async function probeCompressSource(file: File): Promise<CompressProbe> {
+  const ffmpeg = await getFFmpeg()
+  const fsName = 'probe-compress.tmp'
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+  await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+  const logLines: string[] = []
+  const onLog = ({ type, message }: { type: string; message: string }) => {
+    if (type === 'stderr' && message) logLines.push(message)
+  }
+  ffmpeg.on('log', onLog)
+  try {
+    await ffmpeg.exec(['-i', fsName])
+  } catch {
+    /* expected — `-i` with no output exits non-zero */
+  } finally {
+    ffmpeg.off('log', onLog)
+  }
+  await ffmpeg.deleteFile(fsName).catch(() => {})
+
+  const text = logLines.join('\n')
+  const videoLine = text.match(/Stream.*?: Video: .*/)?.[0] ?? ''
+  const audioLine = text.match(/Stream.*?: Audio: .*/)?.[0] ?? ''
+  const audioCodec = audioLine.match(/Audio:\s*(\w+)/)?.[1]?.toLowerCase() ?? ''
+  const hasAudio = audioLine.length > 0
+
+  // "..., 5361 kb/s, 120 fps" — the container may print "N/A" instead, in which
+  // case the caller's size/duration fallback takes over.
+  const audioKbps = Number(audioLine.match(/,\s*(\d+)\s*kb\/s/)?.[1] ?? 0)
+  let videoKbps = Number(videoLine.match(/,\s*(\d+)\s*kb\/s/)?.[1] ?? 0)
+  if (!videoKbps && file.size > 0) {
+    // Derive it: total stream rate minus the audio share.
+    const dm = text.match(/Duration:\s*(\d+):(\d\d):(\d+)(?:\.(\d+))?/)
+    if (dm) {
+      const duration = Number(dm[1]) * 3600 + Number(dm[2]) * 60 + Number(dm[3])
+      if (duration > 0) {
+        videoKbps = Math.max(0, Math.round((file.size * 8) / duration / 1000) - audioKbps)
+      }
+    }
+  }
+
+  const fpsMatch = videoLine.match(/,\s*(\d+(?:\.\d+)?(?:\/\d+)?)\s*fps/)
+  const [fpsNum, fpsDen] = parseFps(fpsMatch?.[1])
+  const pixMatch = videoLine.match(/Video:.*?,\s*(\w+)(?:\([^)]*\))?[\s,]*(\d+)x(\d+)/)
+
+  return {
+    videoKbps,
+    audioKbps,
+    audioCodec,
+    hasAudio,
+    fpsNum,
+    fpsDen,
+    width: pixMatch ? Number(pixMatch[2]) : 0,
+    height: pixMatch ? Number(pixMatch[3]) : 0,
+  }
+}
+
+/**
+ * Compress a video to a bitrate budget with a genuine two-pass encode.
+ *
+ * Why two passes: one pass cannot know how many bits the footage wants, so it
+ * either overshoots the budget (measured +9.8% on a 720p clip) or lands far
+ * under it. Pass 1 writes x264's stats, pass 2 spends them — which is the only
+ * way to land on a size the user named.
+ *
+ * The pass log survives between the two exec calls because this module shares a
+ * single FFmpeg instance (and therefore a single MEMFS). Do not "optimise" that
+ * away: separate instances would silently turn pass 2 into a guess.
+ *
+ * `-maxrate`/`-bufsize` are not decoration either — plain ABR went ~10% over.
+ */
+export async function compressVideo(
+  file: File,
+  opts: {
+    videoKbps: number
+    audioKbps: number
+    audioMode: 'copy' | 'aac' | 'none'
+    targetBytes: number
+    /** 'down' = two-pass shrink; 'up' = single-pass CBR pad to a floor */
+    direction: 'down' | 'up'
+    onProgress?: (progress: number) => void
+    onPhase?: (phase: CompressPhase) => void
+  },
+): Promise<CompressResult> {
+  const started = performance.now()
+  opts.onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+
+  const fsName = 'compress-in.tmp.mp4'
+  const outName = 'compress-out.mp4'
+  const logName = 'compress-pass'
+  const scratch = [fsName, outName, `${logName}-0.log`, `${logName}-0.log.mbtree`]
+
+  // Shrinking runs two passes, and pass 1 is the cheaper half of the wall clock
+  // (no audio, no output), so the bar moves 0..45% then 45..100%. Raising is a
+  // single CBR pass and simply fills the bar.
+  const up = opts.direction === 'up'
+  let pass = 1
+  const progressCb: ProgressEventCallback = ({ progress: p }) => {
+    const clamped = Math.min(1, Math.max(0, p))
+    if (up) {
+      opts.onProgress?.(clamped)
+    } else {
+      opts.onProgress?.(pass === 1 ? clamped * 0.45 : 0.45 + clamped * 0.55)
+    }
+  }
+  if (opts.onProgress) ffmpeg.on('progress', progressCb)
+
+  try {
+    await ffmpeg.writeFile(fsName, await fetchFile(file))
+
+    // Raising holds a FLOOR, which takes CBR padding: x264 will not spend bits
+    // a simple picture does not want (measured in this core: a static clip asked
+    // for 4000 kbps came out at 18 kbps, and adding -minrate did not move it to
+    // 16 kbps). nal-hrd=cbr is what actually delivers the number, so the extra
+    // bytes are filler — which is exactly what a "minimum bitrate" requirement
+    // is asking for.
+    const videoArgs = up
+      ? [
+          '-c:v', 'libx264',
+          '-preset', 'veryfast',
+          '-b:v', `${opts.videoKbps}k`,
+          '-minrate', `${opts.videoKbps}k`,
+          '-maxrate', `${opts.videoKbps}k`,
+          '-bufsize', `${opts.videoKbps * 2}k`,
+          '-x264-params', 'nal-hrd=cbr:force-cfr=1',
+          '-pix_fmt', 'yuv420p',
+        ]
+      : [
+          '-c:v', 'libx264',
+          '-preset', 'veryfast',
+          '-b:v', `${opts.videoKbps}k`,
+          '-maxrate', `${opts.videoKbps}k`,
+          '-bufsize', `${opts.videoKbps * 2}k`,
+          '-pix_fmt', 'yuv420p',
+        ]
+    const audioArgs =
+      opts.audioMode === 'copy'
+        ? ['-c:a', 'copy']
+        : opts.audioMode === 'aac'
+          ? ['-c:a', 'aac', '-b:a', `${opts.audioKbps}k`]
+          : ['-an']
+
+    if (up) {
+      opts.onPhase?.('encoding')
+      await ffmpeg.exec([
+        '-i', fsName, ...videoArgs,
+        ...audioArgs,
+        '-movflags', '+faststart',
+        '-y', outName,
+      ])
+    } else {
+      opts.onPhase?.('pass1')
+      pass = 1
+      await ffmpeg.exec([
+        '-i', fsName, ...videoArgs,
+        '-pass', '1', '-passlogfile', logName,
+        '-an', '-f', 'null', '/dev/null',
+      ])
+
+      opts.onPhase?.('pass2')
+      pass = 2
+      await ffmpeg.exec([
+        '-i', fsName, ...videoArgs,
+        '-pass', '2', '-passlogfile', logName,
+        ...audioArgs,
+        '-movflags', '+faststart',
+        '-y', outName,
+      ])
+    }
+
+    const data = await ffmpeg.readFile(outName)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'video/mp4' })
+    return {
+      blob,
+      size: blob.size,
+      durationMs: performance.now() - started,
+      videoKbps: opts.videoKbps,
+      audioKbps: opts.audioKbps,
+      audioMode: opts.audioMode,
+      targetBytes: opts.targetBytes,
+      direction: opts.direction,
+    }
+  } finally {
+    if (opts.onProgress) ffmpeg.off('progress', progressCb)
+    await Promise.all(scratch.map((n) => ffmpeg.deleteFile(n).catch(() => {})))
+  }
+}
+
 /** Trigger a browser download of a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)

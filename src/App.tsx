@@ -37,6 +37,7 @@ const VideoResizerTool = lazyWithRetry(() => import('./components/VideoResizerTo
 const ImageToVideoTool = lazyWithRetry(() => import('./components/ImageToVideoTool'))
 const MusicVideoBuilderTool = lazyWithRetry(() => import('./components/MusicVideoBuilderTool'))
 const VideoFpsReducerTool = lazyWithRetry(() => import('./components/VideoFpsReducerTool'))
+const VideoCompressorTool = lazyWithRetry(() => import('./components/VideoCompressorTool'))
 
 // Registry pattern for ref tools — add new tools here, routing auto-works
 const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
@@ -55,6 +56,7 @@ const REF_TOOLS: Record<string, LazyExoticComponent<ComponentType<any>>> = {
   'image-to-video': ImageToVideoTool,
   'music-video': MusicVideoBuilderTool,
   'video-fps': VideoFpsReducerTool,
+  'video-compress': VideoCompressorTool,
 }
 
 function Shell() {
