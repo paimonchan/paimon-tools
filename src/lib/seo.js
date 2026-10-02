@@ -49,6 +49,7 @@ export const HOME_SEO = {
   <li><a href="video-resize/">Video Resizer</a> - reduce a video's resolution to 720p, 480p or 360p for a much smaller file</li>
   <li><a href="video-fps/">Video FPS Reducer</a> - lower a video's frame rate to 30, 24 or 15 fps without changing its length or speed</li>
   <li><a href="video-compress/">Video Compressor</a> - compress a video to a target size (25 MB, 16 MB) with a two-pass encode</li>
+  <li><a href="video-metadata/">Video Metadata</a> - inspect a video's codec, bitrate, resolution, frame count and tags — instantly for MP4/MOV</li>
   <li><a href="image-to-video/">Image to Video</a> - turn a photo and an audio track into an MP4, with vertical presets for Reels and Shorts
   <li><a href="music-video/">Music Video Builder</a> - loop a cover video under a playlist of songs and get the YouTube chapter list
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
@@ -1097,6 +1098,56 @@ print(json.dumps(data, indent=2))</pre>
       { q: 'My file is already smaller than the target — what happens?', a: 'The tool says plainly that there is nothing to win, since re-encoding can only cost a generation of quality. A target just under the current size gets the same warning.' },
       { q: 'Can it raise the bitrate to a minimum a platform demands?', a: 'Yes. Ask for a bitrate above the source and the stream is CBR-padded up to hold it (measured 93-116% of the request on this tool\'s own tests). Be clear about what that buys: the extra bytes are filler and the picture is unchanged. Raising is for meeting a requirement, never for improving quality — measured, a 147 kbps clip re-encoded lossless at 51x the bitrate gained 0.0000 SSIM.' },
       { q: 'Should I use this or the Video Resizer?', a: 'Resizer when the picture is simply too big (720p to 360p cut 81% on a test clip). Compressor when you have a size to hit — a chat or email limit — and want the tool to work backwards to it. Doing both in order works.' },
+    ],
+  },
+  'video-metadata': {
+    title: 'Video Metadata - Inspect a Video\u2019s Codec, Bitrate, Frame Count and Tags | Paimon Tools',
+    description:
+      'See everything a video file knows about itself \u2014 container, codecs, profile, resolution, frame rate, the exact frame count, real per-stream bitrates and embedded tags. MP4 and MOV are read straight from their own index box, so the answer appears instantly with no ffmpeg download; other containers get a full ffmpeg report on request. 100% client-side.',
+    path: 'video-metadata',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Metadata - inspect a video\u2019s codec, bitrate, frame count and tags in your browser',
+    h1: 'Video Metadata - See What a Video Really Is',
+    breadcrumb: 'Video / Video Metadata',
+    bodyHtml: `<h2>Video Metadata - Read a Video\u2019s Own Report</h2>
+<p>Every video carries a description of itself, and this tool reads it out: container and brand list, video codec with its profile and level, resolution, frame rate, the exact frame count, the real bitrate of each stream, and the tags baked in by the encoder or the editor. <strong>MP4 and MOV return instantly</strong>, because those facts live in the file\u2019s own index box and are read without decoding a single frame \u2014 no ffmpeg download at all. Other containers get a full ffmpeg report on request.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop an MP4/MOV video (or click to browse)</li>
+  <li>The metadata appears at once \u2014 read straight from the file\u2019s index box</li>
+  <li>Copy it as text or as JSON, ready for a ticket or a forum post</li>
+  <li>Want the full ffmpeg report \u2014 pixel format, aspect ratio, colour info, chapters, subtitle streams? Ask for it once</li>
+  <li>Switch between the two views to compare them</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Instant for MP4/MOV</strong> \u2014 the box table is parsed directly from the file\u2019s bytes. Nothing is decoded, nothing is uploaded, and the ffmpeg core is never fetched</li>
+  <li><strong>Exact frame count</strong> \u2014 counted from the sample table. Even <code>ffmpeg -i</code> does not print this number</li>
+  <li><strong>Exact stream bitrates</strong> \u2014 computed by summing every encoded sample instead of trusting a header, so the video and audio rates are the real payload</li>
+  <li><strong>Codec detail</strong> \u2014 H.264 profile and level, AAC object type, sample rate, channel layout, track rotation, and the container\u2019s brand list</li>
+  <li><strong>Honest about limits</strong> \u2014 the instant view names exactly what a box table cannot carry (pixel format, SAR/DAR, colour information, subtitle and attachment streams, chapters, every container tag) rather than showing a guess, and the full read fills them in</li>
+  <li><strong>Full ffmpeg report on request</strong> \u2014 the same report the encoding tools work from: every stream with its pixel format, aspect ratio, sample format, language and default flag, plus chapters and attachments</li>
+  <li><strong>Copy as text or JSON</strong> \u2014 \u2318\u21e7C copies the whole readout, so a bug report is one paste</li>
+  <li>Read-only, and 100% client-side \u2014 your video is never uploaded and never modified</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Why is it instant for some files and not others?</strong> MP4 and MOV keep their own description in an index box (moov), so the facts sit in the first few kilobytes and can be read without decoding anything. WebM, MKV and AVI describe themselves differently, so those need ffmpeg to interpret the container \u2014 a one-time ~9.9 MB core download that then stays cached for the session.</p>
+<p><strong>Does this change or damage my video?</strong> No. The tool only reads. It never writes a new file and cannot alter the original.</p>
+<p><strong>Is the frame count really exact?</strong> Yes for MP4/MOV \u2014 it is the number of entries in the sample table, one per frame. A container can round its duration and its frame rate, but the sample count is what the file actually stores.</p>
+<p><strong>Are the bitrates exact?</strong> In the instant read they are the sum of every sample\u2019s size over the track duration \u2014 the real payload. An encoder\u2019s declared bitrate can differ, and the tool shows both so you can see where they disagree.</p>
+<p><strong>What does the full read add?</strong> Pixel format (yuv420p and friends), pixel aspect ratio, colour information, subtitle and attachment streams, chapters, and every container tag. None of those are in the box table, which is why the instant view says so out loud.</p>
+<p><strong>Why would I need this?</strong> Two reasons. When a tool refuses a file \u2014 a lossless merge needs two clips to match spec \u2014 this readout shows exactly which field differs. And when you need to describe a file precisely: a frame count, a profile and level, a real bitrate.</p>
+<p><strong>Are my files uploaded?</strong> No. Everything runs in your browser. Your video never leaves your device.</p>
+<p><strong>Related:</strong> <a href="video-compress/">Video Compressor</a> \u2014 hit a target size, <a href="video-resize/">Video Resizer</a> \u2014 shrink the picture, and <a href="video-merge/">Video Merger</a> \u2014 whose lossless merge needs matching specs, which is what this readout reveals.</p>
+<p><a href="../">\u2190 Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Why is it instant for some files and not others?', a: 'MP4 and MOV keep their description in an index box (moov), so the facts sit in the first few kilobytes and are read without decoding anything. WebM, MKV and AVI need ffmpeg to interpret the container, which costs a one-time ~9.9 MB core download that then stays cached for the session.' },
+      { q: 'Does this change or damage my video?', a: 'No. The tool only reads. It never writes a new file and cannot alter the original.' },
+      { q: 'Is the frame count really exact?', a: 'Yes for MP4/MOV \u2014 it is the number of entries in the sample table, one per frame. A container can round its duration and frame rate, but the sample count is what the file actually stores.' },
+      { q: 'Are the bitrates exact?', a: 'In the instant read they are the sum of every sample size over the track duration \u2014 the real payload. An encoder\u2019s declared bitrate can differ, and both are shown so you can see where they disagree.' },
+      { q: 'What does the full read add?', a: 'Pixel format, pixel aspect ratio, colour information, subtitle and attachment streams, chapters, and every container tag \u2014 none of which are in the box table.' },
+      { q: 'Why would I need this?', a: 'When a tool refuses a file \u2014 a lossless merge needs two clips to match spec \u2014 this readout shows which field differs. And when you need to describe a file precisely: a frame count, a profile, a real bitrate.' },
+      { q: 'Are my files uploaded?', a: 'No. Everything runs in your browser. Your video never leaves your device.' },
     ],
   },
   'video-resize': {

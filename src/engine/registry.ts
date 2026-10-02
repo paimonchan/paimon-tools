@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge' | 'chevrons-down-up'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge' | 'chevrons-down-up' | 'file-search'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -435,6 +435,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['compress video', 'video compressor', 'reduce video size', 'shrink video', 'video under 25mb', 'whatsapp video size', 'email attachment video', 'target file size', 'video bitrate', 'make video smaller', 'video too large', 'compress mp4', 'smaller mp4', 'video size reducer', '25 mb video'],
     description:
       'Compress a video to a target size you name — 25 MB for an email, 16 MB for WhatsApp — with a real two-pass encode that lands under the limit instead of overshooting it. Going the other way works too: ask for a higher bitrate and it pads the stream up to hold that floor for a platform minimum. Runs on your device, never uploaded, and shows the plan before you start. 100% client-side.',
+  },
+  {
+    id: 'video-metadata',
+    name: 'Video Metadata',
+    shortName: 'Video Metadata',
+    category: 'Video',
+    type: 'ref',
+    icon: 'file-search',
+    keywords: ['video metadata', 'video info', 'media info', 'mediainfo', 'video details', 'codec', 'bitrate', 'frame count', 'resolution', 'video properties', 'inspect video', 'file info', 'container', 'probe video', 'video specs'],
+    description:
+      'See everything a video knows about itself — container, codecs, profile, resolution, frame rate, exact frame count, per-stream bitrates and tags. MP4 and MOV files are read straight from their own index box, so it appears instantly with no ffmpeg download at all; other containers get a full ffmpeg report on request. 100% client-side.',
   },
   {
     id: 'image-to-video',

@@ -1620,3 +1620,52 @@ export function downloadBlob(blob: Blob, filename: string): void {
   // Revoke after a tick so the download can start.
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+// ── Video Metadata (deep read) ──────────────────────────
+
+/** Phase of a deep metadata read, for the UI's progress copy. */
+export type DeepReadPhase = 'loading' | 'reading'
+
+/**
+ * Run `ffmpeg -i` and return the ENTIRE stderr log, unparsed.
+ *
+ * This is the deep tier of the Video Metadata tool: ffmpeg reports things the
+ * MP4 box table simply does not carry (pixel format, SAR/DAR, colour info,
+ * subtitle/attachment streams, chapters, every container tag).
+ *
+ * It loads the shared ffmpeg core — the one-time ~9.9 MB download — which is why
+ * the instant box read exists as the first tier. The MEMFS entry is always
+ * removed afterwards, success or failure, so the file's bytes don't linger in
+ * RAM. Parsing lives in engine/video-metadata.ts.
+ */
+export async function readVideoLog(
+  file: File,
+  onPhase?: (phase: DeepReadPhase) => void,
+): Promise<string> {
+  onPhase?.('loading')
+  const ffmpeg = await getFFmpeg()
+  const fsName = sanitizeFsName(file.name, 0)
+  const logLines: string[] = []
+  const onLog = ({ type, message }: { type: string; message: string }) => {
+    if (type === 'stderr' && message) logLines.push(message)
+  }
+
+  onPhase?.('reading')
+  try {
+    await ffmpeg.deleteFile(fsName).catch(() => {})
+    await ffmpeg.writeFile(fsName, await fetchFile(file))
+    ffmpeg.on('log', onLog)
+    try {
+      // `-i` alone prints the full stream report then exits non-zero (there is
+      // no output file) — that is the expected path, not a failure.
+      await ffmpeg.exec(['-i', fsName])
+    } catch {
+      /* expected */
+    }
+  } finally {
+    ffmpeg.off('log', onLog)
+    await ffmpeg.deleteFile(fsName).catch(() => {})
+  }
+
+  return logLines.join('\n')
+}
