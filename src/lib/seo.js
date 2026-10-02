@@ -50,6 +50,7 @@ export const HOME_SEO = {
   <li><a href="video-fps/">Video FPS Reducer</a> - lower a video's frame rate to 30, 24 or 15 fps without changing its length or speed</li>
   <li><a href="video-compress/">Video Compressor</a> - compress a video to a target size (25 MB, 16 MB) with a two-pass encode</li>
   <li><a href="video-metadata/">Video Metadata</a> - inspect a video's codec, bitrate, resolution, frame count and tags — instantly for MP4/MOV</li>
+  <li><a href="video-compare/">Video Compare</a> - play two videos side by side, frame-locked, with a difference view and PSNR</li>
   <li><a href="image-to-video/">Image to Video</a> - turn a photo and an audio track into an MP4, with vertical presets for Reels and Shorts
   <li><a href="music-video/">Music Video Builder</a> - loop a cover video under a playlist of songs and get the YouTube chapter list
   <li><a href="postgres-explain/">PostgreSQL EXPLAIN Visualizer</a> - visualize query plans
@@ -1148,6 +1149,59 @@ print(json.dumps(data, indent=2))</pre>
       { q: 'What does the full read add?', a: 'Pixel format, pixel aspect ratio, colour information, subtitle and attachment streams, chapters, and every container tag \u2014 none of which are in the box table.' },
       { q: 'Why would I need this?', a: 'When a tool refuses a file \u2014 a lossless merge needs two clips to match spec \u2014 this readout shows which field differs. And when you need to describe a file precisely: a frame count, a profile, a real bitrate.' },
       { q: 'Are my files uploaded?', a: 'No. Everything runs in your browser. Your video never leaves your device.' },
+    ],
+  },
+  'video-compare': {
+    title: 'Video Compare - Play Two Videos Side by Side, Frame-Locked | Paimon Tools',
+    description:
+      'Compare two videos in your browser: side by side, swipe divider, difference, overlay or blink A/B \u2014 with the frames locked so both sides always show the same one. PSNR, mean difference and the share of pixels that changed are measured live. No ffmpeg, no upload.',
+    path: 'video-compare',
+    ogImage: DEFAULT_OG_IMAGE,
+    ogImageAlt: 'Paimon Tools Video Compare - play two videos side by side, frame-locked, with a difference view',
+    h1: 'Video Compare - Two Clips, One Frame at a Time',
+    breadcrumb: 'Video / Video Compare',
+    bodyHtml: `<h2>Video Compare - Watch Two Clips Against Each Other</h2>
+<p>Drop two videos and they play together on one canvas: <strong>side by side</strong>, through a <strong>swipe divider</strong>, as a <strong>difference image</strong>, as an <strong>overlay</strong>, or as a <strong>blink A/B</strong> flip. Both sides always show the same frame \u2014 that is the whole point, and it is harder than it sounds: two video elements playing next to each other drift by up to a frame (measured here: mean 23 ms, max 33 ms). This tool keeps every clip decoded separately but paints one canvas, and only repaints when the decoders agree on the frame. Measured alignment error: 0.00000 s.</p>
+<p>It is the natural companion to the rest of the suite: the <a href="video-compress/">Compressor</a>, <a href="video-resize/">Resizer</a>, <a href="video-fps/">FPS Reducer</a> and <a href="video-mute/">Muter</a> all produce a new file, and this is where you see what that cost. Everything runs on your device \u2014 no ffmpeg, no core download, no upload.</p>
+<h2>How to Use</h2>
+<ol>
+  <li>Drop two videos (up to four clips)</li>
+  <li>Pick a view \u2014 side by side, swipe, difference, overlay or blink</li>
+  <li>Scrub, play, or step one frame at a time with the arrow keys</li>
+  <li>Loop a two-second slice to stare at one artifact</li>
+  <li>Read the numbers: PSNR, mean difference, and the share of pixels that changed</li>
+  <li>Save the composited frame as a PNG if you need to show someone</li>
+</ol>
+<h2>Features</h2>
+<ul>
+  <li><strong>Frame-locked playback</strong> \u2014 the canvas repaints only when every decoder is on the same frame, so a difference you spot is a real difference, not a timing artifact. Presentation follows the slowest clip; the pairing never drifts</li>
+  <li><strong>Five views, one clock</strong> \u2014 side by side, swipe divider, difference composite, adjustable overlay, and blink A/B</li>
+  <li><strong>Measured, not vibes</strong> \u2014 live PSNR in dB with a plain-language verdict, mean absolute difference, and the percentage of pixels that changed</li>
+  <li><strong>Worst PSNR per slice</strong> \u2014 a timeline of the weakest moment in each slice, so damage has a location instead of an average</li>
+  <li><strong>Offset detection</strong> \u2014 two recordings of the same thing are rarely aligned; the tool searches for the offset where the frames match best</li>
+  <li><strong>Per-clip specs</strong> \u2014 codec, profile, resolution, frame rate, frame count and bitrate for each side, read instantly from the file's own index box</li>
+  <li><strong>Frame stepping and 2-second loop</strong> \u2014 inspect one frame, or watch a short slice repeat</li>
+  <li><strong>Snapshot</strong> \u2014 save the composited view as a PNG</li>
+  <li>100% client-side and <strong>wasm-free</strong> \u2014 nothing is uploaded, and no ffmpeg core is downloaded</li>
+</ul>
+<h2>FAQs</h2>
+<p><strong>Why do my two videos not line up perfectly in other players?</strong> Because two video elements are decoded and presented independently, and their clocks drift \u2014 measured here at a mean of 23 ms and up to 33 ms, roughly one frame at 30fps. This tool sidesteps that by gating every repaint on all decoders being on the same frame.</p>
+<p><strong>What is PSNR and should I trust it?</strong> Peak signal-to-noise ratio compares two frames pixel by pixel and reports the difference in decibels \u2014 higher is closer. It is a real, standard measurement, and it is a blunt one: it tracks overall pixel error, not what your eye cares about. Use it to find where quality dropped, then look at the frame yourself. It is not SSIM.</p>
+<p><strong>Does the difference view mean my encode is broken?</strong> No. Any re-encode changes pixels; the question is where and how much. Bright areas in the difference view are where the encoder spent the least. Set the compression target lower and watch which regions light up first.</p>
+<p><strong>Why does playback sometimes look slower with two clips?</strong> The canvas only paints when both decoders are ready, so it follows the slowest one. That is the trade for a guaranteed identical frame on both sides \u2014 and the tool shows how many frame pairs were drawn versus held back.</p>
+<p><strong>What if my clips have different frame rates?</strong> The tool pairs by frame index when the rates match, and by time when they do not \u2014 and it says which rule is in use, so you always know what you are looking at.</p>
+<p><strong>Which files can it play?</strong> Whatever your browser can decode. HEVC in Chrome, ProRes, and some MKV files are not supported by the built-in player, and the tool will name the file it could not open instead of showing a black pane.</p>
+<p><strong>Are my files uploaded?</strong> No. Everything runs in your browser. Your videos never leave your device, and no ffmpeg core is downloaded for this tool.</p>
+<p><strong>Related:</strong> <a href="video-metadata/">Video Metadata</a> \u2014 the full spec readout, <a href="video-compress/">Video Compressor</a> \u2014 make the file you are about to compare, and <a href="video-frame-grabber/">Video Frame Grabber</a> \u2014 pull a single frame out.</p>
+<p><a href="../">\u2190 Back to all Paimon Tools</a></p>`,
+    faq: [
+      { q: 'Why do two videos not line up perfectly in other players?', a: 'Two video elements are decoded and presented independently, so their clocks drift \u2014 measured here at a mean of 23 ms and up to 33 ms, about one frame at 30fps. This tool gates every repaint on all decoders being on the same frame, giving a measured alignment error of 0.00000 s.' },
+      { q: 'What is PSNR and should I trust it?', a: 'Peak signal-to-noise ratio compares two frames pixel by pixel and reports the difference in decibels \u2014 higher is closer. It is a real standard measurement and a blunt one: it tracks pixel error, not what your eye cares about. Use it to find where quality dropped, then look at the frame yourself. It is not SSIM.' },
+      { q: 'Does the difference view mean my encode is broken?', a: 'No. Any re-encode changes pixels; the question is where and how much. Bright areas are where the encoder spent the least, so lower the target and watch which regions light up first.' },
+      { q: 'Why does playback look slower with two clips?', a: 'The canvas paints only when both decoders are ready, so presentation follows the slowest clip. That is the trade for a guaranteed identical frame on both sides, and the tool reports how many frame pairs were drawn versus held back.' },
+      { q: 'What if my clips have different frame rates?', a: 'It pairs by frame index when the rates match and by time when they do not \u2014 and it says which rule is active, so you always know what you are comparing.' },
+      { q: 'Which files can it play?', a: 'Whatever your browser can decode. HEVC in Chrome, ProRes and some MKV files are outside the built-in player; the tool names the file it could not open instead of showing a black pane.' },
+      { q: 'Are my files uploaded?', a: 'No. Everything runs in your browser. Your videos never leave your device, and no ffmpeg core is downloaded for this tool.' },
     ],
   },
   'video-resize': {

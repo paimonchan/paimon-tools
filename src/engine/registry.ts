@@ -31,7 +31,7 @@ export interface ToolOutput {
 }
 /** Fields shared by every tool — enough for sidebar rendering & palette search. */
 export type IconName =
-  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge' | 'chevrons-down-up' | 'file-search'
+  'arrow-left-right' | 'braces' | 'file-code' | 'file-spreadsheet' | 'file-json' | 'file-text' | 'fingerprint' | 'git-branch' | 'git-compare' | 'hash' | 'layers' | 'minimize-2' | 'play' | 'list' | 'scissors' | 'merge' | 'music' | 'clapperboard' | 'volume-x' | 'image' | 'scaling' | 'image-play' | 'list-music' | 'gauge' | 'chevrons-down-up' | 'file-search' | 'columns-2'
 export interface ToolBase {
   id: ToolId
   name: string
@@ -446,6 +446,17 @@ export const TOOLS: ToolDefinition[] = [
     keywords: ['video metadata', 'video info', 'media info', 'mediainfo', 'video details', 'codec', 'bitrate', 'frame count', 'resolution', 'video properties', 'inspect video', 'file info', 'container', 'probe video', 'video specs'],
     description:
       'See everything a video knows about itself — container, codecs, profile, resolution, frame rate, exact frame count, per-stream bitrates and tags. MP4 and MOV files are read straight from their own index box, so it appears instantly with no ffmpeg download at all; other containers get a full ffmpeg report on request. 100% client-side.',
+  },
+  {
+    id: 'video-compare',
+    name: 'Video Compare',
+    shortName: 'Video Compare',
+    category: 'Video',
+    type: 'ref',
+    icon: 'columns-2',
+    keywords: ['compare video', 'video comparison', 'side by side video', 'video diff', 'compare two videos', 'before after video', 'video quality check', 'psnr', 'difference video', 'swipe compare', 'a b compare video', 'check compression quality'],
+    description:
+      'Play two videos against each other on one canvas — side by side, swipe divider, difference, overlay or blink A/B — and see the numbers next to the pictures: PSNR, mean difference and the pixels that changed. Frames are locked, so both sides always show the same frame. Compares straight off your disk with no ffmpeg and no upload. 100% client-side.',
   },
   {
     id: 'image-to-video',

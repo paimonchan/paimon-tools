@@ -43,7 +43,7 @@ and discarded when you close the tab.
 
 ## 🧰 Tools
 
-**31 tools** across five categories, plus a multi-language code playground.
+**32 tools** across five categories, plus a multi-language code playground.
 
 ### 🔄 Convert
 
@@ -84,6 +84,7 @@ commas, and comments are accepted.
 | [Video FPS Reducer](https://paimonchan.github.io/paimon-tools/video-fps/) | Lower a video's frame rate (120 → 60, 60 → 30, 24, 15 fps) without changing its length, speed or resolution |
 | [Video Compressor](https://paimonchan.github.io/paimon-tools/video-compress/) | Compress a video to a target size (25 MB, 16 MB) with a two-pass encode — or pad the bitrate up to a platform minimum |
 | [Video Metadata](https://paimonchan.github.io/paimon-tools/video-metadata/) | Inspect a video's codec, profile, resolution, exact frame count, real bitrates and tags — instant for MP4/MOV, full ffmpeg report on request |
+| [Video Compare](https://paimonchan.github.io/paimon-tools/video-compare/) | Play two clips frame-locked on one canvas — side by side, swipe, difference or blink — with PSNR and a difference metric |
 | [Image to Video](https://paimonchan.github.io/paimon-tools/image-to-video/) | Turn a photo plus an audio track into an MP4 (landscape or vertical) |
 | [Music Video Builder](https://paimonchan.github.io/paimon-tools/music-video/) | Loop a cover video under a playlist of songs + YouTube chapter list |
 

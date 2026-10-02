@@ -6,7 +6,7 @@
  *
  * To add a new icon, import it from lucide-react below and add it to ICON_MAP.
  */
-import { ArrowLeftRight, AudioLines, Braces, ChevronsDownUp, Clapperboard, FileCode, FileSpreadsheet, FileJson, FileSearch, FileText, Fingerprint, Gauge, GitBranch, GitCompare, Hash, Image, ImagePlay, Layers, List, ListMusic, Merge, Minimize2, Music, Play, Scaling, Scissors, VolumeX } from 'lucide-react'
+import { ArrowLeftRight, AudioLines, Braces, ChevronsDownUp, Clapperboard, Columns2, FileCode, FileSpreadsheet, FileJson, FileSearch, FileText, Fingerprint, Gauge, GitBranch, GitCompare, Hash, Image, ImagePlay, Layers, List, ListMusic, Merge, Minimize2, Music, Play, Scaling, Scissors, VolumeX } from 'lucide-react'
 import type { IconName } from '../engine/registry'
 
 export const ICON_MAP: Record<IconName, React.ComponentType<{ className?: string }>> = {
@@ -36,4 +36,5 @@ export const ICON_MAP: Record<IconName, React.ComponentType<{ className?: string
   gauge: Gauge,
   'chevrons-down-up': ChevronsDownUp,
   'file-search': FileSearch,
+  'columns-2': Columns2,
 }
